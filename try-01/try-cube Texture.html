@@ -20,7 +20,7 @@
 	<p>see <a href='https://threejsfundamentals.org/threejs/lessons/threejs-shadertoy.html'>Three.js and Shadertoy</a></p>
     <canvas id="c" width="1032" height="980"></canvas>
 
-<script src="Three.js/three.js"></script>
+<script src="three.js/three.min.js"></script>
 <script>
 'use strict';
 
@@ -87,7 +87,8 @@ function main() {
 
 
   const loader = new THREE.TextureLoader();
-  const texture = loader.load('resources/images/bayer.png');
+  // const texture = loader.load('resources/images/bayer.png');
+  const texture = loader.load('three.js/bayer.png');
   texture.minFilter = THREE.NearestFilter;
   texture.magFilter = THREE.NearestFilter;
   texture.wrapS = THREE.RepeatWrapping;
