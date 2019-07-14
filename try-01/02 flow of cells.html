@@ -1,0 +1,164 @@
+
+<!-- Licensed under a BSD license. See license.html for license -->
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Three.js - Shadertoy Basic x40</title>
+	<script src="../3rd-lib/jquery-3.4.1.min.js"></script>
+
+    <style>
+    body {
+        margin: 0;
+    }
+    #c {
+        width: 100vw;
+        height: 100vh;
+        display: block;
+    }
+	.unival {
+        width: 2em;
+	}
+    </style>
+  </head>
+  <body>
+	  <table>
+		  <tr>
+			  <td>Cluster Size:</td><td><input  class='unival'id='field' value='20'></input></td>
+			  <td/><td>Transparent Level:</td><td><input class='unival' id='height' value="0.7"></input><td>
+		  </tr>
+		  <tr>
+			  <td>Cluster Deepth:</td><td><input class='unival' id='iteration' value='2'></input></td>
+			  <td/><td>Hue:</td><td><span style="white-space: nowrap"><input class='unival' id='R' value="0.5"></input>
+				  <input  class='unival' id='G' value="0.2"></input>
+				  <input class='unival' id='B' value="0.3"></input></span>
+			  <td>
+			  <td><input type='button' value='update' onclick="update()"></input></td>
+		  </tr>
+	  </table>
+    <canvas id="c"></canvas>
+  </body>
+<script src="three.js/three.min.js"></script>
+<script>
+'use strict';
+
+/* global THREE */
+function update() {
+	uniforms.ITERATION = $('#iteration').val();
+}
+
+function main() {
+  const canvas = document.querySelector('#c');
+  const renderer = new THREE.WebGLRenderer({canvas});
+  renderer.autoClearColor = false;
+
+  const camera = new THREE.OrthographicCamera(
+    -1, // left
+     1, // right
+     1, // top
+    -1, // bottom
+    -1, // near,
+     1, // far
+  );
+  const scene = new THREE.Scene();
+  const plane = new THREE.PlaneBufferGeometry(2, 2);
+
+  const fragmentShader = `
+// Created by sofiane benchaa - sben/2015
+// License Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License.
+// #define FIELD 20.0
+#define HEIGHT 0.7
+// #define ITERATION 2
+#define TONE vec3(0.5,0.2,0.3)
+
+  uniform int ITERATION;
+
+  uniform vec3 iResolution;
+  uniform float iTime;
+  uniform sampler2D iChannel0;
+
+vec2 eq(vec2 p,float t){
+	vec2 fx = vec2(0.0);
+	fx.x = (sin(p.y+cos(t+p.x*0.2))*cos(p.x-t));
+	fx.x *= acos(fx.x);
+	fx.x *= -distance(fx.x,0.5)*p.x/p.y;
+	fx.y = p.y-fx.x;
+	return fx;
+}
+
+vec3 computeColor(vec2 p, float t, float hs){
+	vec3 color = vec3(0.0);
+	vec2 fx = eq(p,t);
+	// for(int i=0; i<ITERATION; ++i)
+	for(int i=0; i< 3; ++i)
+	{
+		p.x+=p.x;
+		color.r += TONE.r/length(fx.y-fx.x-hs);
+		fx.x += eq(p,t+float(i+1)).x;
+		color.g += TONE.g/length(fx.y-fx.x-hs);
+		fx.x += eq(p,t+float(i+2)).x;
+		color.b += TONE.b/length(fx.y-fx.x-hs);
+	}
+	return color;
+}
+
+void mainImage( out vec4 fragColor, in vec2 fragCoord ) {
+	float time = iTime;
+	vec2 position = ( fragCoord.xy / iResolution.xy )+0.5;
+	float hs = FIELD*(HEIGHT+cos(time)*0.1);
+	vec2 p = (position)*FIELD;
+	vec3 color = computeColor(p, time, hs);
+	fragColor = vec4( color, 1.0 );
+}
+
+void main() {
+	mainImage(gl_FragColor, gl_FragCoord.xy);
+}
+`;
+
+  const uniforms = {
+    iTime: { value: 0 },
+    iResolution:  { value: new THREE.Vector3() },
+
+	ITERATION: 2,
+  };
+
+  const material = new THREE.ShaderMaterial({
+    fragmentShader,
+    uniforms,
+  });
+
+  scene.add(new THREE.Mesh(plane, material));
+
+  function resizeRendererToDisplaySize(renderer) {
+    const canvas = renderer.domElement;
+    const width = canvas.clientWidth;
+    const height = canvas.clientHeight;
+    const needResize = canvas.width !== width || canvas.height !== height;
+    if (needResize) {
+      renderer.setSize(width, height, false);
+    }
+    return needResize;
+  }
+
+  function render(time) {
+    time *= 0.001;  // convert to seconds
+
+    resizeRendererToDisplaySize(renderer);
+
+    const canvas = renderer.domElement;
+    uniforms.iResolution.value.set(canvas.width, canvas.height, 1);
+    uniforms.iTime.value = time;
+
+    renderer.render(scene, camera);
+
+    requestAnimationFrame(render);
+  }
+
+  requestAnimationFrame(render);
+}
+
+main();
+</script>
+</html>
