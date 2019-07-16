@@ -39,12 +39,12 @@
  */
 const bool GlowEnabled = true;
 const float Circumradius = 0.2;
-const float WallDistance = 0.01;
+const float WallDistance = 0.03;
 const float GlowDistance = 0.26974;
 
 const bool Jitter = true;
 const float MarchDumping = 0.658;
-const float Far = 5.0;
+const float Far = 150.0;
 const int MaxSteps = 50;
 
 #define PI 3.141592
@@ -116,6 +116,7 @@ float tetrahedron(vec3 p) {
 
 	p = rotx(p, -tria);
 	p = rotz(p, diha);
+
 	d = max(d, p.x - inra);
 
 	return d;
@@ -252,7 +253,13 @@ vec3 render(vec3 ro, vec3 rd) {
 
 	for (int i = 0; i < MaxSteps; i++) {
 		steps = float(i);
-		float d = map(ro + rd * t);
+
+		// float d = map(ro + rd * t);
+    vec3 pos = ro + rd * t;
+    // pos.x = mod(pos.x, 0.2);
+    pos.xyz = mod(pos.xyz, 1.0) - 0.5;
+		float d = map(pos);
+
 		float absd = abs(d);
 
 		if (Jitter) {
@@ -261,7 +268,7 @@ vec3 render(vec3 ro, vec3 rd) {
 		if (t > tmax) {
 			break;
 		}
-		glowFactor += pow(1.0 - smoothstep(0.0, GlowDistance, d), 14.0)
+		glowFactor += pow(1.0 - smoothstep(0.0, GlowDistance, absd), 14.0)
 				* step(0.0, d);
 		float f = absd * (1.0 - smoothstep(0.0, WallDistance, absd));
 		accu += vec3(f);
@@ -271,7 +278,7 @@ vec3 render(vec3 ro, vec3 rd) {
 	glowFactor /= steps;
 
 	if (GlowEnabled) {
-		accu += 0.7 * pow(glowFactor, 1.2) * vec3(0.9, 0.2, 1.0);
+		accu += 1.7 * pow(glowFactor, 2.52) * vec3(0.2, 0.5, 1.0);
 	}
 	return accu;
 }
@@ -293,14 +300,14 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
 	um.x *= iResolution.x / iResolution.y;
 
 	mat2 mx = mm2(iTime * 0.05 + um.x * 6.0);
-	mat2 my = mm2(iTime * 0.07 + um.y * 6.0);
+	mat2 my = mm2(iTime * 0.17 + um.y * 6.0);
 	ro.xz *= mx;
 	rd.xz *= mx;
 	ro.xy *= my;
 	rd.xy *= my;
 
 	vec3 col = render(ro, rd);
-	col = pow(col, vec3(2.2545));
+	col = pow(col, vec3(1.4545));
 
 	fragColor = vec4(col, 1.0);
 }
