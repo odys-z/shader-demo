@@ -1,0 +1,84 @@
+<!-- Licensed under a BSD license. See license.html for license -->
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Three.js - Shadertoy Bleepy Blocks</title>
+    <link rel='stylesheet' type='text/css' href='../lib/shader.css'>
+    <script type='text/javascript' src='three.js/three.min.js'></script>
+    <script type='text/javascript' src='three.js/OrbitControls.js'></script>
+    <script type='text/javascript' src='../lib/shadertoy-loader.js'></script>
+  </head>
+  <body>
+    <p><a href='https://www.shadertoy.com/view/4sXGzn'>Deform - holes</a></p>
+    <canvas id="frag"></canvas>
+  </body>
+<script>
+'use strict';
+
+const fragmentShader = `
+// Created by inigo quilez - iq/2013
+// License Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License.
+
+  uniform vec3 iResolution;
+  uniform vec2 iMouse;
+  uniform float iTime;
+  uniform sampler2D iChannel0;
+
+void mainImage( out vec4 fragColor, in vec2 fragCoord )
+{
+  vec2 p = -1.0 + 2.0 * fragCoord.xy / iResolution.xy;
+  vec2 m = -1.0 + 2.0 * iMouse.xy / iResolution.xy;
+
+  float a1 = atan(p.y-m.y,p.x-m.x);
+  float r1 = sqrt(dot(p-m,p-m));
+  float a2 = atan(p.y+m.y,p.x+m.x);
+  float r2 = sqrt(dot(p+m,p+m));
+
+  vec2 uv;
+  uv.x = 0.02*iTime + (r1-r2)*0.25;
+  uv.y = asin(sin(a1-a2))/3.1416;
+
+
+  vec3 col = texture2D( iChannel0, 0.0125*uv ).xyz;
+
+  float w = exp(-15.0*r1*r1) + exp(-15.0*r2*r2);
+
+  w += 0.25*smoothstep( 0.93,1.0,sin(128.0*uv.x));
+  w += 0.25*smoothstep( 0.93,1.0,sin(128.0*uv.y));
+
+  fragColor = vec4(col+w,1.0);
+}
+
+void main() {
+  mainImage(gl_FragColor, gl_FragCoord.xy);
+}
+`;
+
+  const loader = new THREE.TextureLoader();
+  loader.setCrossOrigin('anonymous');
+  const texture = loader.load('three.js/parallel axis with bar chart.png');
+  const uniforms = {
+    iTime: { value: 0 },
+    iResolution:  { value: new THREE.Vector3() },
+    iChannel0: { value: texture },
+    iMouse: {value: new THREE.Vector2()},
+  };
+
+  //const mouse = new THREE.Vector2();
+  document.onmousemove = function(e){
+    // mouse.x = e.pageX;
+    // mouse.y = e.pageY;
+    uniforms.iMouse.value.x = e.pageX;
+    uniforms.iMouse.value.y = e.pageY;
+  }
+  main('frag', fragmentShader, uniforms);
+
+  // shaderSkybox('frag', fragmentShader, {
+  //       time: 0,
+  //       resolut: null, // default: new THREE.Vector3()
+  //       texture: 'three.js/parallel axis with bar chart.png'})
+  //     ; //.start();
+</script>
+</html>
