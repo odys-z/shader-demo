@@ -2,7 +2,7 @@
 
 This is a temp repo for testing. No plan to support in the future.
 
-The shadertoy and raymatching is some how different from the well known style, see [2].
+The shadertoy and raymatching is some how different from the well known style of 3d rendering, see [2].
 
 This repository is a testing project using three.js for running shaders from shadertoy
 in a html file, independent to shadertoy.
@@ -27,14 +27,20 @@ Shapes melding, because of power of "mix()".
 
 Shadertoy Home Page
 
-- 2. [Shadertoy to Three.js How to](https://threejsfundamentals.org/threejs/lessons/threejs-shadertoy.html)
+- 2. [Shadertoy to Three.js How to](https://threejsfundamentals.org/threejs/lessons/threejs-shadertoy.html "")
 
 A general way adapting shadertoy's shader to three.js.
 
-- 3. [distance functions](http://iquilezles.org/www/articles/distfunctions/distfunctions.htm)
+- 3. [Three.js Backgrounds and Skyboxes](https://threejsfundamentals.org/threejs/lessons/threejs-backgrounds.html "Three.js Backgrounds and Skyboxes")
+
+- 4. [distance functions](http://iquilezles.org/www/articles/distfunctions/distfunctions.htm)
 
 Raymarching Distance Functions
 
-- 4. [raymatching tutorial](http://jamie-wong.com/2016/07/15/ray-marching-signed-distance-functions/)
+- 5. [inigo quilez home page](http://www.iquilezles.org/www/articles/raymarchingdf/raymarchingdf.htm "inigo quilez, raymarching distance fields")
+
+inigo quilez home page
+
+- 6. [raymatching tutorial](http://jamie-wong.com/2016/07/15/ray-marching-signed-distance-functions/)
 
 A Tutorial by Jamie Wang
