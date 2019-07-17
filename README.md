@@ -37,6 +37,8 @@ A general way adapting shadertoy's shader to three.js.
 
 Raymarching Distance Functions
 
+And also example: [sdf examples](https://www.shadertoy.com/view/Xds3zN "sdf examples"), with [sdf example tutorail](https://www.alanzucconi.com/2016/07/01/signed-distance-functions/ "tutorial")
+
 - 5. [inigo quilez home page](http://www.iquilezles.org/www/articles/raymarchingdf/raymarchingdf.htm "inigo quilez, raymarching distance fields")
 
 inigo quilez home page
@@ -44,3 +46,6 @@ inigo quilez home page
 - 6. [raymatching tutorial](http://jamie-wong.com/2016/07/15/ray-marching-signed-distance-functions/)
 
 A Tutorial by Jamie Wang
+
+- x. [inigo quilez](http://www.iquilezles.org/www/index.htm "inigo quilez website")
+- x. [Advanced Engine](http://advances.realtimerendering.com/s2015/index.html "Advanced Tech Survey")
