@@ -185,12 +185,12 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord )
 {
 	vec2 p = fragCoord.xy / iResolution.xy - 0.5;
 	p.x *= iResolution.x / iResolution.y;
-  p = mod(p, .2) - .1;
+  p = mod(p, .3) - .15;
 	vec2 um = iMouse.xy / iResolution.xy - .5;
 
 	//camera
 	vec3 ro = vec3(0., 0., 5.); // ray origin
-  vec3 rd = normalize(vec3(p * 3.9, -1.5));// ray dir
+  vec3 rd = normalize(vec3(p * 2.9, -1.5));// ray dir
   mat2 mx = mm2(time * .4 + um.x * 6.);
   mat2 my = mm2(time * 0.3 + um.y * 6.);
   ro.xz *= mx;    rd.xz *= mx;
@@ -200,7 +200,7 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord )
   vec3 brd = rd;
 
   vec3 col = vec3(0.0125, 0., 0.025);
-  #if 1
+  // #if 1
   for (float j = 1.;j<NUM_RAYS+1.;j++)
   {
     ro = bro;
@@ -208,12 +208,14 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord )
     mat2 mm = mm2((time*0.1+((j+1.)*5.1))*j*0.25);
     ro.xy *= mm; rd.xy *= mm;
     ro.xz *= mm; rd.xz *= mm;
-    float rz = march(ro,rd,2.5,FAR,j);
+
+    float rz = march(ro, rd, 2.5, FAR, j);
 		if ( rz >= FAR)continue;
-    	vec3 pos = ro+rz*rd;
-    	col = max(col,vmarch(pos,rd,j, bro));
-    }
-    #endif
+
+    vec3 pos = ro + rz * rd;
+    col = max(col,vmarch(pos,rd,j, bro));
+  }
+  // #endif
 
     ro = bro;
     rd = brd;

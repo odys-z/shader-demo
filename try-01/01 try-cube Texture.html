@@ -78,6 +78,7 @@ function main() {
     mainImage(gl_FragColor, vUv * iResolution.xy);
   }
   `;
+
   const vertexShader = `
     varying vec2 vUv;
     void main() {
@@ -86,7 +87,6 @@ function main() {
     }
   `;
 
-
   const loader = new THREE.TextureLoader();
   loader.setCrossOrigin('anonymous');
   const texture = loader.load('three.js/bayer.png');
@@ -94,6 +94,7 @@ function main() {
   texture.magFilter = THREE.NearestFilter;
   texture.wrapS = THREE.RepeatWrapping;
   texture.wrapT = THREE.RepeatWrapping;
+
   const uniforms = {
     iTime: { value: 0 },
     iResolution:  { value: new THREE.Vector3(1, 1, 1) },
@@ -104,6 +105,7 @@ function main() {
     fragmentShader,
     uniforms,
   });
+
   function makeInstance(geometry, x) {
     const cube = new THREE.Mesh(geometry, material);
     scene.add(cube);

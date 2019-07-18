@@ -2,7 +2,7 @@
 
 This is a temp repo for testing. No plan to support in the future.
 
-The shadertoy and raymatching is some how different from the well known style of 3d rendering, see [2].
+The [shadertoy](https://en.wikipedia.org/wiki/Shadertoy) and raymatching is some how different from the well known style of 3d rendering, see [2].
 
 This repository is a testing project using three.js for running shaders from shadertoy
 in a html file, independent to shadertoy.
@@ -41,8 +41,8 @@ A general way adapting shadertoy's shader to three.js.
 
 - 3. [Three.js Backgrounds and Skyboxes](https://threejsfundamentals.org/threejs/lessons/threejs-backgrounds.html "Three.js Backgrounds and Skyboxes")
 
-- 4. [distance functions](http://iquilezles.org/www/articles/distfunctions/distfunctions.htm)
-Raymarching Distance Functions
+- 4. [Raymarching distance functions](http://iquilezles.org/www/articles/distfunctions/distfunctions.htm)
+and [** primatives **](https://www.iquilezles.org/www/articles/distfunctions2d/distfunctions2d.htm)
 
 And also example: [sdf examples](https://www.shadertoy.com/view/Xds3zN "sdf examples"), with [sdf example tutorial](https://www.alanzucconi.com/2016/07/01/signed-distance-functions/ "tutorial")
 
