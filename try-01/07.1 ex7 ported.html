@@ -1,0 +1,128 @@
+<!-- Licensed under a BSD license. See license.html for license -->
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Three.js - Shadertoy Bleepy Blocks</title>
+    <link rel='stylesheet' type='text/css' href='../lib/shader.css'>
+    <script type='text/javascript' src='three.js/three.min.js'></script>
+    <script type='text/javascript' src='three.js/OrbitControls.js'></script>
+    <script type='text/javascript' src='../lib/volumetric-raymatching.js'></script>
+  </head>
+  <body>
+    <p><a href='https://www.shadertoy.com/view/XsjXRm'>Plasma Globe</a></p>
+    <canvas id="frag"></canvas>
+  </body>
+<script>
+const fragmentShader = `
+  uniform vec3 iResolution;
+  uniform vec3 camPos;
+  uniform float iTime;
+  uniform vec2 iMouse;
+
+  varying vec3 I;
+  varying vec3 P;
+  varying vec4 cent; // mode centre
+
+  /**Vector distance  to orignal point.
+   * See https://en.wikipedia.org/wiki/Line%E2%80%93sphere_intersection
+   * @param eye camera postion in world
+   * @param u direction norm
+   * @param r sphere radius
+   * @param cent shpere center position in world
+   * @return distance
+   */
+  float distSphere( vec3 eye, vec3 u, float r, vec3 cent ) {
+      // e = o - c, where o = eye, c = cent
+      vec3 e = eye - cent;
+      // delta = (u.e)^2 + r^2 - |e|^2
+      float delta = pow( dot( u, e ), 2. ) + pow( r, 2. ) - dot(e, e);
+      if (delta < 0.) return delta;
+      // d = - u.e +/- delta^0.5
+      delta = pow( delta, 0.5 );
+      return min( -dot( u, e ) + delta, -dot( u, e ) - delta );
+  }
+
+  void mainImage( out vec4 fragColor, in vec2 fragCoord ) {
+    // SDF tanslate
+    vec3 e = camPos;
+    vec3 i = normalize(I);
+    float dist = distSphere( e, i, 1.6, cent.xyz);
+
+    if (dist < 0.) {
+      // Didn't hit anything
+      fragColor = vec4(0.03);
+		  return;
+    }
+
+    vec3 p = e + dist * i;
+    vec3 n = normalize(p - cent.xyz);
+    p = reflect( i, n );
+    vec4 refractedColor = vec4( p, 1.0 );
+    // gl_FragColor = mix( 1.2 * refractedColor, 0.8 * reflectedColor, .50);
+    fragColor = mix( 1.2 * refractedColor, 0.8 * refractedColor, .50);
+    // fragColor = vec4(p, 0.1);
+  }
+
+  void main() {
+    // working
+    // gl_FragColor = vec4(0.0, 0.0, 1.0, 1.0);
+    // gl_FragColor = normalize(abs(cent));
+    // gl_FragColor = normalize(vec4(gl_FragCoord.x, gl_FragCoord.y, I.x * iResolution.x, 1.));
+    // gl_FragColor = normalize(vec4(P.x, P.y, P.z, 1.));
+    // gl_FragColor = normalize(vec4(abs(I), 1.));
+
+    mainImage(gl_FragColor, gl_FragCoord.xy);
+  }
+`;
+
+const vertexShader = `
+  uniform vec3 camPos;
+
+  varying vec2 vUv;
+
+  varying vec3 I;
+  varying vec3 P;
+  varying vec4 cent;
+
+  void main() {
+      vUv = uv;
+      P = position;
+
+      // gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
+
+      vec4 worldPosition = modelViewMatrix * vec4(position, 1.0);
+    	// I = normalize(worldPosition.xyz - camPos);
+    	I = normalize( -position );
+
+    	//E = worldPosition.xyz - camPos;
+      //cent = ModelWorld[3];
+      cent = projectionMatrix * vec4(position, 1.);
+
+    	// gl_Position = vpMatrix * modelViewMatrix * a_position;
+    	gl_Position = projectionMatrix * worldPosition;
+  }
+`;
+
+const loader = new THREE.TextureLoader();
+loader.setCrossOrigin('anonymous');
+const texture = loader.load('three.js/bayer.png');
+texture.minFilter = THREE.NearestFilter;
+texture.magFilter = THREE.NearestFilter;
+texture.wrapS = THREE.RepeatWrapping;
+texture.wrapT = THREE.RepeatWrapping;
+
+const uniforms = {
+    iTime: { value: 0 },
+    iMouse: { value: new THREE.Vector2(0, 0) },
+    camPos:  { value: new THREE.Vector3(0, 0, 1.8) },
+    iResolution:  { value: new THREE.Vector3(1, 1, 1) },
+    iChannel0: { value: texture },
+    light_pos1: { value: new THREE.Vector3(20, 20, 20) },
+    light_color1: { value: new THREE.Vector3( .9, 0.7, 0.7 ) },
+  };
+
+vmatch('frag', vertexShader, fragmentShader, uniforms);
+</script>
+</html>
