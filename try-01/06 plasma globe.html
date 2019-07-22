@@ -11,7 +11,7 @@
     <script type='text/javascript' src='../lib/shadertoy-loader.js'></script>
   </head>
   <body>
-    <p><a href='https://www.shadertoy.com/view/XsjXRm'>Plasma Globe</a></p>
+    <p>Reference: <a href='https://www.shadertoy.com/view/XsjXRm'>Plasma Globe, Shadertoy</a></p>
     <canvas id="frag"></canvas>
   </body>
 <script>
@@ -38,7 +38,6 @@ const fragmentShader = `
 
 #define time (sin( iTime * 1.1 ))
 
-
 mat2 mm2(in float a){float c = cos(a), s = sin(a);return mat2(c,-s,s,c);}
 // float noise( in float x ){return textureLod(iChannel0, vec2(x*.01,1.),0.0).x;}
 float noise( in float x ){ return smoothstep(0.2, 1.0, sin(iTime));}
@@ -60,7 +59,6 @@ float noise(in vec3 p)
 mat3 m3 = mat3( 0.00,  0.80,  0.60,
               -0.80,  0.36, -0.48,
               -0.60, -0.48,  0.64 );
-
 
 //See: https://www.shadertoy.com/view/XdfXRj
 float flow(in vec3 p, in float t)
