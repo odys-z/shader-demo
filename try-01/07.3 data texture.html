@@ -4,7 +4,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>07.2 Data Texture</title>
+    <title>07.3 Data Texture</title>
     <link rel='stylesheet' type='text/css' href='../lib/shader.css'>
     <script type='text/javascript' src='three.js/three.min.js'></script>
     <script type='text/javascript' src='three.js/OrbitControls.js'></script>
@@ -23,7 +23,9 @@ const fragmentShader = `
   uniform float iTime;
   uniform vec2 iMouse;
   uniform float modelAlpha;
+  uniform sampler2D iChannel0;
 
+  varying vec2 vUv;
   varying vec3 I;
   varying vec3 P;
   varying vec4 cent;
@@ -60,14 +62,17 @@ const fragmentShader = `
       // Didn't hit anything
       fragColor = vec4( modelAlpha ) + vec4(normalize(i), modelAlpha);
       // fragColor = vec4(abs(i), 1.);
-		  return;
+	  return;
     }
 
     vec3 p = e + dists.x * i;
     vec3 n = normalize(p - cent.xyz);
     p = reflect( I, n );
     vec4 refractedColor = vec4( p, 1.0 );
-    fragColor = refractedColor;
+    // fragColor = refractedColor;
+    fragColor = mix( refractedColor, texture2D(iChannel0, vec2(0., 0.)), .90);
+    // fragColor = mix( refractedColor, vec4(abs(p), 1.), .80);
+
     // gl_FragColor = mix( 1.2 * refractedColor, 0.8 * reflectedColor, .50);
     // fragColor = mix( 1.2 * refractedColor, 0.8 * refractedColor, .50);
     // fragColor = vec4(0.3, 0.0, 0.0, 1.);
@@ -87,17 +92,17 @@ const vertexShader = `
   varying vec4 cent;
 
   void main() {
-      vUv = uv;
+    vUv = uv;
 
-      // gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
-      vec4 worldPosition = modelMatrix * vec4(position, 1.0);
+    // gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
+    vec4 worldPosition = modelMatrix * vec4(position, 1.0);
 
-      P = worldPosition.xyz;
-    	I = normalize(camPos - worldPosition.xyz);
+    P = worldPosition.xyz;
+    I = normalize(camPos - worldPosition.xyz);
 
-      cent = modelMatrix * vec4(0., 0., 0., 1.);
+    cent = modelMatrix * vec4(0., 0., 0., 1.);
 
-    	gl_Position = projectionMatrix * viewMatrix * worldPosition;
+    gl_Position = projectionMatrix * viewMatrix * worldPosition;
   }
 `;
 
@@ -108,11 +113,14 @@ const vertexShader = `
   //   texture = loader.load('three.js/parallel axis with bar chart.png');
   // } catch (e) { console.error(e); }
 
+  texture = dataxture(512, 512, () => {return new THREE.Color(0.5, 0, 1);});
+
   const uniforms = {
     iTime: { value: 0 },
     modelAlpha: { value: 0.05 },
     camPos: { value: new THREE.Vector3(0, 0, 1.6) },
     iResolution:  { value: new THREE.Vector3() },
+    iChannel0: { value: texture },
     // iChannel0: { value: texture },
     iMouse: {value: new THREE.Vector2()},
   };
