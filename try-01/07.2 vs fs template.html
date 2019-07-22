@@ -113,8 +113,8 @@ const vertexShader = `
 
   //const mouse = new THREE.Vector2();
   document.onmousemove = function(e){
-    uniforms.iMouse.value.x = e.pageX;
-    uniforms.iMouse.value.y = e.pageY;
+      uniforms.iMouse.value.x = e.clientX / window.innerWidth - 0.5;
+      uniforms.iMouse.value.y = e.clientY / window.innerHeight - 0.5;
   }
   vmatch('frag', vertexShader, fragmentShader, uniforms,
     {geometryType: new THREE.BoxGeometry(.6, .6, .6),

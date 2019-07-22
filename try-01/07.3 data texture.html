@@ -11,7 +11,7 @@
     <script type='text/javascript' src='../lib/volumetric-raymatching v0.1.js'></script>
   </head>
   <body>
-    <p>7.3 Data Texture</p>
+    <p>7.3 Data Texture - Model Alpha:<input id='alpha' value='0.1'></input></p>
     <canvas id="frag"></canvas>
   </body>
 <script>
@@ -22,6 +22,7 @@ const fragmentShader = `
   uniform vec3 camPos;
   uniform float iTime;
   uniform vec2 iMouse;
+  uniform float modelAlpha;
 
   varying vec3 I;
   varying vec3 P;
@@ -57,7 +58,7 @@ const fragmentShader = `
 
     if (dists.y < 0. || dists.x < 0.) {
       // Didn't hit anything
-      fragColor = vec4( 0.05 );
+      fragColor = vec4( modelAlpha ) + vec4(normalize(i), modelAlpha);
       // fragColor = vec4(abs(i), 1.);
 		  return;
     }
@@ -102,19 +103,26 @@ const vertexShader = `
 
   const loader = new THREE.TextureLoader();
   loader.setCrossOrigin('anonymous');
-  const texture = loader.load('three.js/parallel axis with bar chart.png');
+  var texture;
+  // try {
+  //   texture = loader.load('three.js/parallel axis with bar chart.png');
+  // } catch (e) { console.error(e); }
+
   const uniforms = {
     iTime: { value: 0 },
+    modelAlpha: { value: 0.05 },
     camPos: { value: new THREE.Vector3(0, 0, 1.6) },
     iResolution:  { value: new THREE.Vector3() },
-    iChannel0: { value: texture },
+    // iChannel0: { value: texture },
     iMouse: {value: new THREE.Vector2()},
   };
 
   //const mouse = new THREE.Vector2();
   document.onmousemove = function(e){
-    uniforms.iMouse.value.x = e.pageX;
-    uniforms.iMouse.value.y = e.pageY;
+    uniforms.iMouse.value.x = e.clientX / window.innerWidth - 0.5;
+    uniforms.iMouse.value.y = e.clientY / window.innerHeight - 0.5;
+
+    uniforms.modelAlpha.value = document.querySelector('#alpha').value;
   }
   vmatch('frag', vertexShader, fragmentShader, uniforms,
     {geometryType: new THREE.BoxGeometry(.6, .6, .6),
