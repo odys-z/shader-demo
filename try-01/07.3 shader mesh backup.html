@@ -127,12 +127,6 @@ vec3 NormalAtPos( vec2 p )
 	#endif
 }
 
-vec3 NormalAtPos_z( vec2 p ) {
-	float dx = length(texture2D(iChannel0, vec2(p.x + 1., 0.)));
-	float dz = length(texture2D(iChannel0, vec2(0., p.y + 1.)));
-	return normalize(vec3(dx, 0, dz));
-}
-
 //=======================================================================================
 bool RayIntersectAABox (vec3 boxMin, vec3 boxMax, in vec3 rayPos, in vec3 rayDir, out vec2 time)
 {
@@ -188,8 +182,7 @@ float RayIntersectSphere (vec4 sphere, in vec3 rayPos, in vec3 rayDir)
 vec3 DiffuseColor (in vec3 pos)
 {
 	// checkerboard pattern
-    // return vec3(mod(floor(pos.x * 10.0) + floor(pos.z * 10.0), 2.0) < 1.0 ? 1.0 : 0.4);
-    return texture2D(iChannel0, pos.xz).xyz;
+    return vec3(mod(floor(pos.x * 10.0) + floor(pos.z * 10.0), 2.0) < 1.0 ? 1.0 : 0.4);
 }
 
 //=======================================================================================
@@ -200,8 +193,7 @@ vec3 ShadePoint (in vec3 pos, in vec3 rayDir, float time, bool fromUnderneath)
 	vec3 lightColor = vec3(0.95,0.95,0.95);
 	vec3 ambientColor = vec3(0.05,0.05,0.05);
 
-	// vec3 normal = NormalAtPos(pos.xz);
-	vec3 normal = NormalAtPos_z(pos.xz);
+	vec3 normal = NormalAtPos(pos.xz);
     normal *= fromUnderneath ? -1.0 : 1.0;
 
     // diffuse
@@ -224,13 +216,14 @@ vec3 ShadePoint (in vec3 pos, in vec3 rayDir, float time, bool fromUnderneath)
 }
 
 //=======================================================================================
-vec3 HandleRay (in vec3 rayPos, in vec3 rayDir, in vec3 pixelColor)
+vec3 HandleRay (in vec3 rayPos, in vec3 rayDir, in vec3 pixelColor, out float hitTime)
 {
 	float time = 0.0;
 	float lastHeight = 0.0;
 	float lastY = 0.0;
 	float height;
 	bool hitFound = false;
+    hitTime = FLT_MAX;
     bool fromUnderneath = false;
 
     vec2 timeMinMax = vec2(0.0);
@@ -249,9 +242,7 @@ vec3 HandleRay (in vec3 rayPos, in vec3 rayDir, in vec3 pixelColor)
 	{
 		pos = rayPos + rayDir * time;
 
-        // height = HeightAtPos(pos.xz);
-		vec4 colr = texture2D(iChannel0, pos.xz);
-		height = length(colr);
+        height = HeightAtPos(pos.xz);
 
         if (sign(pos.y - height) * firstSign < 0.0)
         {
@@ -270,9 +261,13 @@ vec3 HandleRay (in vec3 rayPos, in vec3 rayDir, in vec3 pixelColor)
 		time = time - deltaT + deltaT*(lastHeight-lastY)/(pos.y-lastY-height+lastHeight);
 		pos = rayPos + rayDir * time;
 		pixelColor = ShadePoint(pos, rayDir, time, fromUnderneath);
+        hitTime = time;
 	}
-    else {
-        pixelColor += vec3(0.2);
+    else
+    {
+        #if SHOW_BOUNDINGBOX
+        	pixelColor += vec3(0.2);
+        #endif
     }
 
 	return pixelColor;
@@ -312,9 +307,11 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord )
 	vec3 rayDir = normalize(rayTarget);
 
 
-    vec3 pixelColor = HandleRay(cameraPos, rayDir, vec3(0.0));
+    float hitTime = FLT_MAX;
+    vec3 pixelColor = HandleRay(cameraPos, rayDir, vec3(0.0), hitTime);
 	// vec3 pixelColor = texture2D(iChannel0, rayDir.xy).rgb;
 	pixelColor += texture2D(iChannel0, rayDir.xy).rgb;
+    //pixelColor = HandleControlPoints(cameraPos, rayDir, pixelColor, hitTime);
 
     fragColor = vec4(clamp(pixelColor,0.0,1.0), 1.0);
   }
