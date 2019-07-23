@@ -11,7 +11,7 @@
     <script type='text/javascript' src='../lib/volumetric-raymatching v0.1.js'></script>
   </head>
   <body>
-    <p>7.3 Data Texture (Show step function texture with fx and vs) - Model Alpha:<input id='alpha' value='0.1'></input></p>
+    <p>7.4 Height Texture - Model Alpha:<input id='alpha' value='0.1'></input></p>
     <canvas id="frag"></canvas>
   </body>
 <script>
@@ -30,6 +30,9 @@ const fragmentShader = `
   varying vec3 P;
   varying vec4 cent;
 
+  // dx, dy in texture
+  const vec2 grad_step = vec2(2.0);
+
   /**Vector distance  to orignal point.
    * See https://en.wikipedia.org/wiki/Line%E2%80%93sphere_intersection
    * FIXME why not return norm?
@@ -38,7 +41,6 @@ const fragmentShader = `
    * @param r sphere radius
    * @param cent shpere center position in world
    * @return vec2(distance_close, distance_far)
-   */
   vec2 distSphere( vec3 eye, vec3 u, float r, vec3 cent ) {
       // e = o - c, where o = eye, c = cent
       vec3 e = eye - cent;
@@ -51,17 +53,52 @@ const fragmentShader = `
       // return min( -dot( u, e ) + delta, -dot( u, e ) - delta );
       return vec2( -dot( u, e ) + delta, -dot( u, e ) - delta );
   }
+   */
+
+  /** get gradient in the texture heights
+   * @param uv
+   * @return norm
+   */
+  vec3 heightextNorm(float h, vec2 uv ) {
+	// const vec3 dx = vec3( grad_step, 0.0, 0.0 );
+	// const vec3 dy = vec3( 0.0, grad_step, 0.0 );
+	// const vec3 dz = vec3( 0.0, 0.0, grad_step );
+	// return normalize (
+	// 	vec3(
+	// 		dist_field( pos + dx ) - dist_field( pos - dx ),
+	// 		dist_field( pos + dy ) - dist_field( pos - dy ),
+	// 		dist_field( pos + dz ) - dist_field( pos - dz )
+	// 	)
+	// );
+
+	float dx = sampler2D(iChannel0, offsets + grad_step.x);
+	float dz = sampler2D(iChannel0, offsets + grad_step.y);
+	return normalize(vec3(dx - h, max(grad_step.x, grad_step.y), dz - h))
+  }
+
+  /**Raymatching to terrian heights,
+   * where terrian height is represented in 2D texture iChannel0.
+   * @param eye ray origin
+   * @param rd ray direction
+   * @return vec4 [norm, height]
+   */
+  vec4 terrian( vec3 eye, vec3 rd ) {
+	float h = sampler2D(iChannel0, offsets);
+	vec3 n = heightextNorm(h, offsets);
+	return vec4(n, h);
+  }
 
   void mainImage( out vec4 fragColor, in vec2 fragCoord ) {
     // SDF tanslate
     vec3 e = camPos;
     vec3 i = normalize( P - camPos );
-    vec2 dists = distSphere( e, i, .3, cent.xyz);
+    // vec2 dists = distSphere( e, i, .3, cent.xyz);
+    vec4 dists = terrian( e, i );
 
-    if (dists.y < 0. || dists.x < 0.) {
+    if (dists.w < 0.0) {
       // Didn't hit anything
+	  // how about skybox?
       fragColor = vec4( modelAlpha ) + vec4(normalize(i), modelAlpha);
-      // fragColor = vec4(abs(i), 1.);
 	  return;
     }
 
@@ -69,13 +106,7 @@ const fragmentShader = `
     vec3 n = normalize(p - cent.xyz);
     p = reflect( I, n );
     vec4 refractedColor = vec4( p, 1.0 );
-    // fragColor = refractedColor;
     fragColor = mix( refractedColor, texture2D(iChannel0, vUv), .20);
-    // fragColor = mix( refractedColor, vec4(abs(p), 1.), .80);
-
-    // gl_FragColor = mix( 1.2 * refractedColor, 0.8 * reflectedColor, .90);
-    // fragColor = mix( 1.2 * refractedColor, 0.8 * refractedColor, .50);
-    // fragColor = vec4(0.3, 0.0, 0.0, 1.);
   }
 
   void main() {
