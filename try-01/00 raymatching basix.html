@@ -277,7 +277,6 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord )
 void main() {
   mainImage(gl_FragColor, gl_FragCoord.xy);
 }
-
 `;
 
   const loader = new THREE.TextureLoader();
@@ -290,10 +289,7 @@ void main() {
     iMouse: {value: new THREE.Vector2()},
   };
 
-  //const mouse = new THREE.Vector2();
   document.onmousemove = function(e){
-    // mouse.x = e.pageX;
-    // mouse.y = e.pageY;
     uniforms.iMouse.value.x = e.pageX;
     uniforms.iMouse.value.y = e.pageY;
   }

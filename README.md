@@ -55,5 +55,11 @@ A Tutorial by Jamie Wang
 - 7. [Volumetric Rendering](https://www.alanzucconi.com/2016/07/01/volumetric-rendering/)
 with [example](try-01/06 plasma globe.html)
 
+- 8. [tom@subblue.com, Tracing a Terrain](http://2008.sub.blue/blog/2009/3/7/tracing_a_terrain.html),
+Find distance to terrian quickly.
+
+This source is copied in ./refrences
+
 - x. [Inigo Quilez's website](http://www.iquilezles.org/www/index.htm "inigo quilez website")
+
 - x. [An advanced rendering tech survey](http://advances.realtimerendering.com/s2015/index.html "Advanced Tech Survey")
