@@ -72,7 +72,9 @@ const fragmentShader = `
 
     float dh_dx = texture2D(iChannel0, uv + grad_step.x).r - h;
     float dh_dz = texture2D(iChannel0, uv + grad_step.y).b - h;
-    return normalize(vec3(dh_dx, mix(dh_dx, dh_dz, 0.3), dh_dz));
+    // return normalize(vec3(dh_dx, mix(dh_dx, dh_dz, 0.3), dh_dz));
+    // working
+    return normalize(vec3(uv, h));
   }
 
   /**Raymatching to terrian heights,
@@ -82,11 +84,13 @@ const fragmentShader = `
    * @return vec4 [norm, dist]
    */
   vec4 terrian( vec3 eye, vec3 rd ) {
+    // working:
     vec2 d = distSphere(eye, normalize(rd), 0.3, vec3(0.0));
+    // vec2 d = vec2(texture2D(iChannel0, rd.zx).y, 0.0);
 
     vec3 p = eye + d.x * rd;
-    vec3 n = heightextNorm(d.x, p.xz);
-    return vec4(n, d.x);
+    vec3 n = heightextNorm(d.x, rd.xz);
+    return vec4(n, 1.);
   }
 
   void mainImage( out vec4 fragColor, in vec2 fragCoord ) {
@@ -103,10 +107,15 @@ const fragmentShader = `
       return;
     }
 
-    vec3 p = reflect( normalize(I), normalize(dists.xyz) );
-    // vec4 refractedColor = texture2D(iChannel0, p.xz);
-    vec4 refractedColor = normalize(vec4(p, 1.0));
-    fragColor = mix( refractedColor, texture2D(iChannel0, vUv), .40);
+    // same: vec3 p = reflect( normalize(I), normalize(dists.xyz) );
+    // vec3 p = reflect( I, dists.xyz );
+
+    // working: vec3 p = reflect( I, normalize( e + dists.w * i - cent.xyz));
+    vec3 p = reflect( I, normalize( dists.xyz ));
+
+    vec4 refractedColor = texture2D(iChannel0, p.xy);
+    // vec4 refractedColor = normalize(vec4(p, 1.0));
+    fragColor = mix( refractedColor, texture2D(iChannel0, vUv), .30);
   }
 
   void main() {
@@ -145,7 +154,7 @@ const vertexShader = `
   // } catch (e) { console.error(e); }
 
   // texture = dataxture(512, 512, () => {return new THREE.Color(0.5, 0, 1);});
-  texture = stepText(64, 64);
+  texture = sinText(64, 64);
 
   const uniforms = {
     iTime: { value: 0 },
