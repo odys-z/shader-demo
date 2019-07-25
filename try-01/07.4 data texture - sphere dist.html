@@ -11,7 +11,7 @@
     <script type='text/javascript' src='../lib/volumetric-raymatching v0.1.js'></script>
   </head>
   <body>
-    <p>7.4 Height Texture - Model Alpha:<input id='alpha' value='0.1'></input></p>
+    <p>7.4 Data Texture [dist = sphere, norm = reflect(ray-dir), colour = sample(norm.xz)] - Model Alpha:<input id='alpha' value='0.1'></input></p>
     <canvas id="frag"></canvas>
   </body>
 <script>
@@ -54,27 +54,6 @@ const fragmentShader = `
       return vec2( -dot( u, e ) + delta, -dot( u, e ) - delta );
   }
 
-  /** get gradient in the texture heights
-   * @param uv
-   * @return norm
-   */
-  vec3 heightextNorm(float h, vec2 uv ) {
-  	// const vec3 dx = vec3( grad_step, 0.0, 0.0 );
-  	// const vec3 dy = vec3( 0.0, grad_step, 0.0 );
-  	// const vec3 dz = vec3( 0.0, 0.0, grad_step );
-  	// return normalize (
-  	// 	vec3(
-  	// 		dist_field( pos + dx ) - dist_field( pos - dx ),
-  	// 		dist_field( pos + dy ) - dist_field( pos - dy ),
-  	// 		dist_field( pos + dz ) - dist_field( pos - dz )
-  	// 	)
-  	// );
-
-    float dh_dx = texture2D(iChannel0, uv + grad_step.x).r - h;
-    float dh_dz = texture2D(iChannel0, uv + grad_step.y).b - h;
-    return normalize(vec3(dh_dx, mix(dh_dx, dh_dz, 0.3), dh_dz));
-  }
-
   /**Raymatching to terrian heights,
    * where terrian height is represented in 2D texture iChannel0.
    * @param eye ray origin
@@ -82,11 +61,11 @@ const fragmentShader = `
    * @return vec4 [norm, dist]
    */
   vec4 terrian( vec3 eye, vec3 rd ) {
-    vec2 d = distSphere(eye, normalize(rd), 0.3, vec3(0.0));
-
-    vec3 p = eye + d.x * rd;
-    vec3 n = heightextNorm(d.x, p.xz);
-    return vec4(n, d.x);
+    // float h = texture2D(iChannel0, offsets);
+    // vec3 n = heightextNorm(h, offsets);
+    // return vec4(n, h);
+    vec2 dAB = distSphere(eye, normalize(rd), 0.3, vec3(0.0));
+    return vec4(0.0, 0.0, 0.0, dAB.x);
   }
 
   void mainImage( out vec4 fragColor, in vec2 fragCoord ) {
@@ -103,10 +82,12 @@ const fragmentShader = `
       return;
     }
 
-    vec3 p = reflect( normalize(I), normalize(dists.xyz) );
-    // vec4 refractedColor = texture2D(iChannel0, p.xz);
-    vec4 refractedColor = normalize(vec4(p, 1.0));
-    fragColor = mix( refractedColor, texture2D(iChannel0, vUv), .40);
+    vec3 p = e + dists.w * i;
+    vec3 n = normalize(p - cent.xyz);
+    p = reflect( I, n );
+    // vec4 refractedColor = vec4( p, 1.0 );
+    vec4 refractedColor = texture2D(iChannel0, p.xy);
+    fragColor = mix( refractedColor, texture2D(iChannel0, vUv), .30);
   }
 
   void main() {
