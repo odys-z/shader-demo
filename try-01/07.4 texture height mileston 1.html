@@ -4,14 +4,14 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>07.4 Data Texture - Sphere</title>
+    <title>07.4 Data Texture Milestone 1</title>
     <link rel='stylesheet' type='text/css' href='../lib/shader.css'>
     <script type='text/javascript' src='three.js/three.min.js'></script>
     <script type='text/javascript' src='three.js/OrbitControls.js'></script>
     <script type='text/javascript' src='../lib/volumetric-raymatching v0.1.js'></script>
   </head>
   <body>
-    <p>7.4 Data Texture [dist = sphere, norm = reflect(ray-dir), colour = sample(norm.xz)] - Model Alpha:<input id='alpha' value='0.1'></input></p>
+    <p>7.4 Height Texture Milestone 1 [plane distance, texture norm] - Model Alpha:<input id='alpha' value='0.1'></input></p>
     <canvas id="frag"></canvas>
   </body>
 <script>
@@ -54,6 +54,46 @@ const fragmentShader = `
       return vec2( -dot( u, e ) + delta, -dot( u, e ) - delta );
   }
 
+  /** get gradient in the texture heights
+   * @param uv
+   * @return norm
+   */
+  vec3 heightextNorm(float h, vec2 uv ) {
+  	// const vec3 dx = vec3( grad_step, 0.0, 0.0 );
+  	// const vec3 dy = vec3( 0.0, grad_step, 0.0 );
+  	// const vec3 dz = vec3( 0.0, 0.0, grad_step );
+  	// return normalize (
+  	// 	vec3(
+  	// 		dist_field( pos + dx ) - dist_field( pos - dx ),
+  	// 		dist_field( pos + dy ) - dist_field( pos - dy ),
+  	// 		dist_field( pos + dz ) - dist_field( pos - dz )
+  	// 	)
+  	// );
+
+    float dh_dx = texture2D(iChannel0, uv + grad_step.x).r - h;
+    float dh_dz = texture2D(iChannel0, uv + grad_step.y).b - h;
+    // return normalize(vec3(dh_dx, mix(dh_dx, dh_dz, 0.3), dh_dz));
+    // working
+    return normalize(vec3(uv, h));
+  }
+
+  /**Get distance of eye to intersect with horizon.
+   * The line = e + rd * t;
+   * where t is the scale.
+   * When (e + rd * t).y == 0, t define the distance.
+   * t = - e.y / rd.y
+   * d = dot(rd * t) ^ 0.5 (if rd is normalized, d == t)
+   */
+  float horizonDist(vec3 e, vec3 rd) {
+    rd = normalize(rd);
+    if (rd.y == 0.0)
+      return -1.0;
+
+    float t = -e.y / rd.y ;
+    return t;
+    // rd is norm: return pow(dot(t * rd, t * rd), 0.5);
+  }
+
   /**Raymatching to terrian heights,
    * where terrian height is represented in 2D texture iChannel0.
    * @param eye ray origin
@@ -61,33 +101,49 @@ const fragmentShader = `
    * @return vec4 [norm, dist]
    */
   vec4 terrian( vec3 eye, vec3 rd ) {
-    // float h = texture2D(iChannel0, offsets);
-    // vec3 n = heightextNorm(h, offsets);
-    // return vec4(n, h);
-    vec2 dAB = distSphere(eye, normalize(rd), 0.3, cent.xyz);
-    return vec4(0.0, 0.0, 0.0, dAB.x);
+    // working:
+    // vec2 d = distSphere(eye, normalize(rd), 0.7, vec3(0.0));
+    // vec2 d = vec2(texture2D(iChannel0, rd.zx).y, 0.0);
+    float dx = horizonDist(eye, rd);
+
+    // vec3 p = eye + dx * rd;
+    vec3 n = heightextNorm(dx, rd.xz);
+    return vec4(n, dx);
   }
 
   void mainImage( out vec4 fragColor, in vec2 fragCoord ) {
     // SDF tanslate
     vec3 e = camPos;
     vec3 i = normalize( P - camPos );
-    // vec4 dists = vec4(i, distSphere( vec3(0., 0., -3.), i, .7, cent.xyz).x);
+    // vec4 dists = vec4(0., 0., 0., distSphere( e, i, .3, cent.xyz).x);
     vec4 dists = terrian( e, i );
 
     if (dists.w < 0.0) {
       // Didn't hit anything
-      // fragColor = vec4( abs(modelAlpha) ) + vec4(normalize(i), modelAlpha);
-      fragColor = mix(vec4( abs(modelAlpha) ), texture2D(iChannel0, vUv), .3);
+      fragColor = vec4( abs(modelAlpha) ) + vec4(normalize(dists.xyz), 1. - modelAlpha);
+      // fragColor = mix(vec4( abs(modelAlpha) ), texture2D(iChannel0, vUv), .3);
+      // fragColor = vec4(0.4, 0.6, 0.8, 0.8);
       return;
     }
 
-    vec3 p = e + dists.w * i;
-    vec3 n = normalize(p - cent.xyz);
-    p = reflect( I, n );
-    // vec4 refractedColor = vec4( p, 1.0 );
-    vec4 refractedColor = texture2D(iChannel0, p.xy);
-    fragColor = mix( refractedColor, texture2D(iChannel0, vUv), .30);
+    // same: vec3 p = reflect( normalize(I), normalize(dists.xyz) );
+    // vec3 p = reflect( I, dists.xyz );
+
+    // working: vec3 p = reflect( I, normalize( e + dists.w * i - cent.xyz));
+    vec3 p = reflect( I, normalize( dists.xyz ));
+
+    vec3 pos = e + i * dists.w;
+
+    // vec4 refractedColor = texture2D(iChannel0, vec2(.2, .25));
+    // vec4 refractedColor = texture2D(iChannel0, vec2(normalize(pos).z, .4) );
+    // vec4 refractedColor = texture2D(iChannel0, vec2(dists.w, vUv.x));
+    // vec4 refractedColor = normalize(vec4(p, 1.0));
+    // vec4 refractedColor = texture2D(iChannel0, pos.xz);
+    // vec4 refractedColor = texture2D(iChannel0, normalize(dists.xyz).xz);
+    vec4 refractedColor = vec4(normalize(dists.xyz), 1.0);
+
+    fragColor = mix( refractedColor, texture2D(iChannel0, vUv), .4);
+    // fragColor = refractedColor;
   }
 
   void main() {
@@ -122,11 +178,6 @@ const vertexShader = `
   const loader = new THREE.TextureLoader();
   loader.setCrossOrigin('anonymous');
   var texture;
-  // try {
-  //   texture = loader.load('three.js/parallel axis with bar chart.png');
-  // } catch (e) { console.error(e); }
-
-  // texture = dataxture(512, 512, () => {return new THREE.Color(0.5, 0, 1);});
   texture = sinText(64, 64);
 
   const uniforms = {
@@ -147,7 +198,8 @@ const vertexShader = `
     uniforms.modelAlpha.value = document.querySelector('#alpha').value;
   }
   vmatch('frag', vertexShader, fragmentShader, uniforms,
-    {geometryType: new THREE.BoxGeometry(.6, .6, .6),
+    // {geometryType: new THREE.BoxGeometry(.6, .6, .6),
+    {geometryType: new THREE.PlaneGeometry(1.0, 2.2),
      camPos: { value: campos },
      geometryCnt: 3});
 </script>
