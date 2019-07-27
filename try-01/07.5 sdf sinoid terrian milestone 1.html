@@ -4,15 +4,16 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>07.5 SDF Terrian Mileston 2</title>
+    <title>07.5 SDF Terrian Mileston 1</title>
     <link rel='stylesheet' type='text/css' href='../lib/shader.css'>
     <script type='text/javascript' src='three.js/three.min.js'></script>
     <script type='text/javascript' src='three.js/OrbitControls.js'></script>
     <script type='text/javascript' src='../lib/volumetric-raymatching v0.1.js'></script>
   </head>
   <body>
-    <p>7.5 SDF Terrian Mileston 2<br>
-			Using partial derivative to get terrian norm. (dx, dy = 0.001, 0.001)</p>
+    <p>7.5 SDF Terrian Mileston 1<br>
+			Terrian Distance = intersect(line, horizon-plane);<br>
+			Texture = 64 x 64, for 4 x 4 in world (camera pos = 0, 0, 2.6)</p>
     <canvas id="frag"></canvas>
   </body>
 <script>
@@ -78,14 +79,11 @@ const fragmentShader = `
    * When (e + rd * t).y == 0, t define the distance.
    * t = - e.y / rd.y
    * d = dot(rd * t) ^ 0.5 (if rd is normalized, d == t)
-	 * @param e eye postion in world
-	 * @param rd ray direction, in world
-	 * @return vec4 [intersect-point, distance]
    */
-  vec4 horizonDist(vec3 e, vec3 rd) {
+  float horizonDist(vec3 e, vec3 rd) {
     rd = normalize(rd);
     if (rd.y == 0.0)
-      return vec4(-1.0);
+      return -1.0;
 
     float t = -e.y / rd.y ;
 
@@ -95,9 +93,9 @@ const fragmentShader = `
 		// terrian texture AABB
 		vec2 range = texize.zw * 0.5;
 		if (p.x < -range.x || p.x > range.x || p.z < -range.y || p.z > range.y)
-      return vec4(-1.0);
+			return -1.0;
 
-    return vec4(p, t);
+    return t;
   }
 
   /**Raymatching to terrian heights,
@@ -107,20 +105,8 @@ const fragmentShader = `
    * @return vec4 [norm, dist]
    */
   vec4 terrian( vec3 eye, vec3 rd ) {
-    vec4 dist = horizonDist(eye, rd);
-
-		float hdx = 0.;
-		float hdz = 0.;
-		if (dist.w >= 0.0) {
-			vec2 uv = dist.xz / texize.zw + 0.5;
-			hdx = length(texture2D(iChannel0, uv - vec2(0.001, 0)));
-			hdx -= length(texture2D(iChannel0, uv + vec2(0.001, 0)));
-
-			hdz = length(texture2D(iChannel0, uv - vec2(0., 0.001)));
-			hdz -= length(texture2D(iChannel0, uv + vec2(0., 0.001)));
-		}
-
-    return vec4(hdx, 0., hdz, dist.w);
+    float dx = horizonDist(eye, rd);
+    return vec4(sin(rd.x), cos(rd.y), rd.z, dx);
   }
 
   void mainImage( out vec4 fragColor, in vec2 fragCoord ) {
@@ -132,11 +118,13 @@ const fragmentShader = `
 
     if (dists.w < 0.0) {
       // Didn't hit anything
+      // fragColor = vec4( abs(modelAlpha) ) + vec4(normalize(dists.xyz), 1. - modelAlpha);
+      // fragColor = mix(vec4( abs(modelAlpha) ), texture2D(iChannel0, vUv), .3);
 			fragColor = vec4(abs(i), 1.);
       return;
     }
+    vec3 p = reflect( I, normalize( dists.xyz ) );
 
-    // vec3 p = reflect( I, normalize( dists.xyz ) );
     vec3 pos = camPos + i * dists.w;
 
     // fragColor = mix( refractedColor, texture2D(iChannel0, vUv), .1);
@@ -147,9 +135,9 @@ const fragmentShader = `
 		vec2 uv = vec2(pos.xz / texize.zw) + 0.5;
 
 		fragColor = mix(
-						vec4(dists.xyz, 1.0),
+						vec4(abs(dists.xyz), 1.0),
 						texture2D( iChannel0, clamp(uv, 0., 1.) ),
-						0.2);
+						0.5);
   }
 
   void main() {
