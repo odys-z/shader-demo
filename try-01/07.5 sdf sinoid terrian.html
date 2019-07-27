@@ -38,19 +38,13 @@ const fragmentShader = `
   const vec2 grad_step = vec2(2.0);
 
 	/** get ray direction
-	 * @param fov
+	 * input: varying P, world postion of the pixel:
+	 * modelMatrix * vec4(position, 1.0);
 	 * @param eye ray origin
-	 * @param size canvas size
-	 * @param pos fragCoord
 	 * @return dir norm
 	 */
-	vec3 ray_dir( float fov, vec3 eye, vec2 size, vec2 pos ) {
-		vec2 xy = pos - size * 0.5;
-
-		float cot_half_fov = tan( ( 90.0 - fov * 0.5 ) * DEG_TO_RAD );
-		float z = size.y * 0.5 * cot_half_fov;
-
-		return normalize( vec3( xy, -z )) - normalize(eye);
+	vec3 ray_dir( vec3 eye ) {
+		return normalize(P - eye);
 	}
 
   /** get gradient in the texture heights
@@ -100,11 +94,7 @@ const fragmentShader = `
    * @return vec4 [norm, dist]
    */
   vec4 terrian( vec3 eye, vec3 rd ) {
-    // working:
-    // vec2 d = distSphere(eye, normalize(rd), 0.7, vec3(0.0));
-    // vec2 d = vec2(texture2D(iChannel0, rd.zx).y, 0.0);
     float dx = horizonDist(eye, rd);
-
     // vec3 p = eye + dx * rd;
     // vec3 n = heightextNorm(dx, rd.xz);
     return vec4(sin(rd.x), cos(rd.y), rd.z, dx);
@@ -114,13 +104,14 @@ const fragmentShader = `
     // SDF tanslate
     vec3 e = camPos;
 		e.y += 0.5;
-    vec3 i = ray_dir(45.0, e, vec2(300, 300), fragCoord);
+    vec3 i = ray_dir( camPos );
     vec4 dists = terrian( e, i );
 
     if (dists.w < 0.0) {
       // Didn't hit anything
-      fragColor = vec4( abs(modelAlpha) ) + vec4(normalize(dists.xyz), 1. - modelAlpha);
+      // fragColor = vec4( abs(modelAlpha) ) + vec4(normalize(dists.xyz), 1. - modelAlpha);
       // fragColor = mix(vec4( abs(modelAlpha) ), texture2D(iChannel0, vUv), .3);
+			fragColor = vec4(i, 1.);
       return;
     }
     vec3 p = reflect( I, normalize( dists.xyz ));
@@ -129,7 +120,10 @@ const fragmentShader = `
 
     vec4 refractedColor = vec4(normalize(dists.xyz), 1.0);
 
-    fragColor = mix( refractedColor, texture2D(iChannel0, vUv), .4);
+    // fragColor = mix( refractedColor, texture2D(iChannel0, vUv), .1);
+		// fragColor = mix ( refractedColor, vec4( normalize(pos), 1.), .9);
+		// fragColor = mix ( refractedColor, texture2D( iChannel0, pos.xz * 0.5 ), .9);
+		fragColor = texture2D( iChannel0, clamp(vec2(pos.x + .5, pos.z / e.z + .5), 0., 1.) );
   }
 
   void main() {
