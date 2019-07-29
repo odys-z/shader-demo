@@ -89,7 +89,7 @@ const fragmentShader = `
             break;
 
         // Find terrain displacement for the current point
-        alt = textureHight(ray.xz) * 0.02;
+        alt = textureHight(ray.xz) ;
 
         if (ray.y <= alt) {
             // Interpolate the intersection distance
