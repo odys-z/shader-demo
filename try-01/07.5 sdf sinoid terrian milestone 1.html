@@ -1,0 +1,201 @@
+<!-- Licensed under a BSD license. See license.html for license -->
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>07.5 SDF Terrian Mileston 1</title>
+    <link rel='stylesheet' type='text/css' href='../lib/shader.css'>
+    <script type='text/javascript' src='three.js/three.min.js'></script>
+    <script type='text/javascript' src='three.js/OrbitControls.js'></script>
+    <script type='text/javascript' src='../lib/volumetric-raymatching v0.1.js'></script>
+  </head>
+  <body>
+    <p>7.5 SDF Terrian Mileston 1<br>
+			Terrian Distance = intersect(line, horizon-plane);<br>
+			Texture = 64 x 64, for 4 x 4 in world (camera pos = 0, 0, 2.6)</p>
+    <canvas id="frag"></canvas>
+  </body>
+<script>
+'use strict';
+
+const fragmentShader = `
+  uniform vec3 iResolution;
+  uniform vec3 camPos;
+  uniform float iTime;
+  uniform vec2 iMouse;
+	/** [texture-w, texture-h, world-w, world-h] */
+  uniform vec4 texize;
+  uniform sampler2D iChannel0;
+
+  varying vec2 vUv;
+  varying vec3 I;
+  varying vec3 P;
+  varying vec4 cent;
+
+	//
+	const float PI = 3.14159265359;
+	const float DEG_TO_RAD = PI / 180.0;
+
+  // dx, dy in texture
+  const vec2 grad_step = vec2(2.0);
+
+	/** get ray direction in world
+	 * input: varying P, world postion of the pixel:
+	 * modelMatrix * vec4(position, 1.0);
+	 * @param eye ray origin
+	 * @return dir norm
+	 */
+	vec3 ray_dir( vec3 eye ) {
+		return normalize(P - eye);
+	}
+
+  /** get gradient in the texture heights
+   * @param uv
+   * @return norm
+   */
+  vec3 heightextNorm(float h, vec2 uv ) {
+  	// const vec3 dx = vec3( grad_step, 0.0, 0.0 );
+  	// const vec3 dy = vec3( 0.0, grad_step, 0.0 );
+  	// const vec3 dz = vec3( 0.0, 0.0, grad_step );
+  	// return normalize (
+  	// 	vec3(
+  	// 		dist_field( pos + dx ) - dist_field( pos - dx ),
+  	// 		dist_field( pos + dy ) - dist_field( pos - dy ),
+  	// 		dist_field( pos + dz ) - dist_field( pos - dz )
+  	// 	)
+  	// );
+
+    float dh_dx = texture2D(iChannel0, uv + grad_step.x).r - h;
+    float dh_dz = texture2D(iChannel0, uv + grad_step.y).b - h;
+    // return normalize(vec3(dh_dx, mix(dh_dx, dh_dz, 0.3), dh_dz));
+    // working
+    return normalize(vec3(uv, h));
+  }
+
+  /** Get distance of eye to intersect with horizon.
+   * The line = e + rd * t;
+   * where t is the scale.
+   * When (e + rd * t).y == 0, t define the distance.
+   * t = - e.y / rd.y
+   * d = dot(rd * t) ^ 0.5 (if rd is normalized, d == t)
+   */
+  float horizonDist(vec3 e, vec3 rd) {
+    rd = normalize(rd);
+    if (rd.y == 0.0)
+      return -1.0;
+
+    float t = -e.y / rd.y ;
+
+		// must hit terrian represented by the texture0
+    vec3 p = e + rd * t;
+
+		// terrian texture AABB
+		vec2 range = texize.zw * 0.5;
+		if (p.x < -range.x || p.x > range.x || p.z < -range.y || p.z > range.y)
+			return -1.0;
+
+    return t;
+  }
+
+  /**Raymatching to terrian heights,
+   * where terrian height is represented in 2D texture iChannel0.
+   * @param eye ray origin
+   * @param rd ray direction
+   * @return vec4 [norm, dist]
+   */
+  vec4 terrian( vec3 eye, vec3 rd ) {
+    float dx = horizonDist(eye, rd);
+    return vec4(sin(rd.x), cos(rd.y), rd.z, dx);
+  }
+
+  void mainImage( out vec4 fragColor, in vec2 fragCoord ) {
+    // SDF tanslate
+    vec3 e = camPos;
+		e.y += 0.5;
+    vec3 i = ray_dir( camPos );
+    vec4 dists = terrian( e, i );
+
+    if (dists.w < 0.0) {
+      // Didn't hit anything
+      // fragColor = vec4( abs(modelAlpha) ) + vec4(normalize(dists.xyz), 1. - modelAlpha);
+      // fragColor = mix(vec4( abs(modelAlpha) ), texture2D(iChannel0, vUv), .3);
+			fragColor = vec4(abs(i), 1.);
+      return;
+    }
+    vec3 p = reflect( I, normalize( dists.xyz ) );
+
+    vec3 pos = camPos + i * dists.w;
+
+    // fragColor = mix( refractedColor, texture2D(iChannel0, vUv), .1);
+		// fragColor = mix ( refractedColor, vec4( normalize(pos), 1.), .9);
+		// fragColor = mix ( refractedColor, texture2D( iChannel0, pos.xz * 0.5 ), .9);
+		// fragColor = texture2D( iChannel0, clamp(vec2(pos.x + .5, pos.z / e.z + .5), 0., 1.) );
+
+		vec2 uv = vec2(pos.xz / texize.zw) + 0.5;
+
+		fragColor = mix(
+						vec4(abs(dists.xyz), 1.0),
+						texture2D( iChannel0, clamp(uv, 0., 1.) ),
+						0.5);
+  }
+
+  void main() {
+    mainImage(gl_FragColor, gl_FragCoord.xy);
+  }
+`;
+
+const vertexShader = `
+  uniform vec3 camPos;
+
+  varying vec2 vUv;
+  varying vec3 I;
+  varying vec3 P;
+  varying vec4 cent;
+
+  void main() {
+    vUv = uv;
+
+    // gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
+    vec4 worldPosition = modelMatrix * vec4(position, 1.0);
+
+    P = worldPosition.xyz;
+    I = normalize(camPos - worldPosition.xyz);
+
+    cent = modelMatrix * vec4(0., 0., 0., 1.);
+
+    gl_Position = projectionMatrix * viewMatrix * worldPosition;
+  }
+`;
+
+  const campos = new THREE.Vector3(0, 0.0, 2.6);
+  const loader = new THREE.TextureLoader();
+  loader.setCrossOrigin('anonymous');
+
+  var texture;
+  texture = sinText(64, 64);
+
+  const uniforms = {
+    iTime: { value: 0 },
+		// texize.xy = texture-size, texize.zw = world.xz represented
+    texize: { value: new THREE.Vector4(64, 64, 4, 4) },
+    iResolution:  { value: new THREE.Vector3() },
+    camPos: { value: campos },
+    iChannel0: { value: texture },
+    // iChannel0: { value: texture },
+    iMouse: {value: new THREE.Vector2()},
+  };
+
+  //const mouse = new THREE.Vector2();
+  document.onmousemove = function(e){
+    uniforms.iMouse.value.x = e.clientX / window.innerWidth - 0.5;
+    uniforms.iMouse.value.y = e.clientY / window.innerHeight - 0.5;
+  }
+
+  vmatch('frag', vertexShader, fragmentShader, uniforms,
+    // {geometryType: new THREE.BoxGeometry(.6, .6, .6),
+    {geometryType: new THREE.PlaneGeometry(2.0, 3.2),
+     camPos: { value: campos },
+     geometryCnt: 3});
+</script>
+</html>

@@ -33,7 +33,8 @@ Shapes melding, because of power of "mix()".
 
     git clone https://github.com/odys-z/shader-demo.git
 
-Then open index.html with browser. Edge is recommended because you can load local files.
+Then open index.html with browser. Edge is recommended because you can load local files,
+the others like Firefox or Chrome will report CROS error.
 
 # References
 
