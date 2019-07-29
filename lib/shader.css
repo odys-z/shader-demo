@@ -8,3 +8,13 @@ body {
     height: 93vh;
     display: block;
 }
+
+
+/* code div */
+.code {
+  background-color:lightgrey;
+  bottom:0px;
+  padding:0.4em;
+  margin-left:1em;
+  font-size: 0.95em;
+}

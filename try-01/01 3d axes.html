@@ -176,8 +176,8 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord )
     Ray ray;
     vec3 eye = vec3(16.0*cos(iTime), 5, 16.0*sin(iTime));
     vec3 dir = vec3(0, 0, 0);
-    vec3 lp = vec3(10.0 * cos(iTime), 10, 10.0*sin(iTime));
-    vec3 col =vec3(0.0, 0.0, 0.0);
+    vec3 lp  = vec3(10.0 * cos(iTime), 10, 10.0*sin(iTime));
+    vec3 col = vec3(0.0, 0.0, 0.0);
 
 
     setCamera(ray, eye, dir, uv);

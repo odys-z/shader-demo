@@ -30,7 +30,7 @@ const fragmentShader = `
   varying vec3 P;
   varying vec4 cent;
 
-  // dx, dy in texture
+  /** dx, dy in texture */
   const vec2 grad_step = vec2(2.0);
 
   /**Vector distance  to orignal point.
@@ -59,21 +59,8 @@ const fragmentShader = `
    * @return norm
    */
   vec3 heightextNorm(float h, vec2 uv ) {
-  	// const vec3 dx = vec3( grad_step, 0.0, 0.0 );
-  	// const vec3 dy = vec3( 0.0, grad_step, 0.0 );
-  	// const vec3 dz = vec3( 0.0, 0.0, grad_step );
-  	// return normalize (
-  	// 	vec3(
-  	// 		dist_field( pos + dx ) - dist_field( pos - dx ),
-  	// 		dist_field( pos + dy ) - dist_field( pos - dy ),
-  	// 		dist_field( pos + dz ) - dist_field( pos - dz )
-  	// 	)
-  	// );
-
     float dh_dx = texture2D(iChannel0, uv + grad_step.x).r - h;
     float dh_dz = texture2D(iChannel0, uv + grad_step.y).b - h;
-    // return normalize(vec3(dh_dx, mix(dh_dx, dh_dz, 0.3), dh_dz));
-    // working
     return normalize(vec3(uv, h));
   }
 
@@ -115,35 +102,20 @@ const fragmentShader = `
     // SDF tanslate
     vec3 e = camPos;
     vec3 i = normalize( P - camPos );
-    // vec4 dists = vec4(0., 0., 0., distSphere( e, i, .3, cent.xyz).x);
     vec4 dists = terrian( e, i );
 
     if (dists.w < 0.0) {
       // Didn't hit anything
       fragColor = vec4( abs(modelAlpha) ) + vec4(normalize(dists.xyz), 1. - modelAlpha);
-      // fragColor = mix(vec4( abs(modelAlpha) ), texture2D(iChannel0, vUv), .3);
-      // fragColor = vec4(0.4, 0.6, 0.8, 0.8);
       return;
     }
-
-    // same: vec3 p = reflect( normalize(I), normalize(dists.xyz) );
-    // vec3 p = reflect( I, dists.xyz );
-
     // working: vec3 p = reflect( I, normalize( e + dists.w * i - cent.xyz));
     vec3 p = reflect( I, normalize( dists.xyz ));
 
     vec3 pos = e + i * dists.w;
-
-    // vec4 refractedColor = texture2D(iChannel0, vec2(.2, .25));
-    // vec4 refractedColor = texture2D(iChannel0, vec2(normalize(pos).z, .4) );
-    // vec4 refractedColor = texture2D(iChannel0, vec2(dists.w, vUv.x));
-    // vec4 refractedColor = normalize(vec4(p, 1.0));
-    // vec4 refractedColor = texture2D(iChannel0, pos.xz);
-    // vec4 refractedColor = texture2D(iChannel0, normalize(dists.xyz).xz);
     vec4 refractedColor = vec4(normalize(dists.xyz), 1.0);
 
     fragColor = mix( refractedColor, texture2D(iChannel0, vUv), .4);
-    // fragColor = refractedColor;
   }
 
   void main() {

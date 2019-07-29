@@ -3,7 +3,7 @@
 - landscape.zip
 
 The source code of [tom@subblue.com, Tracing a Terrain](http://2008.sub.blue/blog/2009/3/7/tracing_a_terrain.html),
-an algorithm for find terrian ray intersect.
+an algorithm for finding and terrian ray intersection.
 
 - Landscape.pbk
 

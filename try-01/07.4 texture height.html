@@ -11,7 +11,11 @@
     <script type='text/javascript' src='../lib/volumetric-raymatching v0.1.js'></script>
   </head>
   <body>
-    <p>7.4 Height Texture Milestone 2 - <input id='alpha' value='0.1'></input></p>
+    <p>7.4 Height Texture Milestone 2 - <input id='alpha' value='0.1'></input><br>
+      Half rendered texture by sampling with ray dir - change alpha to negetive to sample with abs().
+      <div class='code'>n = heightextNorm(dx, abs(rd.xz));</div>
+      see <a href='https://www.khronos.org/opengl/wiki/Sampler_(GLSL)#Texture_coordinates'>Texture coordinates</a>
+    </p>
     <canvas id="frag"></canvas>
   </body>
 <script>
@@ -33,48 +37,80 @@ const fragmentShader = `
   // dx, dy in texture
   const vec2 grad_step = vec2(2.0);
 
-  /**Vector distance  to orignal point.
-   * See https://en.wikipedia.org/wiki/Line%E2%80%93sphere_intersection
-   * FIXME why not return norm?
-   * @param eye camera position in world
-   * @param u direction norm
-   * @param r sphere radius
-   * @param cent shpere center position in world
-   * @return vec2(distance_close, distance_far)
-   */
-  vec2 distSphere( vec3 eye, vec3 u, float r, vec3 cent ) {
-      // e = o - c, where o = eye, c = cent
-      vec3 e = eye - cent;
-      // delta = (u . e)^2 + r^2 - |e|^2
-      float delta = pow( dot( u, e ), 2. ) + pow( r, 2. ) - dot(e, e);
-      // if (delta < 0.) return delta;
-      if (delta < 0.) return vec2(delta);
-      // d = - u.e +/- delta^0.5
-      delta = pow( delta, 0.5 );
-      return vec2( -dot( u, e ) + delta, -dot( u, e ) - delta );
-  }
-
   /** get gradient in the texture heights
    * @param uv
    * @return norm
    */
-  vec3 heightextNorm(float h, vec2 uv ) {
-  	// const vec3 dx = vec3( grad_step, 0.0, 0.0 );
-  	// const vec3 dy = vec3( 0.0, grad_step, 0.0 );
-  	// const vec3 dz = vec3( 0.0, 0.0, grad_step );
-  	// return normalize (
-  	// 	vec3(
-  	// 		dist_field( pos + dx ) - dist_field( pos - dx ),
-  	// 		dist_field( pos + dy ) - dist_field( pos - dy ),
-  	// 		dist_field( pos + dz ) - dist_field( pos - dz )
-  	// 	)
-  	// );
+  vec3 heightextNorm( vec2 uv ) {
+    // backup
+    // float dh_dx = texture2D(iChannel0, uv + 0.1).r - h;
+    // float dh_dz = texture2D(iChannel0, uv + 0.1).b - h;
 
-    float dh_dx = texture2D(iChannel0, uv + grad_step.x).r - h;
-    float dh_dz = texture2D(iChannel0, uv + grad_step.y).b - h;
-    // return normalize(vec3(dh_dx, mix(dh_dx, dh_dz, 0.3), dh_dz));
-    // working
-    return normalize(vec3(uv, h));
+    // surface = length(texture2D(iChannel0, normalize(ray.xz)));
+    float dh_dx = texture2D(iChannel0, uv + 0.001).r;
+    dh_dx -= texture2D(iChannel0, uv - 0.001).r;
+    float dh_dz = texture2D(iChannel0, uv + 0.0001).b;
+    dh_dz -= texture2D(iChannel0, uv - 0.0001).b;
+    return normalize(vec3(dh_dx, 0.0, dh_dz));
+  }
+
+  /** Trace the ray through the scene
+   * http://2008.sub.blue/blog/2009/3/7/tracing_a_terrain.html
+   * @return vec2 [ distance, height ]
+   */
+  vec2 castRay(
+        in  vec3   ray_direction,     // Ray direction
+        in  float  t,                 // Start distance
+        out vec3   ray) {             // Current position of marching ray
+
+    float ray_distance = t;
+    float surface = 0.0;
+
+    float dt = 0.1;                   // Step size
+    ray = vec3(0.0, 0.0, 0.0);
+    float  start_d = t;
+    vec3   basic_ray, prev_ray;
+    float  prev_alt;
+
+    // March ray until we reach the horizon
+    // not supported: while (t < terrainHorizon)
+    // 0.01: terrainHorizon
+    for (float ix = 0.0; ix < 400.0; ix ++) {
+        ray_distance = -1.0;          // < 0 when no intersection
+
+        // Vector for current position
+        ray = ray + ray_direction * t;
+
+        // If greater than the max terrain height and moving away from the plane then stop
+        if (ray.y > 30.0 && ray.y > prev_ray.y && t > start_d)
+            break;
+
+        // Find terrain displacement for the current point
+        // surface = displacement(ray);
+        surface = length(texture2D(iChannel0, normalize(ray.xz)));
+
+        if (ray.y <= surface) {
+            // Interpolate the intersection distance
+            float id = (prev_alt - prev_ray.y)/(ray.y -  prev_ray.y - surface + prev_alt);
+            ray_distance = mix(t, (t - dt), id);
+            surface = mix(surface, ray.y, id);
+            ray.y = surface;
+            prev_ray.y = prev_alt;
+            break;
+        }
+
+        // Step size increases proportionally to the ray length
+        t += dt;
+        // 0.01: terrainHorizon
+        if ( t < 0.01 )
+          break;
+
+        dt = max((t - start_d), 0.005);
+        prev_alt = surface;
+        prev_ray = ray;
+
+    }
+    return vec2(ray_distance, surface);
   }
 
   /**Get distance of eye to intersect with horizon.
@@ -84,14 +120,17 @@ const fragmentShader = `
    * t = - e.y / rd.y
    * d = dot(rd * t) ^ 0.5 (if rd is normalized, d == t)
    */
-  float horizonDist(vec3 e, vec3 rd) {
+  float horizonRay(vec3 e, vec3 rd) {
     rd = normalize(rd);
     if (rd.y == 0.0)
       return -1.0;
 
     float t = -e.y / rd.y ;
-    return t;
+    // return t;
     // rd is norm: return pow(dot(t * rd, t * rd), 0.5);
+    float d = 1., h = 0.;
+    vec2 dst = castRay(rd, t, e);
+    return dst.x;
   }
 
   /**Raymatching to terrian heights,
@@ -101,14 +140,73 @@ const fragmentShader = `
    * @return vec4 [norm, dist]
    */
   vec4 terrian( vec3 eye, vec3 rd ) {
-    // working:
-    // vec2 d = distSphere(eye, normalize(rd), 0.7, vec3(0.0));
-    // vec2 d = vec2(texture2D(iChannel0, rd.zx).y, 0.0);
-    float dx = horizonDist(eye, rd);
+    float dx = horizonRay(eye, rd);
 
-    // vec3 p = eye + dx * rd;
-    vec3 n = heightextNorm(dx, rd.xz);
+    vec3 p = eye + dx * rd;
+    vec3 n = heightextNorm(p.xz) + 0.5;
+    if (modelAlpha < 0.0)
+      n = heightextNorm(abs(p.xz) + 0.5);
+
     return vec4(n, dx);
+  }
+
+  vec3 fresnel( vec3 F0, vec3 h, vec3 l ) {
+  	return F0 + ( 1.0 - F0 ) * pow( clamp( 1.0 - dot( h, l ), 0.0, 1.0 ), 5.0 );
+  }
+
+  /* phong shading
+   * v must be the position
+   */
+  vec4 phong( vec3 v, vec3 n, vec3 dir, vec3 eye ) {
+  	// ...add lights here...
+
+  	float shininess = 16.0;
+
+  	vec3 final = vec3( 0.0 );
+
+    // dir reflection
+  	vec3 ref = reflect( dir, n );
+
+    vec3 Ks = vec3( 0.5, 0.75, 0.9 );
+    vec3 Kd = vec3( .5 );
+
+  	// light 0
+  	{
+  		vec3 light_pos   = vec3( 20.0, 20.0, 20.0 );
+  		vec3 light_color = vec3( .9, 0.7, 0.7 );
+
+      // from color's postion to light position
+  		vec3 vl = normalize( light_pos - v );
+
+      // 1/2 |cos(light distance, norm)|
+  		vec3 diffuse  = Kd * vec3( max( 0.0, dot( vl, n ) ) );
+  		// |cos(light distance, reflect)|
+  		vec3 specular = vec3( max( 0.0, dot( vl, ref ) ) );
+
+      vec3 F = fresnel( Ks, normalize( vl - dir ), vl );
+  		specular = pow( specular, vec3( shininess ) );
+
+  		final += light_color * mix( diffuse, specular, F );
+  	}
+
+  	// light 1
+  	{
+  		vec3 light_pos   = vec3( -20.0, -20.0, -30.0 );
+  		vec3 light_color = vec3( 0.5, 0.7, 1.0 );
+
+  		vec3 vl = normalize( light_pos - v );
+
+  		vec3 diffuse  = Kd * vec3( max( 0.0, dot( vl, n ) ) );
+  		vec3 specular = vec3( max( 0.0, dot( vl, ref ) ) );
+
+      vec3 F = fresnel( Ks, normalize( vl - dir ), vl );
+  		specular = pow( specular, vec3( shininess ) );
+
+  		final += light_color * mix( diffuse, specular, F );
+  	}
+
+    // final += texture2D( iChannel0, ref.xy ).rgb * fresnel( Ks, n, -dir );
+  	return vec4(final, 1.0);
   }
 
   void mainImage( out vec4 fragColor, in vec2 fragCoord ) {
@@ -120,30 +218,17 @@ const fragmentShader = `
 
     if (dists.w < 0.0) {
       // Didn't hit anything
-      fragColor = vec4( abs(modelAlpha) ) + vec4(normalize(dists.xyz), 1. - modelAlpha);
+      // fragColor = vec4( abs(modelAlpha) ) + vec4(normalize(dists.xyz), 1. - modelAlpha);
       // fragColor = mix(vec4( abs(modelAlpha) ), texture2D(iChannel0, vUv), .3);
-      // fragColor = vec4(0.4, 0.6, 0.8, 0.8);
+      fragColor = vec4(abs(modelAlpha));
       return;
     }
 
-    // same: vec3 p = reflect( normalize(I), normalize(dists.xyz) );
-    // vec3 p = reflect( I, dists.xyz );
+    // vec3 p = reflect( I, normalize( dists.xyz ));
+    vec4 refractedColor = phong(e + dists.w * i, dists.xyz, i, e);
+    refractedColor.g = 0.2;
 
-    // working: vec3 p = reflect( I, normalize( e + dists.w * i - cent.xyz));
-    vec3 p = reflect( I, normalize( dists.xyz ));
-
-    vec3 pos = e + i * dists.w;
-
-    // vec4 refractedColor = texture2D(iChannel0, vec2(.2, .25));
-    // vec4 refractedColor = texture2D(iChannel0, vec2(normalize(pos).z, .4) );
-    // vec4 refractedColor = texture2D(iChannel0, vec2(dists.w, vUv.x));
-    // vec4 refractedColor = normalize(vec4(p, 1.0));
-    // vec4 refractedColor = texture2D(iChannel0, pos.xz);
-    // vec4 refractedColor = texture2D(iChannel0, normalize(dists.xyz).xz);
-    vec4 refractedColor = vec4(normalize(dists.xyz), 1.0);
-
-    fragColor = mix( refractedColor, texture2D(iChannel0, vUv), .4);
-    // fragColor = refractedColor;
+    fragColor = mix( refractedColor, texture2D(iChannel0, vUv), abs(modelAlpha));
   }
 
   void main() {
