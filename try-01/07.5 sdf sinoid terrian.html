@@ -7,12 +7,11 @@
     <title>07.5 SDF Terrian Mileston 2</title>
     <link rel='stylesheet' type='text/css' href='../lib/shader.css'>
     <script type='text/javascript' src='three.js/three.min.js'></script>
-    <script type='text/javascript' src='three.js/OrbitControls.js'></script>
     <script type='text/javascript' src='../lib/volumetric-raymatching v0.1.js'></script>
   </head>
   <body>
     <p>7.5 SDF Terrian Mileston 2<br>
-			Using partial derivative to get terrian norm. (dx, dy = 0.001, 0.001)</p>
+		<div class='exception'>Problem: Can't find distance with ray marching</div></p>
     <canvas id="frag"></canvas>
   </body>
 <script>
@@ -67,58 +66,64 @@ const fragmentShader = `
    * @return vec2 [ distance, height ]
    */
   vec2 castRay( in vec3 eye, in vec3 rd, in float t ) {
-    float alt = 0.0;
 
     float max_d = t;
-    float dt = .01;                   // Step size
+    float dt = .01;
 	t = dt;
+    float alt = .0; //(eye + dt * rd).y;
     float prev_alt = eye.y;
     vec3  ray = eye;
-    //vec3  basic_ray = eye;
 	vec3  prev_ray = eye;
 
     // March ray until we reach the horizon
-    for (float ix = 0.0; ix < 100.0; ix ++) {
+    for (float ix = 0.0; ix < 1000.0; ix ++) {
 
         // Vector for current position
         ray += rd * t;
 
         // If greater than the max terrain height and moving away from the plane then stop
-        // if (ray.y > 100.0 && ray.y > prev_ray.y && t > max_d)
         if (ray.y > 100.0 && ray.y > prev_ray.y && t > max_d)
             break;
 
-        // Find terrain displacement for the current point
-        alt = textureHight(ray.xz) ;
+		// Find terrain displacement for the current point
+		alt = textureHight(ray.xz) ;
+		// alt = sin(length(ray.xz));
+		// alt = sin(iTime * ray.x);
 
-        if (ray.y <= alt) {
-            // Interpolate the intersection distance
-            float id = (prev_alt - prev_ray.y) / (ray.y - prev_ray.y - alt + prev_alt);
+		if (ray.y <= alt) {
+			// Interpolate the intersection distance
+			float id = (prev_alt - prev_ray.y) / (ray.y - prev_ray.y - alt + prev_alt);
 			/*
-            t = mix(t, (t - dt), id);
-            alt = mix(alt, ray.y, id);
-            ray.y = alt;
-            prev_ray.y = prev_alt;
+			t = mix(t, (t - dt), id);
+			alt = mix(alt, ray.y, id);
+			ray.y = alt;
+			prev_ray.y = prev_alt;
 			*/
 
-            t = mix(t, (t + dt), id);
-            break;
-        }
+			t = mix(t, t - dt, id);
+			// break;
+			alt = mix(ray.y, alt, id);
+			// return vec2(sin(iTime) + PI / 2., alt);
+			return vec2(t, alt);
+		}
 
-        // Step size increases proportionally to the ray length
-        t += dt;
+		// Step size increases proportionally to the ray length
+		t += dt;
 		if (t > max_d)
 			break;
 
-        dt = max(abs(max_d - t), 0.005);
-        prev_alt = alt;
-        prev_ray = ray;
-    }
+		dt = max(abs(max_d - t), 0.01);
+		prev_alt = alt;
+		prev_ray = ray;
+	}
 
-	if (ray.y <= alt)
-    	return vec2(max_d, .001);
-	else
-		return vec2(t, alt);
+	// if (ray.y <= alt) {
+	// 	// float id = (prev_alt - prev_ray.y) / (ray.y - prev_ray.y - alt + prev_alt);
+	// 	// return vec2(t, mix(alt, ray.y, id));
+	// 	return vec2(sin(iTime) + 2.0, .001);
+	// }
+	// else
+		return vec2(-0.1, .001);
 
     // return vec2(length(rd.xz) * 0.9, alt);
     // return vec2(sin(rd.z) + 1., alt);
@@ -161,30 +166,37 @@ const fragmentShader = `
 	if (p.x < -range.x || p.x > range.x || p.z < -range.y || p.z > range.y)
 		return vec4(-.1);
 
+	// return vec4( e + rd * t, p.y);
+
 	// let's rock - raymaching backward
-	vec2 hit = castRay( e, rd, t);
+	vec2 hit = castRay( e, rd, t );
 	return vec4(e + rd * hit.x, hit.x);
   }
 
   vec3 gradient (vec3 e, vec3 pos) {
-	vec3 dx = vec3(0.1, 0., 0.);
-	vec3 dy = vec3(0., 0.1, 0.);
-	vec3 dz = vec3(0., 0., 0.1);
+	vec3 dx = vec3(0.01, 0., 0.);
+	vec3 dy = vec3(0., 0.01, 0.);
+	vec3 dz = vec3(0., 0., 0.01);
 
 	float w = horizonDist(e, pos).w;
 	// float pdx = horizonDist(e, pos + dx).w - w;
 	// float pdy = horizonDist(e, pos + dy).w - w;
 	// float pdz = horizonDist(e, pos + dz).w - w;
-	float pdx = castRay(e, pos + dx, w + .1).x - w;
-	float pdy = castRay(e, pos + dy, w + .1).x - w;
-	float pdz = castRay(e, pos + dz, w + .1).x - w;
+
+	// float pdx = castRay(e, pos + dx, w + .1).x - w;
+	// float pdy = castRay(e, pos + dy, w + .1).x - w;
+	// float pdz = castRay(e, pos + dz, w + .1).x - w;
+	// return vec3(pdx, pdy, pdz) * hscale;
 
 	// almost the same:
 	// float pdx = horizonDist(e, pos + dx).w - horizonDist(e, pos - dx).w;
 	// float pdy = horizonDist(e, pos + dy).w - horizonDist(e, pos - dy).w;
 	// float pdz = horizonDist(e, pos + dz).w - horizonDist(e, pos - dz).w;
 
-	return vec3(pdx, pdy, pdy);
+ 	float h = textureHight(pos.xz);
+	float pdx = textureHight((pos + dx).xz) - h;
+	float pdz = textureHight((pos + dz).xz) - h;
+	return vec3(pdx, 0.1, pdz) * hscale;
   }
 
   /**Raymatching to terrian heights,
@@ -225,10 +237,9 @@ const fragmentShader = `
 	// 			texture2D( iChannel0, clamp(uv, 0., 1.) ),
 	// 			0.1);
 
-    vec3 n = normalize( gradient( e, dists.xyz ) );
+	vec3 n = normalize( gradient( e, dists.xyz ) );
 	fragColor = vec4(abs(n), 1.);
-	fragColor = vec4((abs(dists.xyz) * .5), 1.);
-	// fragColor = vec4(normalize(dists.xyz), 1.);
+	// fragColor = vec4(((dists.xyz) * .5), 1.);
   }
 
   void main() {
@@ -284,7 +295,6 @@ const vertexShader = `
   }
 
   vmatch('frag', vertexShader, fragmentShader, uniforms,
-    // {geometryType: new THREE.BoxGeometry(.6, .6, .6),
     {geometryType: new THREE.PlaneGeometry(2.0, 3.2),
      camPos: { value: campos },
      geometryCnt: 3});

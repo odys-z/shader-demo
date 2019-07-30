@@ -9,10 +9,22 @@ body {
     display: block;
 }
 
+input.para {
+    width: 3em;
+}
 
 /* code div */
 .code {
   background-color:lightgrey;
+  bottom:0px;
+  padding:0.4em;
+  margin-left:1em;
+  font-size: 0.95em;
+}
+
+.exception {
+  background-color:lightgrey;
+  color: red;
   bottom:0px;
   padding:0.4em;
   margin-left:1em;
