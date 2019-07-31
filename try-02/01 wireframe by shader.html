@@ -13,7 +13,6 @@
 </head>
 <body>
 	<p><a href='https://threejs.org/examples/#webgl_geometry_normals'>Three webgl_geometry_normals</a>
-		<input id='ixGeo' placeholder='Set a Geometry Index' value='0' class='para'></input>(0 - 9)
 	</p>
 	<div id="container"></div>
 
@@ -77,7 +76,7 @@ const vertexShader = `
 	}
 
 	init('container', {
-		showMesh: true,
+		// showMesh: true,
 		geometry: new THREE.BoxBufferGeometry( 240, 200, 150, 2, 2, 2 ),
 	});
 	animate();

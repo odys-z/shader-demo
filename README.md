@@ -36,6 +36,19 @@ Shapes melding, because of power of "mix()".
 Then open index.html with browser. Edge is recommended because you can load local files,
 the others like Firefox or Chrome will report CROS error.
 
+# Troubleshootings:
+
+## Chrome CORS Blocked
+
+If Chrome is reporting CORS error, that's because you opened the html file from file system
+and it's trying to load a local file. Chrome doesn't allow this access by default. So in Ubuntu:
+
+    google-chrome --allow-file-access-from-files
+
+Windows has the similar shooting.
+
+see [Stackovrflow: Problems with jQuery getJSON using local files in Chrome](https://stackoverflow.com/questions/2541949/problems-with-jquery-getjson-using-local-files-in-chrome);
+
 # References
 
 - 1. [Shadertoy](www.shadertoy.com)

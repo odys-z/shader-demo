@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<title>three.js webgl - geometry - normals</title>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+
+	<script type='text/javascript' src='../3rd-lib/jquery-3.4.1.min.js'></script>
+	<script type='text/javascript' src='../try-01/three.js/three.min.js'></script>
+	<script type='text/javascript' src='../try-01/three.js/OrbitControls.js'></script>
+	<script type='text/javascript' src='../lib/three meshes.js'></script>
+	<script type='text/javascript' src='res/geoframe.js'></script>
+
+	<link rel='stylesheet' type='text/css' href='../lib/shader.css'>
+</head>
+<body>
+	<div id="container"></div>
+
+<script type="module">
+// https://www.shadertoy.com/view/MtdcDn
+fragmentShader = `
+#define DEBUG 0 //Visualize the planes
+#define ADD 1
+#define ALPHA 2
+#define BLENDMODE ADD
+
+uniform vec2 iResolution;
+uniform vec2 iMouse;
+uniform float iTime;
+uniform sampler2D iChannel0;
+
+const float pi = atan(1.0) * 4.0;
+
+const float CUBE_SIZE = 1.5;
+const float GRID_RES = 17.0;
+const float POINT_SIZE = 0.375;
+const vec4 COLOR_BOOST = vec4(1,1,1,3);
+
+vec3 rayPlane(vec3 rorg, vec3 rdir, vec3 porg, vec3 pnrm)
+{
+    float t = dot(porg - rorg, pnrm) / dot(pnrm, rdir);
+    return rorg+rdir*t;
+}
+
+/*Nearest axis to 'dir':
+X: (+/-1, 0, 0)
+Y: (0, +/-1, 0)
+Z: (0, 0, +/-1)
+*/
+vec3 nearestAxis(vec3 dir)
+{
+    vec3 asign = sign(dir);
+    dir = abs(dir);
+    float amax = max(max(dir.x,dir.y),dir.z);
+
+    if(amax == dir.x){ return vec3(asign.x,0,0); }
+    if(amax == dir.y){ return vec3(0,asign.y,0); }
+    if(amax == dir.z){ return vec3(0,0,asign.z); }
+
+    return vec3(0);
+}
+
+//Maximum component of a vec3.
+float max3(vec3 v)
+{
+    return max(max(v.x,v.y),v.z);
+}
+
+void mainImage( out vec4 fragColor, in vec2 fragCoord )
+{
+    vec2 res = iResolution.xy / iResolution.y;
+	vec2 uv = fragCoord.xy / iResolution.y;
+
+    //Camera setup
+    vec3 camAngles = vec3((iMouse.xy / iResolution.xy) * pi, 0);
+    camAngles.xy *= vec2(2.0, 1.0);
+
+    //Thumbnail mode
+    if(iMouse.xy == vec2(0))
+    {
+    	camAngles = vec3(iTime*0.6, 1.0, 0.0);
+    }
+
+    //mat3 camMatrix = rotate(camAngles.yzx);
+    //vec3 camOrig = vec3(0, 0,-1.5) * camMatrix;
+    vec3 camOrig = vec3(0, 0,-1.5);
+    //vec3 camDir = normalize(vec3(uv - res/2.0, 0.5)) * camMatrix;
+    vec3 camDir = normalize(vec3(uv - res/2.0, 0.5));
+    //Setup plane axis,initial location, and step direction based on ray direction
+    vec3 planeNorm = nearestAxis(camDir);
+    vec3 planePos = planeNorm * ((GRID_RES-1.0)/GRID_RES)/2.0 * CUBE_SIZE;
+    vec3 planeDelta = planeNorm / GRID_RES * CUBE_SIZE;
+
+    vec3 outColor = vec3(0);
+    vec3 volRes = vec3(1.0);
+
+    for(float i = 0.0;i < GRID_RES;i++)
+    {
+        vec3 hit = rayPlane(camOrig, camDir, planePos, planeNorm) / CUBE_SIZE;
+
+		planePos -= planeDelta;
+
+        if(max3(abs(hit)) < 0.5) //Only draw areas inside the cube.
+        {
+            vec3 pointUVW = fract(((hit-0.5)*GRID_RES))-0.5;
+            vec3 volUVW = (floor(((hit-0.5)*GRID_RES))+0.5) / GRID_RES;
+
+            //Sample the pseudo-volumetric texture in BufA
+            vec4 vCol = texture2D(iChannel0, normalize(volUVW / volRes).xy);
+            vCol = clamp(vCol*COLOR_BOOST, 0.0, 1.0);
+
+            //Make the points face the camera.
+            //This makes the transition between planes seamless.
+            pointUVW = cross(pointUVW,camDir);
+
+            //Shape of the points
+            float pointMask = smoothstep(POINT_SIZE*vCol.a,
+                                         POINT_SIZE*vCol.a*0.8,
+                                         length(pointUVW));
+
+            #if BLENDMODE == ADD
+            	outColor += 0.5*vCol.rgb*pointMask*vCol.a;
+            #elif BLENDMODE == ALPHA
+            	outColor = mix(outColor, vCol.rgb, pointMask*vCol.a);
+            #elif BLENDMODE == DEBUG
+            	outColor = (planeNorm*.5+.5)*(i/GRID_RES);
+            #endif
+        }
+	}
+
+	fragColor = vec4(outColor,1.0);
+}
+	void main() {
+		mainImage(gl_FragColor, gl_FragCoord.xy);
+	}
+`;
+
+vertexShader = `
+  uniform vec3 camPos;
+
+  varying vec2 vUv;
+  varying vec3 I;
+  varying vec3 P;
+  varying vec4 cent;
+  varying vec3 n;
+
+  void main() {
+    vUv = uv;
+	n = normal;
+
+    // gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
+    vec4 worldPosition = modelMatrix * vec4(position, 1.0);
+
+    P = worldPosition.xyz;
+    I = normalize(camPos - worldPosition.xyz);
+    cent = modelMatrix * vec4(0., 0., 0.0, 1.);
+
+    gl_Position = projectionMatrix * viewMatrix * worldPosition;
+  }
+`;
+
+	loadMesh("res/Chengdu.geojson");
+</script>
+</body>
+</html>
