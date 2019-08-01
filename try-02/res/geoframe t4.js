@@ -46,11 +46,16 @@ Object.assign(opts.uniforms, {
 });
 
 document.onmousemove = function(e){
-	opts.uniforms.iMouse.value.x = e.clientX / window.innerWidth - 0.5;
-	opts.uniforms.iMouse.value.y = e.clientY / window.innerHeight - 0.5;
+	opts.uniforms.iMouse.value.x = e.clientX / container.clientWidth - 0.5;
+	opts.uniforms.iMouse.value.y = e.clientY / container.clientHeight - 0.5;
+	
+	opts.uniforms.iResolution.value.x = e.clientX / container.clientWidth - 0.5;
+	opts.uniforms.iResolution.value.y = e.clientY / container.clientHeight - 0.5;
 }
 
 function loadMesh(file, optns) {
+	Object.assign(opts.uniforms, optns.uniforms);
+
 	// $.getJSON("res/Jinjiang geom.json?jsoncallback=geojson", function(json) {
 	$.getJSON(file, function(json) {
 		console.log(json);
@@ -96,7 +101,10 @@ function geoMesh(jsonMesh, wireframe) {
 		}
 	});
 
-	var extrudeSettings = { depth: 15, curveSegments: 1, bevelEnabled: false };
+	var extrudeSettings = { depth: .1, curveSegments: 1, bevelEnabled: false };
+	var geop = new THREE.ExtrudeGeometry( shape, extrudeSettings );
+	geop.translate(0, 0, 15.);
+	extrudeSettings = { depth: 15, curveSegments: 1, bevelEnabled: false };
 	var geom = new THREE.ExtrudeGeometry( shape, extrudeSettings );
 	// var geom = new THREE.ShapeGeometry( shape );
 
@@ -112,9 +120,9 @@ function geoMesh(jsonMesh, wireframe) {
 
 	var mesh;
 
-	var geo = new THREE.EdgesGeometry( geom ); // or WireframeGeometry
+	var geo = new THREE.EdgesGeometry( geop ); // or WireframeGeometry
 	var mat = new THREE.LineBasicMaterial( { color: 0x003f00, linewidth: 1 } );
-	mesh = new THREE.LineSegments( geo, mat );
+	// mesh = new THREE.LineSegments( geo, mat );
 
 	if (wireframe) {
 		var wire = new THREE.Mesh( geom,
@@ -126,7 +134,8 @@ function geoMesh(jsonMesh, wireframe) {
 		var vertexNormalsHelper = new THREE.VertexNormalsHelper( wire, 1 );
 		wire.add( vertexNormalsHelper );
 
-		mesh.add(wire);
+		mesh = wire;
+		// mesh.add(wire);
 	}
 	else {
 		var material = new THREE.ShaderMaterial( {
@@ -140,8 +149,12 @@ function geoMesh(jsonMesh, wireframe) {
 		// var vertexNormalsHelper = new THREE.VertexNormalsHelper( m, 1 );
 		// m.add( vertexNormalsHelper );
 
-		mesh.add( m );
+		// mesh.add( m );
+		mesh = m;
 	}
+
+	mesh.add( new THREE.LineSegments( geo, mat ));
+
 	return mesh;
 }
 
@@ -162,10 +175,10 @@ function initBoxes(opts) {
 			vertexShader: opts.vert,
 			uniforms: opts.uniforms,
 			opacity: 0.8 } );
-		material.transparent = true;
+	material.transparent = true;
 
-		var m = new THREE.Mesh( box, material );
-		// var vertexNormalsHelper = new THREE.VertexNormalsHelper( m, 1 );
-		// m.add( vertexNormalsHelper );
-		return m;
+	var m = new THREE.Mesh( box, material );
+	// var vertexNormalsHelper = new THREE.VertexNormalsHelper( m, 1 );
+	// m.add( vertexNormalsHelper );
+	return m;
 }
