@@ -57,7 +57,7 @@ const fragtoy1 = `
 #define ADD 1
 #define ALPHA 2
 
-#define BLENDMODE ADD
+#define BLENDMODE ALPHA //  ADD
 
   uniform vec3 iResolution;
   uniform vec3 camPos;
@@ -172,7 +172,7 @@ vec4 texture3DLinear(sampler2D tex, vec3 uvw, vec3 vres)
 const float CUBE_SIZE = 300.5;
 const float GRID_RES = 7.0;
 const float POINT_SIZE = .175;
-const vec4 COLOR_BOOST = vec4(1,1,1,3);
+const vec4 COLOR_BOOST = vec4(1.,1.,1.,3);
 
 void mainImage( out vec4 fragColor, in vec2 fragCoord )
 {
@@ -235,10 +235,15 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord )
             	outColor = (planeNorm*.5+.5)*(i/GRID_RES);
             #endif
         }
-		// else outColor = fragColor.xyz;
+		else outColor = vec3(0.);
 	}
 	// fragColor = mix(vec4(outColor, .8), texture2D(iChannel0, vUv), 0.1);
-	fragColor = vec4(outColor, sin(iTime * .2) * .2 + .7);
+	// fragColor = vec4(outColor, sin(iTime * .2) * .2 + .7);
+	// fragColor = mix(fragColor, vec4(outColor, sin(iTime * .2) * .2 + .7), .5);
+
+	if (length(outColor) >= 0.001)
+		fragColor = vec4(outColor, sin(iTime * .2) * .2 + .7);
+	else fragColor += vec4(0., 0., 0.1, 0.2);
 }
 
   void main() {
