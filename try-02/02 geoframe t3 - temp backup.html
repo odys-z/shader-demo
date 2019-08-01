@@ -14,6 +14,7 @@
 	<link rel='stylesheet' type='text/css' href='../lib/shader.css'>
 </head>
 <body>
+	<p>It's not clear why the shader's cent is not the box cent, and it's moving.</p>
 	<div id="container"></div>
 
 <script type="module">
@@ -31,6 +32,9 @@ fragmentShader = `
 		fragColor = mix(fragColor, vec4(pow(dot(P, cent.xyz), 2.)), .5);
 		fragColor = mix(fragColor, vec4(sin(iTime * .3) * .5 + .8), .5);
 
+		// float z = smoothstep(1.0, 0.03, pow( 1. / P.z, 2.26) * 50.);
+		// float z = smoothstep(0.9, 0.03, pow( 0.1, P.z * 2.26));
+		float z = 1. - sin((14.75 - P.z) * .11);
 		z = smoothstep(0.03, 0.93, z);
 		vec4 colz = vec4(0.0, z * 0.8, z, alpha + .5);
 
@@ -87,6 +91,9 @@ const fragtoy1 = `
    * @return vec4 [norm, dist]
    */
   vec4 terrian( vec3 eye, vec3 rd ) {
+    // float h = texture2D(iChannel0, offsets);
+    // vec3 n = heightextNorm(h, offsets);
+    // return vec4(n, h);
     vec2 dAB = distSphere(eye, normalize(rd), 10.3, cent.xyz);
     return vec4(0.0, 0.0, 0.0, dAB.x);
   }
@@ -99,6 +106,8 @@ const fragtoy1 = `
 
     if (dists.w < 0.0) {
       // Didn't hit anything
+      // fragColor = vec4( abs(modelAlpha) ) + vec4(normalize(i), modelAlpha);
+      // fragColor = mix(vec4( abs(modelAlpha) ), texture2D(iChannel0, vUv), .3);
 	  fragColor = vec4(i, 0.6);
       return;
     }
@@ -106,6 +115,7 @@ const fragtoy1 = `
     vec3 p = e + dists.w * i;
     vec3 n = normalize(p - cent.xyz);
     p = reflect( I, n );
+    // vec4 refractedColor = vec4( p, 1.0 );
     vec4 refractedColor = texture2D(iChannel0, p.xy);
     fragColor = mix( refractedColor, texture2D(iChannel0, vUv), .30);
 	fragColor = vec4(0., 0., 1., 1.);
@@ -143,12 +153,13 @@ vertexShader = `
     eye = e.xyz;
 
     gl_Position = projectionMatrix * viewMatrix * worldPosition;
+
+	// P = gl_Position.xyz;
   }
 `;
 
 	loadMesh("res/Chengdu.geojson", {
-		datafrag: fragtoy1,
-		boxSize: [40, 40, 200]
+		datafrag: fragtoy1
 	});
 </script>
 </body>

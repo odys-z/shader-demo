@@ -25,7 +25,6 @@ var vertexShader = `
   void main() {
     vUv = uv;
 
-    // gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
     vec4 worldPosition = modelMatrix * vec4(position, 1.0);
 
     P = worldPosition.xyz;
@@ -38,8 +37,9 @@ var vertexShader = `
 `;
 
 Object.assign(opts.uniforms, {
-	camPos:  { value: new THREE.Vector3(0, 0, 110) },
+	camPos:  { value: new THREE.Vector3(0, 0, 140) },
 	iTime: { value: 0 },
+	iChannel0: { value: sinText(64, 64) },
 	texize: { value: new THREE.Vector4(64, 64, 4, 4) },
 	iResolution:  { value: new THREE.Vector3() },
 	iMouse: {value: new THREE.Vector2()},
@@ -121,7 +121,7 @@ function geoMesh(jsonMesh, wireframe) {
 			new THREE.MeshBasicMaterial( {
 				color: 0x222080,
 				wireframe: true,
-				opacity: 0.1 } ));
+				opacity: 0.2 } ));
 
 		var vertexNormalsHelper = new THREE.VertexNormalsHelper( wire, 1 );
 		wire.add( vertexNormalsHelper );
@@ -133,7 +133,7 @@ function geoMesh(jsonMesh, wireframe) {
 			fragmentShader,
 			vertexShader,
 			uniforms: opts.uniforms,
-			opacity: 1.0 } );
+			opacity: 0.7 } );
 		material.transparent = true;
 
 		var m = new THREE.Mesh( geom, material );

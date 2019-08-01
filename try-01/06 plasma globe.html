@@ -181,13 +181,13 @@ vec2 iSphere2(in vec3 ro, in vec3 rd)
 
 void mainImage( out vec4 fragColor, in vec2 fragCoord )
 {
-	vec2 p = fragCoord.xy / iResolution.xy - 0.5;
-	p.x *= iResolution.x / iResolution.y;
+  vec2 p = fragCoord.xy / iResolution.xy - 0.5;
+  p.x *= iResolution.x / iResolution.y;
   p = mod(p, .3) - .15;
-	vec2 um = iMouse.xy / iResolution.xy - .5;
+  vec2 um = iMouse.xy / iResolution.xy - .5;
 
-	//camera
-	vec3 ro = vec3(0., 0., 5.); // ray origin
+  //camera
+  vec3 ro = vec3(0., 0., 5.); // ray origin
   vec3 rd = normalize(vec3(p * 2.9, -1.5));// ray dir
   mat2 mx = mm2(time * .4 + um.x * 6.);
   mat2 my = mm2(time * 0.3 + um.y * 6.);
@@ -257,11 +257,5 @@ void main() {
     uniforms.iMouse.value.y = e.pageY;
   }
   main('frag', fragmentShader, uniforms);
-
-  // shaderSkybox('frag', fragmentShader, {
-  //       time: 0,
-  //       resolut: null, // default: new THREE.Vector3()
-  //       texture: 'three.js/parallel axis with bar chart.png'})
-  //     ; //.start();
 </script>
 </html>

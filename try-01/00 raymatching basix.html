@@ -173,18 +173,18 @@ vec3 shading( vec3 v, vec3 n, vec3 dir, vec3 eye ) {
 }
 
 
-bool ray_vs_aabb(vec3 o, vec3 dir, vec3 bmin, vec3 bmax, inout vec2 e ) {
-    vec3 a = ( bmin - o ) / dir;
-    vec3 b = ( bmax - o ) / dir;
-
-    vec3 s = min( a, b );
-    vec3 t = max( a, b );
-
-    e.x = max( max( s.x, s.y ), max( s.z, e.x ) );
-    e.y = max( min( t.x, t.y ), max( t.z, e.y ) );
-
-    return e.x < e.y;
-}
+// bool ray_vs_aabb(vec3 o, vec3 dir, vec3 bmin, vec3 bmax, inout vec2 e ) {
+//     vec3 a = ( bmin - o ) / dir;
+//     vec3 b = ( bmax - o ) / dir;
+//
+//     vec3 s = min( a, b );
+//     vec3 t = max( a, b );
+//
+//     e.x = max( max( s.x, s.y ), max( s.z, e.x ) );
+//     e.y = max( min( t.x, t.y ), max( t.z, e.y ) );
+//
+//     return e.x < e.y;
+// }
 
 // ray marching
 bool ray_marching( vec3 o, vec3 dir, inout float depth, inout vec3 n ) {

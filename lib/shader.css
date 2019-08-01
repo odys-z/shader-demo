@@ -3,9 +3,9 @@ body {
     margin: 0;
 }
 
-#frag {
-    width: 100vw;
-    height: 93vh;
+#frag,#container {
+    width: 100%;
+    height: 91vh;
     display: block;
 }
 
