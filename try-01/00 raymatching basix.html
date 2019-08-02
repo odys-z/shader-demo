@@ -6,8 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
     <title>Raymatching, SDF Basics</title>
     <link rel='stylesheet' type='text/css' href='../lib/shader.css'>
-    <script type='text/javascript' src='three.js/three.min.js'></script>
-    <script type='text/javascript' src='three.js/OrbitControls.js'></script>
+    <script type='text/javascript' src='../3rd-lib/three.js/three.min.js'></script>
+    <script type='text/javascript' src='../3rd-lib/three.js/OrbitControls.js'></script>
     <script type='text/javascript' src='../lib/shadertoy-loader.js'></script>
   </head>
   <body>
@@ -281,7 +281,7 @@ void main() {
 
   const loader = new THREE.TextureLoader();
   loader.setCrossOrigin('anonymous');
-  const texture = loader.load('three.js/parallel axis with bar chart.png');
+  const texture = loader.load('../3rd-lib/three.js/parallel axis with bar chart.png');
   const uniforms = {
     iTime: { value: 0 },
     iResolution:  { value: new THREE.Vector3() },

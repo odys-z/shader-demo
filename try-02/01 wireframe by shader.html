@@ -5,8 +5,8 @@
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
 
-	<script type='text/javascript' src='../try-01/three.js/three.min.js'></script>
-	<script type='text/javascript' src='../try-01/three.js/OrbitControls.js'></script>
+	<script type='text/javascript' src='../3rd-lib/three.js/three.min.js'></script>
+	<script type='text/javascript' src='../3rd-lib/three.js/OrbitControls.js'></script>
 	<script type='text/javascript' src='../lib/three meshes.js'></script>
 
 	<link rel='stylesheet' type='text/css' href='../lib/shader.css'>
@@ -17,19 +17,6 @@
 	<div id="container"></div>
 
 <script type="module">
-// const fragmentShader = `
-// 	varying vec3 P;
-//
-// 	void mainImage( out vec4 fragColor, in vec2 fragCoord ) {
-// 		vec2 n = normalize(fragCoord);
-// 		fragColor = vec4(normalize(P.xyz), .5);
-// 	}
-//
-// 	void main() {
-// 		mainImage(gl_FragColor, gl_FragCoord.xy);
-// 	}
-// `;
-
 const vertexShader = `
   uniform vec3 camPos;
 
@@ -53,13 +40,6 @@ const vertexShader = `
   }
 `;
 
-	// const campos = new THREE.Vector3(0, 0.3, 2.6);
-	// const loader = new THREE.TextureLoader();
-	// loader.setCrossOrigin('anonymous');
-
-	// var texture;
-	// texture = sinText(64, 64);
-
 	const uniforms = {
 		iTime: { value: 0 },
 		texize: { value: new THREE.Vector4(64, 64, 4, 4) },
@@ -69,7 +49,6 @@ const vertexShader = `
 		iMouse: {value: new THREE.Vector2()},
 	};
 
-	//const mouse = new THREE.Vector2();
 	document.onmousemove = function(e){
 		uniforms.iMouse.value.x = e.clientX / window.innerWidth - 0.5;
 		uniforms.iMouse.value.y = e.clientY / window.innerHeight - 0.5;

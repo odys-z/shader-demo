@@ -6,8 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
     <title>07.1 Ported ex7</title>
     <link rel='stylesheet' type='text/css' href='../lib/shader.css'>
-    <script type='text/javascript' src='three.js/three.min.js'></script>
-    <script type='text/javascript' src='three.js/OrbitControls.js'></script>
+    <script type='text/javascript' src='../3rd-lib/three.js/three.min.js'></script>
+    <script type='text/javascript' src='../3rd-lib/three.js/OrbitControls.js'></script>
     <script type='text/javascript' src='../lib/volumetric-raymatching.js'></script>
   </head>
   <body>
@@ -107,7 +107,7 @@ const vertexShader = `
 
 const loader = new THREE.TextureLoader();
 loader.setCrossOrigin('anonymous');
-const texture = loader.load('three.js/bayer.png');
+const texture = loader.load('../3rd-lib/three.js/bayer.png');
 texture.minFilter = THREE.NearestFilter;
 texture.magFilter = THREE.NearestFilter;
 texture.wrapS = THREE.RepeatWrapping;

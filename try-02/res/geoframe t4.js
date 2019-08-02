@@ -45,14 +45,6 @@ Object.assign(opts.uniforms, {
 	iMouse: {value: new THREE.Vector2()},
 });
 
-document.onmousemove = function(e){
-	opts.uniforms.iMouse.value.x = e.clientX / container.clientWidth - 0.5;
-	opts.uniforms.iMouse.value.y = e.clientY / container.clientHeight - 0.5;
-	
-	opts.uniforms.iResolution.value.x = e.clientX / container.clientWidth - 0.5;
-	opts.uniforms.iResolution.value.y = e.clientY / container.clientHeight - 0.5;
-}
-
 function loadMesh(file, optns) {
 	Object.assign(opts.uniforms, optns.uniforms);
 
@@ -75,9 +67,18 @@ function loadMesh(file, optns) {
 		}
 
 		// <script src='lib/three meshes.js'></script>
-		init('container', {
+		container = init('container', {
 			mesh: meshes,
 		});
+
+		container = document.onmousemove = function(e){
+			opts.uniforms.iMouse.value.x = e.clientX / container.clientWidth - 0.5;
+			opts.uniforms.iMouse.value.y = e.clientY / container.clientHeight - 0.5;
+
+			opts.uniforms.iResolution.value.x = e.clientX / container.clientWidth - 0.5;
+			opts.uniforms.iResolution.value.y = e.clientY / container.clientHeight - 0.5;
+		}
+
 		animate();
 	});
 }
