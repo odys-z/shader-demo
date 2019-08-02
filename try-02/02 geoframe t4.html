@@ -28,23 +28,26 @@
 fragmentShader = `
 	uniform float iTime;
 	varying vec3 P;
+	varying vec4 world;
+	varying vec3 eye;
 	varying vec3 n;
 	varying vec2 vUv;
 	varying vec4 cent;
 
 	void mainImage( out vec4 fragColor, in vec2 fragCoord ) {
-		float alpha = cos(iTime * 2.) * .5;
-		fragColor = vec4(normalize(abs(P.xyz)), abs(alpha * .5 + .5));
-		fragColor = mix(fragColor, vec4(pow(dot(P, cent.xyz), 2.)), .5);
-		fragColor = mix(fragColor, vec4(sin(iTime * .3) * .5 + .8), .5);
+		float alpha = cos(iTime * .2) * .5;
+		// fragColor = vec4(normalize(abs(P.xyz)), abs(alpha * .5 + .5));
+		// fragColor = vec4(normalize(P), alpha * 0.1 + 0.5);
+		fragColor = mix(vec4(normalize(P.zyx), alpha), clamp(vec4(pow(abs(dot(eye.yx - cent.xy, n.xy)), .3)), 0., 1.), .5);
 
 		// float z = smoothstep(1.0, 0.03, pow( 1. / P.z, 2.26) * 50.);
 		// float z = smoothstep(0.9, 0.03, pow( 0.1, P.z * 2.26));
-		float z = 1. - sin((14.75 - P.z) * .11);
-		z = smoothstep(0.03, 0.93, z);
-		vec4 colz = vec4(0.0, z * 0.8, z, alpha + .5);
+		// float z = pow((15. - world.z) / 15., 1.1);
+		float z = (15. - world.z) / 15.;
+		z = 1. - pow( z, .15);
+		vec4 colz = vec4(0.0, z, z, 1.);
 
-		fragColor = mix(fragColor, colz, 1. - n.z);
+		fragColor = mix(fragColor, colz, 1.0 - n.z);
 	}
 
 	void main() {
@@ -138,11 +141,11 @@ const fragtoy1 = `
 
   // get distance in the world
   float dist_field( vec3 p ) {
-      p = sdRep( p, vec3( 0.5 ) );
+      p = sdRep( p, vec3( 0.2 ) );
       // p = sdTwist( p, 1.0 );
 
       // float d1 = sdBox( p, vec3(0.07) );
-      float d1 = sdSphere( p, 0.16 );
+      float d1 = sdSphere( p, 0.016 );
 	  // float d1 = sdTorus( p, vec2(0.2, 0.04));
 
       // float d = sdInter( d1, d0 );
@@ -303,6 +306,7 @@ vertexShader = `
   varying vec3 P;
   varying vec3 eye;
   varying vec4 cent;
+  varying vec4 world;
   varying vec3 n;
 
   void main() {
@@ -311,6 +315,7 @@ vertexShader = `
 
     // gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
     vec4 worldPosition = modelMatrix * vec4(position, 1.0);
+	world = worldPosition;
 
     // P = worldPosition.xyz;
     // vec4 P0 = viewMatrix * worldPosition;
