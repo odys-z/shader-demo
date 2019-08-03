@@ -1,0 +1,105 @@
+#!/bin/bash
+
+declare -A src
+src[1]="/home/user1/git/shader-demo"
+src[2]="c:/Users/administrator/git/shader-demo"
+
+show_help() {
+    echo -e "cp-res copys necessary lib files for application dependency. Currently shader-demo is not compiled, only some plain js files."
+	echo -e "usage: cp-res -s [1|2...] -i [all|js]"
+	echo -e "optings:\n\ts: source path"
+	echo -e "\t\t1\t" ${src[1]}
+	echo -e "\t\t2\t" ${src[2]}
+	echo -e "\t\t...\t append your dir into src[3], and use command like cp-res -s 3"
+
+	echo -e "\ti: include files"
+	echo -e "\t\tall\t*.* files"
+	echo -e "\t\t2\tOnly js files"
+	echo -e "\t\tpattern\tOnly *.pattern files"
+}
+
+## srcroot/destpath + pattern -> $PWD/destpath
+ # @param 1 srcroot
+ # @param 2 destpath destination subpath
+ # @param 3 pattern
+##
+cpfiles() {
+	#echo -e "\nargs" $1 $2 $3
+
+	srcpath=$1/
+
+	target=$2
+
+	#echo "srcpath" $srcpath "target" $target
+
+	if [ ! -e $target ]; then
+	    mkdir $target
+	fi
+
+	if [[ ! -z $3 ]] && [[ $3 != '/' ]]; then
+        echo "pattern:" $3 $srcpath $target
+		# rsync -a -f"- */" -f '- *' -f "+ ${3}" $srcpath  $target
+		rsync -am --include "${3}" --exclude '*' --exclude '*/' $srcpath  $target
+	else
+        echo "pattern: /" $srcpath $target
+		# echo 'rsync -a -f"- */" -f"+ *"' "${srcpath} ${target}"
+		rsync -a -f"- */" -f"+ *" $srcpath  $target
+	fi
+}
+
+# disable globling
+# http://tldp.org/LDP/abs/html/globbingref.html
+set -f
+filext="/"
+sf="~"
+clean=0
+
+while getopts 'chs:i:' opt; do
+    case $opt in
+    h)
+        show_help
+        exit 0
+        ;;
+    c)
+        clean=1;
+        ;;
+    s)
+		sf="${src[$OPTARG]}"
+		#echo $sf
+        ;;
+    i)  filext=$OPTARG
+		if [ $filext = 'all' ]; then
+			filext=''
+		else
+			filext="*.${filext}"
+		fi
+		echo $filext
+        ;;
+	?)
+		echo -e "usage: cp-res -s [1|2...] -i [all|js]"
+		echo  "cp-res -h  for help"
+		exit -1
+    esac
+done
+
+if [ clean > 0 ]; then
+    echo "rm -r ${PWD}/oz"
+    rm -r $PWD/oz
+fi
+
+if [ sf = "~" ]; then
+    echo "Pleas specify -s"
+    exit -1;
+fi
+
+# echo "sf" $sf "filext" $filext
+
+# cp shader-demo/try-02/* -> 2019/oz
+cpfiles $sf/try-02 "${PWD}/oz" $filext
+
+# cp shader-demo/try-02/lib -> 2019/oz/lib
+cpfiles $sf/lib "${PWD}/oz/lib" $filext
+
+# cp shader-demo/try-02/res -> 2019/oz/res
+cpfiles $sf/try-02/res "${PWD}/oz/res" $filext
+
