@@ -2,7 +2,7 @@
 
 declare -A src
 src[1]="/home/user1/git/shader-demo"
-src[2]="c:/Users/administrator/git/shader-demo"
+src[2]="/home/administrator/git/shader-demo"
 
 show_help() {
     echo -e "cp-res copys necessary lib files for application dependency. Currently shader-demo is not compiled, only some plain js files."
@@ -10,12 +10,13 @@ show_help() {
 	echo -e "optings:\n\ts: source path"
 	echo -e "\t\t1\t" ${src[1]}
 	echo -e "\t\t2\t" ${src[2]}
-	echo -e "\t\t...\t append your dir into src[3], and use command like cp-res -s 3"
+	echo -e "\t\t...\t append your dir into src[3], and use command like\n\t\t\t\tcp-res -s 3"
 
 	echo -e "\ti: include files"
 	echo -e "\t\tall\t*.* files"
 	echo -e "\t\t2\tOnly js files"
 	echo -e "\t\tpattern\tOnly *.pattern files"
+	echo -e "\tc: clean the copied files"
 }
 
 ## srcroot/destpath + pattern -> $PWD/destpath
