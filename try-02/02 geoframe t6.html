@@ -16,7 +16,10 @@
 <body>
 	<table>
 		<tr><td width="80%"><div id="container"></div><td>
-			<td><input id='c1'></input>
+			<td><p>Testing the best known picking:
+				<a href='https://threejsfundamentals.org/threejs/lessons/threejs-picking.html'>
+					Three.js picking</a></p>
+				<input id='c1'></input>
 				<input id='c2'></input>
 				<input id='c'></input>
 			</td>
@@ -303,9 +306,15 @@ vertexShader = `
 
 	loadMesh("res/Chengdu.geojson", {
 		datafrag: fragtoy1,
+		onMouseFrag: fragtoy3,
+		onSelect: onSelect,
 		boxSize: [40, 40, 200],
 		uniforms: {parm: {value: new THREE.Vector3(500, 20, .05)}}
 	});
+
+	onSelect(obj) {
+
+	}
 </script>
 </body>
 </html>
