@@ -1,6 +1,8 @@
 # About
 
-This is a temp repo for testing. No plan to support in the future.
+Shader-demo is a Glsl shader testing and visual effects lib.
+
+This is a temp repo for now. The js lib distribution will using Webpack in the future. For now, there is a helping tool, cp-res, in shader-demo/lib directory for copying necessary files. Users need modify the "src" array to indicate their git location, then copy files to their application/oz dir.
 
 The [shadertoy](https://en.wikipedia.org/wiki/Shadertoy) and raymatching is some how different from the well known style of 3d rendering, see [2].
 
