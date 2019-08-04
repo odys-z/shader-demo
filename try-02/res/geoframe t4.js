@@ -64,7 +64,7 @@ function loadMesh(file, optns) {
 					meshes.push(initBoxes(
 						Object.assign({
 							uniforms: opts.uniforms,
-							boxSize: optns.boxSize,
+							// boxSize: optns.boxSize,
 							frag: optns.datafrag,
 							vert: vertexShader},
 						box)));
@@ -91,20 +91,29 @@ function loadMesh(file, optns) {
 
 const longLatScale = 1000;
 const centre = [104.063, 30.666];
+/**Change longitude and latitude to world position xy.<br>
+ * @param {array} longlat [long, lat]
+ * @return [x, y] in world */
+function worldxy(longlat) {
+	// TODO GIS Projection ...
+	return [longlat[0] - centre[0] * longLatScale, longlat[1] - centre[1] * longLatScale];
+}
 
 function geoMesh(jsonMesh, wireframe) {
 	// https://threejs.org/docs/#api/en/extras/core/Shape
 	var shape = new THREE.Shape();
 
 	jsonMesh[0].forEach(function(p, ix) {
-		// TODO GIS Projection ...
+		xy = worldxy(p);
 		if (ix === 0) {
-			shape.moveTo( (p[0] - centre[0]) * longLatScale,
-						(p[1] - centre[1]) * longLatScale );
+			// shape.moveTo( (p[0] - centre[0]) * longLatScale,
+			// 			(p[1] - centre[1]) * longLatScale );
+			shape.moveTo( xy[0], xy[1] );
 		}
 		else {
-			shape.lineTo( (p[0] - centre[0]) * longLatScale,
-						(p[1] - centre[1]) * longLatScale );
+			// shape.lineTo( (p[0] - centre[0]) * longLatScale,
+			// 			(p[1] - centre[1]) * longLatScale );
+			shape.lineTo( xy[0], xy[1] );
 		}
 	});
 
@@ -168,18 +177,17 @@ function geoMesh(jsonMesh, wireframe) {
 function initBoxes(opts) {
 	var box;
 
-	var transx = opts.center[0] - centre[0];
-	var transy = opts.center[1] - centre[1];
+	var transxy = worldxy(opts.center);
 
-	if (Array.isArray(opts.boxSize)) {
+	if (Array.isArray(opts.size)) {
 		box = new THREE.BoxBufferGeometry(
-			opts.boxSize[0], opts.boxSize[1], opts.boxSize[2], 2, 2, 2 );
+			opts.size[0], opts.size[1], opts.size[2], 2, 2, 2 );
 		// box.translate(0, 0, 20 + opts.boxSize[2] / 2);
-		box.translate(transx, transy, 20 + opts.size[2] / 2);
+		box.translate(transxy[0], transxy[1], 20 + opts.size[2] / 2);
 	}
 	else {
 		box = new THREE.BoxBufferGeometry( 40, 40, 200, 2, 2, 2 );
-		box.translate(transx, transy, 120);
+		box.translate(transxy[0], transxy[1], 120);
 	}
 
 	var material = new THREE.ShaderMaterial( {
