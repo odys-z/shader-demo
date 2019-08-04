@@ -59,11 +59,17 @@ function loadMesh(file, optns) {
 		} );
 
 		if (optns !== undefined && typeof optns.datafrag === 'string') {
-			meshes.push(initBoxes({
-				uniforms: opts.uniforms,
-				boxSize: optns.boxSize,
-				frag: optns.datafrag,
-				vert: vertexShader}));
+			if (optns.boxes) {
+				optns.boxes.forEach((box, ix) => {
+					meshes.push(initBoxes(
+						Object.assign({
+							uniforms: opts.uniforms,
+							boxSize: optns.boxSize,
+							frag: optns.datafrag,
+							vert: vertexShader},
+						box)));
+				});
+			}
 		}
 
 		// <script src='lib/three meshes.js'></script>
@@ -161,14 +167,19 @@ function geoMesh(jsonMesh, wireframe) {
 
 function initBoxes(opts) {
 	var box;
+
+	var transx = opts.center[0] - centre[0];
+	var transy = opts.center[1] - centre[1];
+
 	if (Array.isArray(opts.boxSize)) {
 		box = new THREE.BoxBufferGeometry(
 			opts.boxSize[0], opts.boxSize[1], opts.boxSize[2], 2, 2, 2 );
-		box.translate(0, 0, 20 + opts.boxSize[2] / 2);
+		// box.translate(0, 0, 20 + opts.boxSize[2] / 2);
+		box.translate(transx, transy, 20 + opts.size[2] / 2);
 	}
 	else {
-		box = new THREE.BoxBufferGeometry( 40, 40, 40, 2, 2, 2 );
-		box.translate(0, 0, 60);
+		box = new THREE.BoxBufferGeometry( 40, 40, 200, 2, 2, 2 );
+		box.translate(transx, transy, 120);
 	}
 
 	var material = new THREE.ShaderMaterial( {
