@@ -14,11 +14,11 @@
 	<link rel='stylesheet' type='text/css' href='../lib/shader.css'>
 </head>
 <body>
-	<table>
+	<table width="100%">
 		<tr><td width="80%"><div id="container"></div><td>
-			<td><input id='c1'></input>
-				<input id='c2'></input>
-				<input id='c'></input>
+			<td>Data 1<input id='c1' value='104.003, 30.666'></input><br>
+			Data 2<input id='c2' value='104.133, 30.666'></input><br>
+			Data 3<input id='c3' value='104.163, 30.566'></input><br>
 			</td>
 		</tr>
 	</table>
@@ -334,8 +334,16 @@ vertexShader = `
 
 	loadMesh("res/Chengdu.geojson", {
 		datafrag: fragtoy1,
-		boxSize: [40, 40, 200]
+		boxSize: [40, 40, 200],
+		boxes: [{center: c('c1'), size: [40, 40, 200]},
+				{center: c('c2'), size: [40, 40, 200]},
+				{center: c('c3'), size: [40, 40, 200]}]
 	});
+
+	function c(tag) {
+  		var input = document.querySelector('#' + tag);
+		return input.value.split(',');
+	}
 </script>
 </body>
 </html>

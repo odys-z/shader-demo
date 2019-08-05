@@ -96,7 +96,8 @@ const centre = [104.063, 30.666];
  * @return [x, y] in world */
 function worldxy(longlat) {
 	// TODO GIS Projection ...
-	return [longlat[0] - centre[0] * longLatScale, longlat[1] - centre[1] * longLatScale];
+	return [(longlat[0] - centre[0]) * longLatScale,
+					(longlat[1] - centre[1]) * longLatScale];
 }
 
 function geoMesh(jsonMesh, wireframe) {
