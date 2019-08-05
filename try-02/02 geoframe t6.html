@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<title>three.js webgl - geometry - normals</title>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+
+	<script type='text/javascript' src='../3rd-lib/jquery-3.4.1.min.js'></script>
+	<script type='text/javascript' src='../3rd-lib/three.js/three.min.js'></script>
+	<script type='text/javascript' src='../3rd-lib/three.js/OrbitControls.js'></script>
+	<script type='text/javascript' src='../lib/three meshes.js'></script>
+	<script type='text/javascript' src='res/geoframe t4.js'></script>
+
+	<link rel='stylesheet' type='text/css' href='../lib/shader.css'>
+</head>
+<body>
+	<table width='100%'>
+		<tr><td width="90%"><canvas id="container"></canvas><td>
+			<td><p>Best known picking:<br>
+				<a href='https://threejsfundamentals.org/threejs/lessons/threejs-picking.html'>
+					Three.js GPU picking</a></p>
+				<input id='c1'></input><br>
+				<input id='c2'></input><br>
+				<input id='c'></input>
+			</td>
+		</tr>
+	</table>
+
+<script type="module">
+// https://www.shadertoy.com/view/MtdcDn
+fragmentShader = `
+	uniform float iTime;
+	varying vec4 world;
+	varying vec3 eye;
+	varying vec2 vUv;
+	varying vec3 P;
+	varying vec4 cent;
+	varying vec3 n;
+
+	void mainImage( out vec4 fragColor, in vec2 fragCoord ) {
+		float alpha = cos(iTime * .2) * .5;
+		fragColor = mix(vec4(normalize(P.zyx), alpha), clamp(vec4(pow(abs(dot(eye.yx - cent.xy, n.xy)), .3)), 0., 1.), .5);
+
+		float z = (15. - world.z) / 15.;
+		z = 1. - pow( z, .15);
+		vec4 colz = vec4(0.0, z, z, 1.);
+
+		fragColor = mix(fragColor, colz, 1.0 - n.z);
+	}
+
+	void main() {
+		mainImage(gl_FragColor, gl_FragCoord.xy);
+	}
+`;
+
+const fragtoy1 = `
+	#define DEBUG 0 //Visualize the planes
+	#define ADD 1
+	#define ALPHA 2
+
+	#define BLENDMODE ALPHA //  ADD
+
+	  uniform vec3 iResolution;
+	  uniform vec3 camPos;
+	  varying vec3 eye;
+	  uniform float iTime;
+	  uniform vec2 iMouse;
+	  uniform vec2 fragCent;
+	  uniform sampler2D iChannel0;
+
+		varying vec3 P;
+		varying vec3 I;
+		varying vec3 n;
+		varying vec2 vUv;
+		varying vec4 cent;
+
+	const float pi = atan(1.0) * 4.0;
+	const float tau = atan(1.0) * 8.0;
+
+	//Rotation matrix from euler (X/Y/Z) angles.
+	mat3 rotate(vec3 angles)
+	{
+	    vec3 c = cos(angles);
+	    vec3 s = sin(angles);
+
+	    mat3 rotX = mat3( 1.0, 0.0, 0.0, 0.0,c.x,s.x, 0.0,-s.x, c.x);
+	    mat3 rotY = mat3( c.y, 0.0,-s.y, 0.0,1.0,0.0, s.y, 0.0, c.y);
+	    mat3 rotZ = mat3( c.z, s.z, 0.0,-s.z,c.z,0.0, 0.0, 0.0, 1.0);
+
+	    return rotX * rotY * rotZ;
+	}
+
+	/*Nearest axis to 'dir':
+	X: (+/-1, 0, 0)
+	Y: (0, +/-1, 0)
+	Z: (0, 0, +/-1)
+	*/
+	vec3 nearestAxis(vec3 dir)
+	{
+	    vec3 asign = sign(dir);
+	    dir = abs(dir);
+	    float amax = max(max(dir.x,dir.y),dir.z);
+
+	    if(amax == dir.x){ return vec3(asign.x,0,0); }
+	    if(amax == dir.y){ return vec3(0,asign.y,0); }
+	    if(amax == dir.z){ return vec3(0,0,asign.z); }
+
+	    return vec3(0);
+	}
+
+	//Intersection point of ray (rorg, rdir) with plane (porg, pnrm)
+	//Assumes rdir & pnrm are normalized
+	vec3 rayPlane(vec3 rorg, vec3 rdir, vec3 porg, vec3 pnrm)
+	{
+	    float t = dot(porg - rorg, pnrm) / dot(pnrm, rdir);
+	    return rorg + rdir*t;
+	}
+
+	//Maximum component of a vec3.
+	float max3(vec3 v) {
+	    return max(max(v.x,v.y),v.z);
+	}
+
+	//Calculate maximum volumetric resolution of a 2D texture.
+	vec3 volumeSize(sampler2D tex) {
+	    // vec2 size2D = vec2(textureSize(tex,0));
+	    vec2 size2D = vec2(64., 64.);
+		return vec3(floor(pow(size2D.x * size2D.y, 1.0 / 3.0)));
+	}
+
+	vec3 volumeSize(vec2 size2D) {
+		return vec3(floor(pow(size2D.x*size2D.y, 1.0/3.0)));
+	}
+
+	//Samples a texture as a psuedo-volumetric buffer.
+	vec4 texture3D(sampler2D tex, vec3 uvw, vec3 vres)
+	{
+	    // vec2 texRes = vec2(textureSize(tex,0));
+	    vec2 texRes = vec2(64., 64.);
+	    uvw = mod(floor(uvw * vres), vres);
+	    float idx = (uvw.z * (vres.x*vres.y)) + (uvw.y * vres.x) + uvw.x;
+	    // ivec2 uv = ivec2(mod(idx, texRes.x), floor(idx / texRes.x));
+	    // return texelFetch(tex, uv, 0);
+		vec2 uv = vec2(mod(idx, texRes.x), floor(idx / texRes.x));
+	    return texture2D(tex, uv);
+	}
+
+	//texture3D with linear sampling.
+	vec4 texture3DLinear(sampler2D tex, vec3 uvw, vec3 vres)
+	{
+	    vec3 blend = fract(uvw*vres);
+	    vec4 off = vec4(1.0/vres, 0.0);
+
+	    vec4 b000 = texture3D(tex, uvw + off.www, vres);
+	    vec4 b100 = texture3D(tex, uvw + off.xww, vres);
+
+	    vec4 b010 = texture3D(tex, uvw + off.wyw, vres);
+	    vec4 b110 = texture3D(tex, uvw + off.xyw, vres);
+
+	    vec4 b001 = texture3D(tex, uvw + off.wwz, vres);
+	    vec4 b101 = texture3D(tex, uvw + off.xwz, vres);
+
+	    vec4 b011 = texture3D(tex, uvw + off.wyz, vres);
+	    vec4 b111 = texture3D(tex, uvw + off.xyz, vres);
+
+	    return mix(mix(mix(b000, b100, blend.x), mix(b010, b110, blend.x), blend.y),
+	               mix(mix(b001, b101, blend.x), mix(b011, b111, blend.x), blend.y),
+	               blend.z);
+	}
+
+	/** cube [size, grad resolution, point size]
+	 * const float CUBE_SIZE = 300.5;
+	 * const float GRID_RES = 3.0;
+	 * const float POINT_SIZE = .125; */
+	uniform vec3 parm;
+
+	const vec4 COLOR_BOOST = vec4(1.,1.,1.,3);
+
+	void mainImage( out vec4 fragColor, in vec2 fragCoord )
+	{
+	    vec2 res = iResolution.xy / iResolution.y;
+		vec2 uv = fragCoord.xy / iResolution.y;
+
+	    //Camera setup
+	    vec3 camAngles = vec3((iMouse.xy / iResolution.xy) * pi, 0);
+	    camAngles.xy *= vec2(2.0, 1.0);
+
+	    //Thumbnail mode
+		float scale = 0.;
+	    if(iMouse.xy == vec2(0)) {
+	    	// camAngles = vec3(iTime * 0.2, 1.0, 0.0);
+	    	scale = 0.2;
+	    }
+		else {
+			scale = clamp( iMouse.x / iMouse.y, 0.1, .6);
+		}
+	    camAngles = vec3(iTime * scale, 1.0, 0.0);
+
+	    mat3 camMatrix = rotate(camAngles.yzx);
+	    // vec3 camOrig = vec3(0, 0,-1.5) * camMatrix;
+	    vec3 camOrig = eye * camMatrix;
+	    // vec3 camDir = normalize(vec3(uv - res/2.0, 0.5)) * camMatrix;
+		vec3 camDir = normalize( P * 3. - camPos );
+
+	    //Setup plane axis,initial location, and step direction based on ray direction
+	    vec3 planeNorm = nearestAxis(camDir);
+	    vec3 planePos = planeNorm * ((parm.y-1.0)/parm.y)/2.0 * parm.x;
+	    vec3 planeDelta = planeNorm / parm.y * parm.x;
+
+	    vec3 outColor = vec3(0);
+	    vec3 volRes = volumeSize(iChannel0);
+
+	    for(float i = 0.0; i < 1000.; i++) {
+			if (i >= parm.y)
+				break;
+
+	        vec3 hit = rayPlane(camOrig, camDir, planePos, planeNorm) / parm.x;
+
+			planePos -= planeDelta;
+
+	        if(max3(abs(hit)) < 0.5) //Only draw areas inside the cube.
+	        {
+	            vec3 pointUVW = fract(((hit-0.5)*parm.y))-0.5;
+	            vec3 volUVW = (floor(((hit-0.5)*parm.y))+0.5) / parm.y;
+
+	            //Sample the pseudo-volumetric texture in BufA
+	            vec4 vCol = texture3DLinear(iChannel0, volUVW, volRes);
+	            vCol = clamp(vCol*COLOR_BOOST, 0.0, 1.0);
+
+	            //Make the points face the camera.
+	            //This makes the transition between planes seamless.
+	            pointUVW = cross(pointUVW,camDir);
+
+	            //Shape of the points
+	            float pointMask = smoothstep(parm.z * vCol.a,
+	                                         parm.z * vCol.a * 0.8,
+	                                         length(pointUVW));
+
+	            #if BLENDMODE == ADD
+	            	outColor += 0.5*vCol.rgb*pointMask*vCol.a;
+	            #elif BLENDMODE == ALPHA
+	            	outColor = mix(outColor, vCol.rgb, pointMask*vCol.a);
+	            #elif BLENDMODE == DEBUG
+	            	outColor = (planeNorm*.5+.5)*(i/parm.y);
+	            #endif
+	        }
+			else outColor = vec3(0.);
+		}
+		if (length(outColor) >= 0.0)
+			fragColor = vec4(outColor, sin(iTime * .2) * .2 + .7);
+		else fragColor += vec4(0., 0., 0.1, 0.2);
+	}
+
+  void main() {
+	mainImage(gl_FragColor, gl_FragCoord.xy);
+  }
+`;
+const fragtoy2 = `
+  uniform sampler2D iChannel0;
+  varying vec2 vUv;
+
+  void mainImage( out vec4 fragColor, in vec2 fragCoord ) {
+	fragColor = texture2D(iChannel0, vUv);
+  }
+
+  void main() {
+	mainImage(gl_FragColor, gl_FragCoord.xy);
+  }
+`;
+
+vertexShader = `
+  uniform vec3 camPos;
+
+  varying vec2 vUv;
+  varying vec3 I;
+  varying vec3 P;
+  varying vec3 eye;
+  varying vec4 cent;
+  varying vec4 world;
+  varying vec4 fragCent;
+  varying vec3 n;
+
+  void main() {
+    vUv = uv;
+	n = normal;
+
+    // gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
+    vec4 worldPosition = modelMatrix * vec4(position, 1.0);
+	world = worldPosition;
+
+    P = worldPosition.xyz;
+    // vec4 P0 = viewMatrix * worldPosition;
+	// P = P0.xyz;
+    I = normalize(camPos - worldPosition.xyz);
+    // cent = modelMatrix * vec4(0., 0., 0.0, 1.);
+    cent = viewMatrix * modelMatrix * vec4(0., 0., 70.0, 1.);
+    vec4 e = modelMatrix * vec4(camPos, 1.);
+    eye = e.xyz;
+
+    gl_Position = projectionMatrix * viewMatrix * worldPosition;
+
+	P = gl_Position.xyz;
+    fragCent = viewMatrix * modelMatrix * vec4(0., 0., 0.0, 1.);
+  }
+`;
+
+	// loadMesh("res/Chengdu.geojson", {
+	// 	datafrag: fragtoy1,
+	// 	onMouseFrag: fragtoy3,
+	// 	onSelect: onSelect,
+	// 	boxSize: [40, 40, 200],
+	// 	uniforms: {parm: {value: new THREE.Vector3(500, 20, .05)}}
+	// });
+	//
+	// onSelect(obj) {
+	// }
+	initPicker('container', {});
+</script>
+</body>
+</html>

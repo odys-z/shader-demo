@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<title>three.js webgl - geometry - normals</title>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+
+	<script type='text/javascript' src='../3rd-lib/jquery-3.4.1.min.js'></script>
+	<script type='text/javascript' src='../3rd-lib/three.js/three.min.js'></script>
+	<script type='text/javascript' src='../3rd-lib/three.js/OrbitControls.js'></script>
+	<script type='text/javascript' src='../lib/three meshes.js'></script>
+	<script type='text/javascript' src='res/geoframe.js'></script>
+
+	<link rel='stylesheet' type='text/css' href='../lib/shader.css'>
+</head>
+<body>
+	<div id="container"></div>
+
+<script type="module">
+fragmentShader = `
+	uniform float iTime;
+	varying vec3 P;
+	varying vec2 vUv;
+
+	void mainImage( out vec4 fragColor, in vec2 fragCoord ) {
+		fragColor = vec4(normalize(P.xyz), abs(cos(iTime) * .5 + .5));
+		fragColor = mix(fragColor, vec4(length(vUv)), sin(iTime) * .5 + .5);
+	}
+
+	void main() {
+		mainImage(gl_FragColor, gl_FragCoord.xy);
+	}
+`;
+
+vertexShader = `
+  uniform vec3 camPos;
+
+  varying vec2 vUv;
+  varying vec3 I;
+  varying vec3 P;
+  varying vec4 cent;
+
+  void main() {
+    vUv = uv;
+
+    // gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
+    vec4 worldPosition = modelMatrix * vec4(position, 1.0);
+
+    P = worldPosition.xyz;
+    I = normalize(camPos - worldPosition.xyz);
+
+    cent = modelMatrix * vec4(0., 0., 0., 1.);
+
+    gl_Position = projectionMatrix * viewMatrix * worldPosition;
+  }
+`;
+
+	loadMesh("res/Jinjiang geom.json?jsoncallback=geojson");
+</script>
+</body>
+</html>

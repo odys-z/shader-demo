@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<title>three.js webgl - geometry - normals</title>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+
+	<script type='text/javascript' src='../3rd-lib/three.js/three.min.js'></script>
+	<script type='text/javascript' src='../3rd-lib/three.js/OrbitControls.js'></script>
+	<script type='text/javascript' src='../lib/three meshes.js'></script>
+
+	<link rel='stylesheet' type='text/css' href='../lib/shader.css'>
+</head>
+<body>
+	<p><a href='https://threejs.org/examples/#webgl_geometry_normals'>Three webgl_geometry_normals</a>
+	</p>
+	<div id="container"></div>
+
+<script type="module">
+const vertexShader = `
+  uniform vec3 camPos;
+
+  varying vec2 vUv;
+  varying vec3 I;
+  varying vec3 P;
+  varying vec4 cent;
+
+  void main() {
+    vUv = uv;
+
+    // gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
+    vec4 worldPosition = modelMatrix * vec4(position, 1.0);
+
+    P = worldPosition.xyz;
+    I = normalize(camPos - worldPosition.xyz);
+
+    cent = modelMatrix * vec4(0., 0., 0., 1.);
+
+    gl_Position = projectionMatrix * viewMatrix * worldPosition;
+  }
+`;
+
+	const uniforms = {
+		iTime: { value: 0 },
+		texize: { value: new THREE.Vector4(64, 64, 4, 4) },
+		iResolution:  { value: new THREE.Vector3() },
+		// camPos: { value: campos },
+		// iChannel0: { value: texture },
+		iMouse: {value: new THREE.Vector2()},
+	};
+
+	document.onmousemove = function(e){
+		uniforms.iMouse.value.x = e.clientX / window.innerWidth - 0.5;
+		uniforms.iMouse.value.y = e.clientY / window.innerHeight - 0.5;
+	}
+
+	init('container', {
+		// showMesh: true,
+		geometry: new THREE.BoxBufferGeometry( 240, 200, 150, 2, 2, 2 ),
+	});
+	animate();
+</script>
+</body>
+</html>

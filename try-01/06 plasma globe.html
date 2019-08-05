@@ -6,8 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
     <title>06 Plasma Globe</title>
     <link rel='stylesheet' type='text/css' href='../lib/shader.css'>
-    <script type='text/javascript' src='three.js/three.min.js'></script>
-    <script type='text/javascript' src='three.js/OrbitControls.js'></script>
+    <script type='text/javascript' src='../3rd-lib/three.js/three.min.js'></script>
+    <script type='text/javascript' src='../3rd-lib/three.js/OrbitControls.js'></script>
     <script type='text/javascript' src='../lib/shadertoy-loader.js'></script>
   </head>
   <body>
@@ -181,13 +181,13 @@ vec2 iSphere2(in vec3 ro, in vec3 rd)
 
 void mainImage( out vec4 fragColor, in vec2 fragCoord )
 {
-	vec2 p = fragCoord.xy / iResolution.xy - 0.5;
-	p.x *= iResolution.x / iResolution.y;
+  vec2 p = fragCoord.xy / iResolution.xy - 0.5;
+  p.x *= iResolution.x / iResolution.y;
   p = mod(p, .3) - .15;
-	vec2 um = iMouse.xy / iResolution.xy - .5;
+  vec2 um = iMouse.xy / iResolution.xy - .5;
 
-	//camera
-	vec3 ro = vec3(0., 0., 5.); // ray origin
+  //camera
+  vec3 ro = vec3(0., 0., 5.); // ray origin
   vec3 rd = normalize(vec3(p * 2.9, -1.5));// ray dir
   mat2 mx = mm2(time * .4 + um.x * 6.);
   mat2 my = mm2(time * 0.3 + um.y * 6.);
@@ -241,7 +241,7 @@ void main() {
 
   const loader = new THREE.TextureLoader();
   loader.setCrossOrigin('anonymous');
-  const texture = loader.load('three.js/parallel axis with bar chart.png');
+  const texture = loader.load('../3rd-lib/three.js/parallel axis with bar chart.png');
   const uniforms = {
     iTime: { value: 0 },
     iResolution:  { value: new THREE.Vector3() },
@@ -257,11 +257,5 @@ void main() {
     uniforms.iMouse.value.y = e.pageY;
   }
   main('frag', fragmentShader, uniforms);
-
-  // shaderSkybox('frag', fragmentShader, {
-  //       time: 0,
-  //       resolut: null, // default: new THREE.Vector3()
-  //       texture: 'three.js/parallel axis with bar chart.png'})
-  //     ; //.start();
 </script>
 </html>

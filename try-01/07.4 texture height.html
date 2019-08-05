@@ -6,8 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
     <title>07.4 Data Texture Milestone 2</title>
     <link rel='stylesheet' type='text/css' href='../lib/shader.css'>
-    <script type='text/javascript' src='three.js/three.min.js'></script>
-    <script type='text/javascript' src='three.js/OrbitControls.js'></script>
+    <script type='text/javascript' src='../3rd-lib/three.js/three.min.js'></script>
+    <script type='text/javascript' src='../3rd-lib/three.js/OrbitControls.js'></script>
     <script type='text/javascript' src='../lib/volumetric-raymatching v0.1.js'></script>
   </head>
   <body>
@@ -47,21 +47,21 @@ const fragmentShader = `
     // float dh_dz = texture2D(iChannel0, uv + 0.1).b - h;
 
     // surface = length(texture2D(iChannel0, normalize(ray.xz)));
-    float dh_dx = texture2D(iChannel0, uv + 0.001).r;
-    dh_dx -= texture2D(iChannel0, uv - 0.001).r;
-    float dh_dz = texture2D(iChannel0, uv + 0.0001).b;
-    dh_dz -= texture2D(iChannel0, uv - 0.0001).b;
+    float dh_dx = texture2D(iChannel0, uv + vec2( 0.001, 0. )).r;
+    dh_dx -= texture2D(iChannel0, uv - vec2( 0.001, 0. )).r;
+    float dh_dz = texture2D(iChannel0, uv + vec2( 0., 0.001 )).b;
+    dh_dz -= texture2D(iChannel0, uv - vec2( 0., 0.001 )).b;
     return normalize(vec3(dh_dx, 0.0, dh_dz));
   }
 
   /** Trace the ray through the scene
    * http://2008.sub.blue/blog/2009/3/7/tracing_a_terrain.html
+   * @param ray_direction Ray direction
+   * @param t Start distance
+   * @param ray Current position of marching ray
    * @return vec2 [ distance, height ]
    */
-  vec2 castRay(
-        in  vec3   ray_direction,     // Ray direction
-        in  float  t,                 // Start distance
-        out vec3   ray) {             // Current position of marching ray
+  vec2 castRay( in vec3 ray_direction, in float t, out vec3 ray) {
 
     float ray_distance = t;
     float surface = 0.0;

@@ -1,6 +1,10 @@
 # About
 
-This is a temp repo for testing. No plan to support in the future.
+Shader-demo is a Glsl shader testing and visual effects lib.
+
+This is a temp repo for now. The js lib distribution will using Webpack in the future. For now, there is a helping tool, cp-res, in shader-demo/lib directory for copying necessary files. Users need modify the "src" array to indicate their git location, then copy files to their application/oz dir.
+
+The bash script is only can be used in linux.
 
 The [shadertoy](https://en.wikipedia.org/wiki/Shadertoy) and raymatching is some how different from the well known style of 3d rendering, see [2].
 
@@ -36,6 +40,19 @@ Shapes melding, because of power of "mix()".
 Then open index.html with browser. Edge is recommended because you can load local files,
 the others like Firefox or Chrome will report CROS error.
 
+# Troubleshootings:
+
+## Chrome CORS Blocked
+
+If Chrome is reporting CORS error, that's because you opened the html file from file system
+and it's trying to load a local file. Chrome doesn't allow this access by default. So in Ubuntu:
+
+    google-chrome --allow-file-access-from-files
+
+Windows has the similar shooting.
+
+see [Stackovrflow: Problems with jQuery getJSON using local files in Chrome](https://stackoverflow.com/questions/2541949/problems-with-jquery-getjson-using-local-files-in-chrome);
+
 # References
 
 - 1. [Shadertoy](www.shadertoy.com)
@@ -68,3 +85,9 @@ This source is copied in ./refrences
 - x. [Inigo Quilez's website](http://www.iquilezles.org/www/index.htm "inigo quilez website")
 
 - x. [An advanced rendering tech survey](http://advances.realtimerendering.com/s2015/index.html "Advanced Tech Survey")
+
+# Resources
+
+- 1. [graphtoy](http://www.iquilezles.org/apps/graphtoy)
+
+- 2. [GLSL Js Translator / Debugger](http://brrian.org/glsl-simulator/),

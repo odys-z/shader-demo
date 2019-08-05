@@ -19,7 +19,7 @@
   <body>
     <canvas id="c"></canvas>
   </body>
-<script src="three.js/three.min.js"></script>
+<script src="../3rd-lib/three.js/three.min.js"></script>
 <script>
 'use strict';
 
@@ -76,7 +76,7 @@ function main() {
   `;
   const loader = new THREE.TextureLoader();
   // const texture = loader.load('resources/images/bayer.png');
-  const texture = loader.load('three.js/bayer.png');
+  const texture = loader.load('../3rd-lib/three.js/bayer.png');
   texture.minFilter = THREE.NearestFilter;
   texture.magFilter = THREE.NearestFilter;
   texture.wrapS = THREE.RepeatWrapping;

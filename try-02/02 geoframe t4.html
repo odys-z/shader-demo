@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<title>three.js webgl - geometry - normals</title>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+
+	<script type='text/javascript' src='../3rd-lib/jquery-3.4.1.min.js'></script>
+	<script type='text/javascript' src='../3rd-lib/three.js/three.min.js'></script>
+	<script type='text/javascript' src='../3rd-lib/three.js/OrbitControls.js'></script>
+	<script type='text/javascript' src='../lib/three meshes.js'></script>
+	<script type='text/javascript' src='res/geoframe t4.js'></script>
+
+	<link rel='stylesheet' type='text/css' href='../lib/shader.css'>
+</head>
+<body>
+	<table>
+		<tr><td width="80%"><div id="container"></div><td>
+			<td><input id='c1'></input>
+				<input id='c2'></input>
+				<input id='c'></input>
+			</td>
+		</tr>
+	</table>
+
+<script type="module">
+// https://www.shadertoy.com/view/MtdcDn
+fragmentShader = `
+	uniform float iTime;
+	varying vec3 P;
+	varying vec4 world;
+	varying vec3 eye;
+	varying vec3 n;
+	varying vec2 vUv;
+	varying vec4 cent;
+
+	void mainImage( out vec4 fragColor, in vec2 fragCoord ) {
+		float alpha = cos(iTime * .2) * .5;
+		// fragColor = vec4(normalize(abs(P.xyz)), abs(alpha * .5 + .5));
+		// fragColor = vec4(normalize(P), alpha * 0.1 + 0.5);
+		fragColor = mix(vec4(normalize(P.zyx), alpha), clamp(vec4(pow(abs(dot(eye.yx - cent.xy, n.xy)), .3)), 0., 1.), .5);
+
+		// float z = smoothstep(1.0, 0.03, pow( 1. / P.z, 2.26) * 50.);
+		// float z = smoothstep(0.9, 0.03, pow( 0.1, P.z * 2.26));
+		// float z = pow((15. - world.z) / 15., 1.1);
+		float z = (15. - world.z) / 15.;
+		z = 1. - pow( z, .15);
+		vec4 colz = vec4(0.0, z, z, 1.);
+
+		fragColor = mix(fragColor, colz, 1.0 - n.z);
+	}
+
+	void main() {
+		mainImage(gl_FragColor, gl_FragCoord.xy);
+	}
+`;
+
+const fragtoy1 = `
+  uniform vec3 iResolution;
+  uniform vec3 camPos;
+  varying vec3 eye;
+  uniform float iTime;
+  uniform vec2 iMouse;
+  uniform sampler2D iChannel0;
+
+	varying vec3 P;
+	varying vec3 I;
+	varying vec3 n;
+	varying vec2 vUv;
+	varying vec4 cent;
+
+	// ray marching
+	const int max_iterations = 512;
+	const float stop_threshold = 0.001;
+	const float grad_step = 0.02;
+	const float clip_far = 10000.0;
+
+	// math
+	const float PI = 3.14159265359;
+	const float DEG_TO_RAD = PI / 180.0;
+
+	vec3 rotx(vec3 p, float a) {
+		float s = sin(a), c = cos(a);
+		return vec3(p.x, c * p.y - s * p.z, s * p.y + c * p.z);
+	}
+	vec3 roty(vec3 p, float a) {
+		float s = sin(a), c = cos(a);
+		return vec3(c * p.x + s * p.z, p.y, -s * p.x + c * p.z);
+	}
+	vec3 rotz(vec3 p, float a) {
+		float s = sin(a), c = cos(a);
+		return vec3(c * p.x - s * p.y, s * p.x + c * p.y, p.z);
+	}
+
+  // iq's distance function
+  float sdSphere( vec3 pos, float r ) {
+  	return length( pos ) - r;
+  }
+
+  float sdBox( vec3 p, vec3 b ) {
+    vec3 d = abs(p) - b;
+    return min(max(d.x,max(d.y,d.z)),0.0) + length(max(d,0.0));
+  }
+
+  float sdTorus( vec3 p, vec2 t ) {
+	vec2 q = vec2(length(p.xz)-t.x,p.y);
+	return length(q)-t.y;
+  }
+
+  float sdUnion( float d0, float d1 ) {
+      return min( d0, d1 );
+  }
+
+  float sdInter( float d0, float d1 ) {
+      return max( d0, d1 );
+  }
+
+  float sdSub( float d0, float d1 ) {
+      return max( d0, -d1 );
+  }
+
+  float sdUnion_s( float a, float b, float k ) {
+      float h = clamp( 0.5+0.5*(b-a)/k, 0.0, 1.0 );
+      return mix( b, a, h ) - k*h*(1.0-h);
+  }
+
+  float sfDisp( vec3 p ) {
+      return sin(p.x)*sin(p.y)*sin(p.z) ;
+  }
+
+  vec3 sdTwist( vec3 p, float a ) {
+      float c = cos(a*p.y);
+      float s = sin(a*p.y);
+      mat2  m = mat2(c,-s,s,c);
+      return vec3(m*p.xz,p.y);
+  }
+
+  vec3 sdRep( vec3 p, vec3 c ) {
+      return mod(p, c) - 0.5 * c;
+  }
+
+  // get distance in the world
+  float dist_field( vec3 p ) {
+      p = sdRep( p, vec3( 0.2 ) );
+      // p = sdTwist( p, 1.0 );
+
+      // float d1 = sdBox( p, vec3(0.07) );
+      float d1 = sdSphere( p, 0.016 );
+	  // float d1 = sdTorus( p, vec2(0.2, 0.04));
+
+      // float d = sdInter( d1, d0 );
+      // float d = sdSub( d1, d0 );
+      // float d = sdSub( d0, d1 );
+      // float d = sdUnion( d1, d0 );
+      // float d = -0.1 * d1 + d0;
+
+	  return d1;
+      // return d;
+      // return d + sfDisp( p * 2.5 );
+      // return sdUnion_s( d + sfDisp( p * 2.5 * sin( iTime * 1.01 ) ), d1, 0.1 );
+  }
+
+  // get gradient in the world
+  vec3 gradient( vec3 pos ) {
+  	const vec3 dx = vec3( grad_step, 0.0, 0.0 );
+  	const vec3 dy = vec3( 0.0, grad_step, 0.0 );
+  	const vec3 dz = vec3( 0.0, 0.0, grad_step );
+  	return normalize (
+  		vec3(
+  			dist_field( pos + dx ) - dist_field( pos - dx ),
+  			dist_field( pos + dy ) - dist_field( pos - dy ),
+  			dist_field( pos + dz ) - dist_field( pos - dz )
+  		)
+  	);
+  }
+
+  vec3 fresnel( vec3 F0, vec3 h, vec3 l ) {
+  	return F0 + ( 1.0 - F0 ) * pow( clamp( 1.0 - dot( h, l ), 0.0, 1.0 ), 5.0 );
+  }
+
+  /* phong shading
+   * v must be the position
+   */
+  vec3 shading( vec3 v, vec3 n, vec3 dir, vec3 eye ) {
+  	// ...add lights here...
+
+  	float shininess = 16.0;
+
+  	vec3 final = vec3( 0.0 );
+
+      // dir reflection
+  	vec3 ref = reflect( dir, n );
+
+      vec3 Ks = vec3( 0.5, 0.75, 0.9 );
+      vec3 Kd = vec3( .5 );
+
+  	// light 0
+  	{
+  		vec3 light_pos   = vec3( 20.0, 20.0, 20.0 );
+  		vec3 light_color = vec3( .9, 0.7, 0.7 );
+
+          // from color's postion to light position
+  		vec3 vl = normalize( light_pos - v );
+
+          // 1/2 |cos(light distance, norm)|
+  		vec3 diffuse  = Kd * vec3( max( 0.0, dot( vl, n ) ) );
+  		// |cos(light distance, reflect)|
+  		vec3 specular = vec3( max( 0.0, dot( vl, ref ) ) );
+
+          vec3 F = fresnel( Ks, normalize( vl - dir ), vl );
+  		specular = pow( specular, vec3( shininess ) );
+
+  		final += light_color * mix( diffuse, specular, F );
+  	}
+
+  	// light 1
+  	{
+  		vec3 light_pos   = vec3( -20.0, -20.0, -30.0 );
+  		vec3 light_color = vec3( 0.5, 0.7, 1.0 );
+
+  		vec3 vl = normalize( light_pos - v );
+
+  		vec3 diffuse  = Kd * vec3( max( 0.0, dot( vl, n ) ) );
+  		vec3 specular = vec3( max( 0.0, dot( vl, ref ) ) );
+
+          vec3 F = fresnel( Ks, normalize( vl - dir ), vl );
+  		specular = pow( specular, vec3( shininess ) );
+
+  		final += light_color * mix( diffuse, specular, F );
+  	}
+
+      final += texture2D( iChannel0, ref.xy ).rgb * fresnel( Ks, n, -dir );
+
+  	return final;
+  }
+
+  // ray marching
+  vec4 ray_marching( vec3 o, vec3 dir, float maxdist) {
+  	float t = 0.0;
+    float d = 10000.0;
+    float dt = 200.0;
+    for ( int i = 0; i < 128; i++ ) {
+          vec3 v = o + dir * t;
+          d = dist_field( v );
+          if ( d < 0.001 ) {
+              break;
+          }
+          dt = min( abs(d), 0.1 );
+          t += dt;
+          if ( t > maxdist ) {
+              break;
+          }
+    }
+
+    if ( d >= 0.001 ) {
+      return vec4(0., 0., 0., -.1);
+    }
+
+    t -= dt;
+    for ( int i = 0; i < 4; i++ ) {
+      dt *= 0.5;
+
+      vec3 v = o + dir * ( t + dt );
+      if ( dist_field( v ) >= 0.001 ) {
+          t += dt;
+      }
+    }
+
+    // depth = t;
+    vec3 n = normalize( gradient( o + dir * t ) );
+    return vec4(n, t);
+  }
+
+  void mainImage( out vec4 fragColor, in vec2 fragCoord ) {
+    // SDF tanslate
+    vec3 e = camPos;
+    // vec3 i = normalize( P - cent.xyz - camPos );
+    vec3 i = normalize( P - e );
+	i = rotz(i, -45.);
+    vec4 dist = ray_marching( e, i, 3000. );
+
+    if (dist.w < .0) {
+      // Didn't hit anything
+	  fragColor = vec4(i, 0.01);
+      return;
+    }
+	else if (dist.w < 1.2)
+		fragColor = vec4(sin(iTime + dist.w) * dist.x, cos(iTime + dist.w) * dist.y, dist.z, .2);
+	else {
+		fragColor = vec4(sin(iTime + dist.w) * dist.x, cos(iTime + dist.w) * dist.y, dist.z,
+			clamp(sin(iTime + dist.w) * .3 + .7, 0., 1.));
+		fragColor = mix(vec4(reflect(i, dist.xyz), sin(iTime * .2) * .5 + .5), fragColor, 0.9);
+	}
+  }
+
+  void main() {
+	mainImage(gl_FragColor, gl_FragCoord.xy);
+  }
+`;
+
+vertexShader = `
+  uniform vec3 camPos;
+
+  varying vec2 vUv;
+  varying vec3 I;
+  varying vec3 P;
+  varying vec3 eye;
+  varying vec4 cent;
+  varying vec4 world;
+  varying vec3 n;
+
+  void main() {
+    vUv = uv;
+	n = normal;
+
+    // gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
+    vec4 worldPosition = modelMatrix * vec4(position, 1.0);
+	world = worldPosition;
+
+    // P = worldPosition.xyz;
+    // vec4 P0 = viewMatrix * worldPosition;
+	// P = P0.xyz;
+    I = normalize(camPos - worldPosition.xyz);
+    // cent = modelMatrix * vec4(0., 0., 0.0, 1.);
+    cent = viewMatrix * modelMatrix * vec4(0., 0., 70.0, 1.);
+    vec4 e = modelMatrix * vec4(camPos, 1.);
+    eye = e.xyz;
+
+    gl_Position = projectionMatrix * viewMatrix * worldPosition;
+
+	P = gl_Position.xyz;
+  }
+`;
+
+	loadMesh("res/Chengdu.geojson", {
+		datafrag: fragtoy1,
+		boxSize: [40, 40, 200]
+	});
+</script>
+</body>
+</html>
