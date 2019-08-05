@@ -36,19 +36,35 @@ var vertexShader = `
   }
 `;
 
-Object.assign(opts.uniforms, {
-	camPos:  { value: new THREE.Vector3(0, 0, 140) },
-	iTime: { value: 0 },
-	iChannel0: { value: sinText(64, 64) },
-	texize: { value: new THREE.Vector4(64, 64, 4, 4) },
-	iResolution:  { value: new THREE.Vector3() },
-	iMouse: {value: new THREE.Vector2()},
-});
+Object.assign(opts.uniforms,
+	{	camPos:  { value: new THREE.Vector3(0, 0, 140) },
+		iTime: { value: 0 },
+		iChannel0: { value: sinText(64, 64) },
+		texize: { value: new THREE.Vector4(64, 64, 4, 4) },
+		iResolution:  { value: new THREE.Vector3() },
+		iMouse: {value: new THREE.Vector2()},
+	}
+);
+
+// gpu picker
+Object.assign(opts,
+	{	picker: {
+			pickingTexture: new THREE.WebGLRenderTarget(1, 1),
+			pixelBuffer: new Uint8Array(4),
+			pickedObject: null,
+			// pickedObjectSavedColor: 0,
+		}
+	}
+);
+
+idToObject = [];
 
 function loadMesh(file, optns) {
 	Object.assign(opts.uniforms, optns.uniforms);
 
-	// $.getJSON("res/Jinjiang geom.json?jsoncallback=geojson", function(json) {
+	opts.picking = {x: 0, y: 0};
+	// const pickingMeshes = [];
+
 	$.getJSON(file, function(json) {
 		console.log(json);
 		// all meshes
@@ -61,12 +77,14 @@ function loadMesh(file, optns) {
 		if (optns !== undefined && typeof optns.datafrag === 'string') {
 			if (optns.boxes) {
 				optns.boxes.forEach((box, ix) => {
-					meshes.push(initBox(
-						Object.assign({
-							uniforms: opts.uniforms,
-							frag: optns.datafrag,
-							vert: vertexShader},
-						box)));
+					var boxMesh = initBox(ix, Object.assign(
+							{	uniforms: opts.uniforms,
+								frag: optns.datafrag,
+								vert: vertexShader
+							}, box));
+					meshes.push(boxMesh[0]);
+
+					idToObject.push(boxMesh[1]);
 				});
 			}
 		}
@@ -74,14 +92,18 @@ function loadMesh(file, optns) {
 		// <script src='lib/three meshes.js'></script>
 		container = init('container', {
 			mesh: meshes,
+			pickingMeshes: idToObject,
 		});
 
-		container = document.onmousemove = function(e){
+		document.onmousemove = function(e){
 			opts.uniforms.iMouse.value.x = e.clientX / container.clientWidth - 0.5;
 			opts.uniforms.iMouse.value.y = e.clientY / container.clientHeight - 0.5;
 
 			opts.uniforms.iResolution.value.x = e.clientX / container.clientWidth - 0.5;
 			opts.uniforms.iResolution.value.y = e.clientY / container.clientHeight - 0.5;
+
+			opts.picking.x = e.clientX;
+			opts.picking.y = e.clienty;
 		}
 
 		animate();
@@ -96,7 +118,7 @@ const centre = [104.063, 30.666];
 function worldxy(longlat) {
 	// TODO GIS Projection ...
 	return [(longlat[0] - centre[0]) * longLatScale,
-					(longlat[1] - centre[1]) * longLatScale];
+			(longlat[1] - centre[1]) * longLatScale];
 }
 
 function geoMesh(jsonMesh, wireframe) {
@@ -106,13 +128,9 @@ function geoMesh(jsonMesh, wireframe) {
 	jsonMesh[0].forEach(function(p, ix) {
 		xy = worldxy(p);
 		if (ix === 0) {
-			// shape.moveTo( (p[0] - centre[0]) * longLatScale,
-			// 			(p[1] - centre[1]) * longLatScale );
 			shape.moveTo( xy[0], xy[1] );
 		}
 		else {
-			// shape.lineTo( (p[0] - centre[0]) * longLatScale,
-			// 			(p[1] - centre[1]) * longLatScale );
 			shape.lineTo( xy[0], xy[1] );
 		}
 	});
@@ -122,23 +140,13 @@ function geoMesh(jsonMesh, wireframe) {
 	geop.translate(0, 0, 15.);
 	extrudeSettings = { depth: 15, curveSegments: 1, bevelEnabled: false };
 	var geom = new THREE.ExtrudeGeometry( shape, extrudeSettings );
-	// var geom = new THREE.ShapeGeometry( shape );
 
-	// var mesh = new THREE.Mesh( geometry, new THREE.MeshPhongMaterial() );
-	// geom = new THREE.BoxBufferGeometry( 20, 20, 10, 2, 2, 2 );
-
-	// scale geometry to a uniform size
 	geom.computeBoundingSphere();
-	/* Don't scale, it scaled from long-lat, that's not on a plane!
-	 * var scaleFactor = 240 / geom.boundingSphere.radius;
-	 * geom.scale( scaleFactor, scaleFactor, scaleFactor );
-	 */
 
 	var mesh;
 
 	var geo = new THREE.EdgesGeometry( geop ); // or WireframeGeometry
 	var mat = new THREE.LineBasicMaterial( { color: 0x003f00, linewidth: 1 } );
-	// mesh = new THREE.LineSegments( geo, mat );
 
 	if (wireframe) {
 		var wire = new THREE.Mesh( geom,
@@ -151,7 +159,6 @@ function geoMesh(jsonMesh, wireframe) {
 		wire.add( vertexNormalsHelper );
 
 		mesh = wire;
-		// mesh.add(wire);
 	}
 	else {
 		var material = new THREE.ShaderMaterial( {
@@ -162,10 +169,6 @@ function geoMesh(jsonMesh, wireframe) {
 		material.transparent = true;
 
 		var m = new THREE.Mesh( geom, material );
-		// var vertexNormalsHelper = new THREE.VertexNormalsHelper( m, 1 );
-		// m.add( vertexNormalsHelper );
-
-		// mesh.add( m );
 		mesh = m;
 	}
 
@@ -175,6 +178,7 @@ function geoMesh(jsonMesh, wireframe) {
 }
 
 /**Create a box mesh.
+ * @param {string} id
  * @param {object} opts
  * opts.uniforms:
  * opts.frag: fragment shader,
@@ -182,7 +186,7 @@ function geoMesh(jsonMesh, wireframe) {
  * opts.box [{center: [x, y], size[x, y, z]}]
  * return {THREE.Mesh} box mesh of box
  */
-function initBox(opts) {
+function initBox(id, opts) {
 	var box;
 
 	var transxy = worldxy(opts.center);
@@ -205,8 +209,74 @@ function initBox(opts) {
 			opacity: 0.8 } );
 	material.transparent = true;
 
-	var m = new THREE.Mesh( box, material );
-	// var vertexNormalsHelper = new THREE.VertexNormalsHelper( m, 1 );
-	// m.add( vertexNormalsHelper );
-	return m;
+	var boxMesh = new THREE.Mesh( box, material );
+
+	// picking cube
+	const pickingMaterial = new THREE.MeshPhongMaterial({
+		emissive: new THREE.Color(id),
+		color: new THREE.Color(0, 0, 0),
+		specular: new THREE.Color(0, 0, 0),
+		// map: texture,
+		transparent: true,
+		side: THREE.DoubleSide,
+		alphaTest: 0.5,
+		blending: THREE.NoBlending,
+	});
+
+    const pickingCube = new THREE.Mesh(box, pickingMaterial);
+    pickingCube.position.copy(boxMesh.position);
+    pickingCube.rotation.copy(boxMesh.rotation);
+    pickingCube.scale.copy(boxMesh.scale);
+
+	return [boxMesh, pickingCube];
+}
+
+function pick(cssPosition, scene, camera, time) {
+	const {pickingTexture, pixelBuffer} = opts.picker;
+	const p = opts.picker;
+
+	// restore the color if there is a picked object
+	if (p.pickedObject) {
+		// p.pickedObject.material.emissive.setHex(this.pickedObjectSavedColor);
+		p.pickedObject = undefined;
+	}
+
+	// set the view offset to represent just a single pixel under the mouse
+	const pixelRatio = renderer.getPixelRatio();
+	camera.setViewOffset(
+		renderer.context.drawingBufferWidth,   // full width
+		renderer.context.drawingBufferHeight,  // full top
+		cssPosition.x * pixelRatio | 0,        // rect x
+		cssPosition.y * pixelRatio | 0,        // rect y
+		1,                                     // rect width
+		1,                                     // rect height
+	);
+
+	// render the scene
+	renderer.setRenderTarget(pickingTexture);
+	renderer.render(scene, camera);
+	renderer.setRenderTarget(null);
+	// clear the view offset so rendering returns to normal
+	camera.clearViewOffset();
+	//read the pixel
+	renderer.readRenderTargetPixels(
+		pickingTexture,
+		0, 0, 1, 1,   // x y width height
+		pixelBuffer);
+
+	const id = (pixelBuffer[0] << 16) |
+			 (pixelBuffer[1] <<  8) |
+			 (pixelBuffer[2]      );
+
+	const intersectedObject = idToObject[id];
+	if (intersectedObject) {
+		// pick the first object. It's the closest one
+		p.pickedObject = intersectedObject;
+		console.log(p.pickedObject.material.emissive.getHex());
+
+		// // save its color
+		// p.pickedObjectSavedColor = this.pickedObject.material.emissive.getHex();
+		// // set its emissive color to flashing red/yellow
+		// p.pickedObject.material.emissive.setHex((time * 8) % 2 > 1 ? 0xFFFF00 : 0xFF0000);
+	}
 }

@@ -9,25 +9,27 @@
 	<script type='text/javascript' src='../3rd-lib/three.js/three.min.js'></script>
 	<script type='text/javascript' src='../3rd-lib/three.js/OrbitControls.js'></script>
 	<script type='text/javascript' src='../lib/three meshes.js'></script>
-	<script type='text/javascript' src='res/geoframe t4.js'></script>
+	<script type='text/javascript' src='res/geoframe t6.js'></script>
 
 	<link rel='stylesheet' type='text/css' href='../lib/shader.css'>
 </head>
 <body>
 	<table width='100%'>
-		<tr><td width="90%"><canvas id="container"></canvas><td>
-			<td><p>Best known picking:<br>
-				<a href='https://threejsfundamentals.org/threejs/lessons/threejs-picking.html'>
-					Three.js GPU picking</a></p>
-				<input id='c1'></input><br>
-				<input id='c2'></input><br>
-				<input id='c'></input>
-			</td>
+		<tr><td rowspan='4' width='80%'><div id='container'></div></td>
+			<td>Center: [104.063, 30.666]</td>
+		</tr>
+		<tr>
+			<td>Data 1<input id='c1' value='104.003, 30.666'></input></td>
+		</tr>
+		<tr>
+			<td>Data 2<input id='c2' value='104.133, 30.666'></input></td>
+		</tr>
+		<tr>
+			<td>Data 3<input id='c3' value='104.163, 30.566'></input></td>
 		</tr>
 	</table>
 
 <script type="module">
-// https://www.shadertoy.com/view/MtdcDn
 fragmentShader = `
 	uniform float iTime;
 	varying vec4 world;
@@ -304,17 +306,19 @@ vertexShader = `
   }
 `;
 
-	// loadMesh("res/Chengdu.geojson", {
-	// 	datafrag: fragtoy1,
-	// 	onMouseFrag: fragtoy3,
-	// 	onSelect: onSelect,
-	// 	boxSize: [40, 40, 200],
-	// 	uniforms: {parm: {value: new THREE.Vector3(500, 20, .05)}}
-	// });
-	//
-	// onSelect(obj) {
-	// }
-	initPicker('container', {});
+	loadMesh("res/Chengdu.geojson", {
+		datafrag: fragtoy1,
+		boxSize: [40, 40, 200],
+		boxes: [{center: c('c1'), size: [40, 40, 200]},
+				{center: c('c2'), size: [40, 40, 200]},
+				{center: c('c3'), size: [40, 40, 200]}],
+		uniforms: {parm: {value: new THREE.Vector3(500, 20, .05)}}
+	});
+
+	function c(tag) {
+  	var input = document.querySelector('#' + tag);
+		return input.value.split(',');
+	}
 </script>
 </body>
 </html>
