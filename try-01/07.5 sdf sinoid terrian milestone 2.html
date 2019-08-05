@@ -37,7 +37,7 @@ const fragmentShader = `
 	const float DEG_TO_RAD = PI / 180.0;
 
   // dx, dy in texture
-  const vec2 grad_step = vec2(2.0);
+  const vec2 grad_step = vec2(0.001);
 
 	/** get ray direction in world
 	 * input: varying P, world postion of the pixel:
