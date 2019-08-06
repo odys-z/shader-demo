@@ -5,7 +5,7 @@ var fragmentShader = `
 	varying vec2 vUv;
 
 	void mainImage( out vec4 fragColor, in vec2 fragCoord ) {
-		fragColor = vec4(sin(P.xyz) + 0.5, smoothstep( 0.0, 0.8, cos(P.x * P.z * sin(iTime * .01) * .1) - .2 ));
+		fragColor = vec4(sin(P.xyz) + 0.5, smoothstep( 0.0, 0.8, cos(P.x * P.z * sin(vUv * 2.5) * .1) - .2 ));
 		fragColor.y = pow(abs(fragColor.y * iTime), 1.2) * 0.5;
 		fragColor = mix(fragColor, vec4(length(vUv) + 0.4), sin(iTime) * .2 + .4);
 		fragColor.r = 0.;
@@ -66,6 +66,8 @@ idToObject.push({}); // id = 0 is the background color - bug of the example?
  */
 var dataMeshes = new Array(1);
 
+var font;
+
 function loadMesh(file, optns) {
 	Object.assign(opts.uniforms, optns.uniforms);
 
@@ -96,11 +98,6 @@ function loadMesh(file, optns) {
 			}
 		}
 
-		// dataMeshes.forEach((m, ix) => {
-		// 	if (ix > 0) {
-		// 		geoMeshes.push(m);
-		// 	}
-		// });
 		geoMeshes.push.apply(geoMeshes, dataMeshes);
 
 		// <script src='lib/three meshes.js'></script>

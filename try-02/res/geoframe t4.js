@@ -39,7 +39,7 @@ var vertexShader = `
 Object.assign(opts.uniforms, {
 	camPos:  { value: new THREE.Vector3(0, 0, 140) },
 	iTime: { value: 0 },
-	iChannel0: { value: sinText(64, 64) },
+	iChannel0: { value: sinTex(64, 64) },
 	texize: { value: new THREE.Vector4(64, 64, 4, 4) },
 	iResolution:  { value: new THREE.Vector3() },
 	iMouse: {value: new THREE.Vector2()},
