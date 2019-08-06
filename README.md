@@ -35,7 +35,7 @@ Shapes melding, because of power of "mix()".
 
 ![picking by gpu](https://github.com/odys-z/odys-z.github.io/blob/master/notes/opnGL/raymatching/screenshots/02%20t6%20geo%20data.png?raw=true)
 
-[//] <img src='https://github.com/odys-z/odys-z.github.io/blob/master/notes/opnGL/raymatching/screenshots/02%20t6%20geo%20data.png?raw=true' style='width:200px;'>with by html tag</img>
+[//]: <img src='https://github.com/odys-z/odys-z.github.io/blob/master/notes/opnGL/raymatching/screenshots/02%20t6%20geo%20data.png?raw=true' style='width:200px;'>with by html tag</img>
 
 # Quick Start
 
