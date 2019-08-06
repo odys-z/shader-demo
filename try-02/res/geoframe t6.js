@@ -5,8 +5,8 @@ var fragmentShader = `
 	varying vec2 vUv;
 
 	void mainImage( out vec4 fragColor, in vec2 fragCoord ) {
-		fragColor = vec4(normalize(P.xyz), abs(cos(iTime) * .5 + .5));
-		fragColor = mix(fragColor, vec4(length(vUv)), sin(iTime) * .5 + .5);
+		fragColor = vec4(sin(P.xyz) + 0.5, smoothstep(0.3, 1.0, cos(P.xyz * .5)));
+		fragColor = mix(fragColor, vec4(length(vUv) + 0.4), sin(iTime) * .2 + .4);
 	}
 
 	void main() {
@@ -58,40 +58,51 @@ Object.assign(opts,
 );
 
 idToObject = [];
+idToObject.push({}); // id = 0 is the background color - bug of the example?
+/** data box meshes, when one picked, use this to change it's color, see pick()
+ * The first one, ix = 0, is reserved for background
+ */
+var dataMeshes = new Array(1);
 
 function loadMesh(file, optns) {
 	Object.assign(opts.uniforms, optns.uniforms);
 
 	opts.picking = {x: 0, y: 0};
-	// const pickingMeshes = [];
 
 	$.getJSON(file, function(json) {
-		console.log(json);
-		// all meshes
-		// var meshes = geoMesh(json);
-		meshes = [];
+		console.log("geojson", json);
+
+		geoMeshes = [];
+
 		json.features.forEach((f, x) => {
-			meshes.push(geoMesh( f.geometry.coordinates[0] ));
+			geoMeshes.push(geoMesh( f.geometry.coordinates[0] ));
 		} );
 
 		if (optns !== undefined && typeof optns.datafrag === 'string') {
 			if (optns.boxes) {
 				optns.boxes.forEach((box, ix) => {
-					var boxMesh = initBox(ix, Object.assign(
+					var boxMesh = initBox(ix + 1, // picking id, 0 is background
+						Object.assign(
 							{	uniforms: opts.uniforms,
 								frag: optns.datafrag,
 								vert: vertexShader
 							}, box));
-					meshes.push(boxMesh[0]);
+					dataMeshes.push(boxMesh[0]);
 
 					idToObject.push(boxMesh[1]);
 				});
 			}
 		}
 
+		dataMeshes.forEach((m, ix) => {
+			if (ix > 0) {
+				geoMeshes.push(m);
+			}
+		});
+
 		// <script src='lib/three meshes.js'></script>
 		container = init('container', {
-			mesh: meshes,
+			mesh: geoMeshes,
 			pickingMeshes: idToObject,
 		});
 
@@ -103,7 +114,7 @@ function loadMesh(file, optns) {
 			opts.uniforms.iResolution.value.y = e.clientY / container.clientHeight - 0.5;
 
 			opts.picking.x = e.clientX;
-			opts.picking.y = e.clienty;
+			opts.picking.y = e.clientY;
 		}
 
 		animate();
@@ -211,6 +222,9 @@ function initBox(id, opts) {
 
 	var boxMesh = new THREE.Mesh( box, material );
 
+	// const loader = new THREE.TextureLoader();
+	// const texture = loader.load('https://threejsfundamentals.org/threejs/resources/images/frame.png');
+
 	// picking cube
 	const pickingMaterial = new THREE.MeshPhongMaterial({
 		emissive: new THREE.Color(id),
@@ -224,22 +238,33 @@ function initBox(id, opts) {
 	});
 
     const pickingCube = new THREE.Mesh(box, pickingMaterial);
-    pickingCube.position.copy(boxMesh.position);
-    pickingCube.rotation.copy(boxMesh.rotation);
-    pickingCube.scale.copy(boxMesh.scale);
+    // pickingCube.position.copy(boxMesh.position);
+    // pickingCube.rotation.copy(boxMesh.rotation);
+    // pickingCube.scale.copy(boxMesh.scale);
 
 	return [boxMesh, pickingCube];
 }
 
+// material for geo mesh
+var pickedMaterial = new THREE.ShaderMaterial( {
+		fragmentShader: fragmentShader,
+		vertexShader: vertexShader,
+		uniforms: opts.uniforms,
+		opacity: 0.8 } );
+pickedMaterial.transparent = true;
+
+/** Saving picked mesh's original material */
+var savedMaterial;
+
 function pick(cssPosition, scene, camera, time) {
-	const {pickingTexture, pixelBuffer} = opts.picker;
+	// const {pickingTexture, pixelBuffer} = opts.picker;
 	const p = opts.picker;
 
 	// restore the color if there is a picked object
-	if (p.pickedObject) {
-		// p.pickedObject.material.emissive.setHex(this.pickedObjectSavedColor);
-		p.pickedObject = undefined;
-	}
+	// if (p.pickedObject) {
+	// 	// p.pickedObject.material.emissive.setHex(this.pickedObjectSavedColor);
+	// 	p.pickedObject = undefined;
+	// }
 
 	// set the view offset to represent just a single pixel under the mouse
 	const pixelRatio = renderer.getPixelRatio();
@@ -253,30 +278,52 @@ function pick(cssPosition, scene, camera, time) {
 	);
 
 	// render the scene
-	renderer.setRenderTarget(pickingTexture);
-	renderer.render(scene, camera);
+	renderer.setRenderTarget(p.pickingTexture);
+	renderer.render(pickingScene, camera);
 	renderer.setRenderTarget(null);
 	// clear the view offset so rendering returns to normal
 	camera.clearViewOffset();
 	//read the pixel
 	renderer.readRenderTargetPixels(
-		pickingTexture,
+		p.pickingTexture,
 		0, 0, 1, 1,   // x y width height
-		pixelBuffer);
+		p.pixelBuffer);
 
-	const id = (pixelBuffer[0] << 16) |
-			 (pixelBuffer[1] <<  8) |
-			 (pixelBuffer[2]      );
+	const id = (p.pixelBuffer[0] << 16) |
+			   (p.pixelBuffer[1] <<  8) |
+			   (p.pixelBuffer[2]      );
 
+	if (id > 0) {
+		select(id);
+	}
+	else {
+		deselect();
+	}
+}
+
+/**Select a data box<br>
+ * @param {string} id
+ */
+function select(id) {
 	const intersectedObject = idToObject[id];
-	if (intersectedObject) {
-		// pick the first object. It's the closest one
-		p.pickedObject = intersectedObject;
-		console.log(p.pickedObject.material.emissive.getHex());
+
+	if (intersectedObject != opts.picker.pickedObject) {
+		deselect();
+
+		savedMaterial = dataMeshes[id].material;
+		dataMeshes[id].material = pickedMaterial;
+		opts.picker.pickedObject = dataMeshes[id];
 
 		// // save its color
 		// p.pickedObjectSavedColor = this.pickedObject.material.emissive.getHex();
 		// // set its emissive color to flashing red/yellow
 		// p.pickedObject.material.emissive.setHex((time * 8) % 2 > 1 ? 0xFFFF00 : 0xFF0000);
+	}
+}
+
+function deselect() {
+	if (opts.picker.pickedObject) {
+		opts.picker.pickedObject.material = savedMaterial;
+		opts.picker.pickedObject = undefined;
 	}
 }

@@ -8,7 +8,7 @@
 	<script type='text/javascript' src='../3rd-lib/jquery-3.4.1.min.js'></script>
 	<script type='text/javascript' src='../3rd-lib/three.js/three.min.js'></script>
 	<script type='text/javascript' src='../3rd-lib/three.js/OrbitControls.js'></script>
-	<script type='text/javascript' src='../lib/three meshes.js'></script>
+	<script type='text/javascript' src='../lib/three meshes picker.js'></script>
 	<script type='text/javascript' src='res/geoframe t6.js'></script>
 
 	<link rel='stylesheet' type='text/css' href='../lib/shader.css'>
@@ -40,7 +40,7 @@ fragmentShader = `
 	varying vec3 n;
 
 	void mainImage( out vec4 fragColor, in vec2 fragCoord ) {
-		float alpha = cos(iTime * .2) * .5;
+		float alpha = cos(iTime * .2) * .2 + 0.8;
 		fragColor = mix(vec4(normalize(P.zyx), alpha), clamp(vec4(pow(abs(dot(eye.yx - cent.xy, n.xy)), .3)), 0., 1.), .5);
 
 		float z = (15. - world.z) / 15.;
