@@ -1,4 +1,4 @@
-#list
+#file list
 
 - earthmap.jpg
 
@@ -7,3 +7,7 @@
 - fonts/optimer_bold.typeface.json
 
 [bold font](https://threejs.org/examples/fonts/optimer_bold.typeface.json)
+
+- tex/start.pd.jpg (public domain)
+
+[NASA star](http://www.orionsarm.com/im_store/M39atlas.jpg)
