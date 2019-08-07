@@ -73,14 +73,28 @@ function loadMesh(file, optns) {
 
 	opts.picking = {x: 0, y: 0};
 
+	// var gisctr = worldxy(centre);
+	// opts.uniforms.giscentr = {value: THREE.Vector2(
+	// 		// centre[0] * longLatScale,
+	// 		// centre[1] * longLatScale )};
+	// 		gisctr[0],
+	// 		gisctr[1] )};
+
 	$.getJSON(file, function(json) {
 		console.log("geojson", json);
 
 		geoMeshes = [];
 
 		json.features.forEach((f, x) => {
-			geoMeshes.push(geoMesh( f.geometry.coordinates[0] ));
+			geoMeshes.push(geoMesh( f.geometry.coordinates[0], {
+				wireframe: optns.wireframe,
+				gishader: optns.gishader
+			} ));
 		} );
+		if (optns.uniforms) ;
+		else optns.uniforms = {};
+		opts.uniforms.gistart = {value: new THREE.Vector4(bound[0].x, bound[0].y)};
+		opts.uniforms.gisbound = {value: new THREE.Vector4(bound[1].x - bound[0].x, bound[1].y - bound[0].y)};
 
 		if (optns !== undefined && typeof optns.datafrag === 'string') {
 			if (optns.boxes) {
@@ -107,11 +121,14 @@ function loadMesh(file, optns) {
 		});
 
 		document.onmousemove = function(e){
-			opts.uniforms.iMouse.value.x = e.clientX / container.clientWidth - 0.5;
-			opts.uniforms.iMouse.value.y = e.clientY / container.clientHeight - 0.5;
-
-			opts.uniforms.iResolution.value.x = e.clientX / container.clientWidth - 0.5;
-			opts.uniforms.iResolution.value.y = e.clientY / container.clientHeight - 0.5;
+			// opts.uniforms.iMouse.value.x = e.clientX / container.clientWidth - 0.5;
+			// opts.uniforms.iMouse.value.y = e.clientY / container.clientHeight - 0.5;
+			// opts.uniforms.iResolution.value.x = e.clientX / container.clientWidth - 0.5;
+			// opts.uniforms.iResolution.value.y = e.clientY / container.clientHeight - 0.5;
+			opts.uniforms.iMouse.value.x = e.clientX;
+			opts.uniforms.iMouse.value.y = e.clientY;
+			opts.uniforms.iResolution.value.x = container.clientWidth;
+			opts.uniforms.iResolution.value.y = container.clientHeight;
 
 			opts.picking.x = e.clientX;
 			opts.picking.y = e.clientY;
@@ -123,6 +140,11 @@ function loadMesh(file, optns) {
 
 const longLatScale = 1000;
 const centre = [104.063, 30.666];
+const bound = [];
+	// obviously not correct from view point of gis
+	bound.push({x: 180 * longLatScale, y: 180 * longLatScale});
+	bound.push({x: -180 * longLatScale, y: -180 * longLatScale});
+
 /**Change longitude and latitude to world position xy.<br>
  * @param {array} longlat [long, lat]
  * @return [x, y] in world */
@@ -132,12 +154,22 @@ function worldxy(longlat) {
 			(longlat[1] - centre[1]) * longLatScale];
 }
 
-function geoMesh(jsonMesh, wireframe) {
+/**
+ * optn.wireframe using wireframe
+ */
+function geoMesh(jsonMesh, optn) {
 	// https://threejs.org/docs/#api/en/extras/core/Shape
 	var shape = new THREE.Shape();
 
 	jsonMesh[0].forEach(function(p, ix) {
 		xy = worldxy(p);
+
+		// GIS AABB
+		if (xy[0] < bound[0].x) { bound[0].x = xy[0]; }
+		if (xy[0] > bound[1].x) { bound[1].x = xy[0]; }
+		if (xy[1] < bound[0].y) { bound[0].y = xy[1]; }
+		if (xy[1] > bound[1].y) { bound[1].y = xy[1]; }
+
 		if (ix === 0) {
 			shape.moveTo( xy[0], xy[1] );
 		}
@@ -146,12 +178,14 @@ function geoMesh(jsonMesh, wireframe) {
 		}
 	});
 
-	var extrudeSettings = { depth: .1, curveSegments: 1, bevelEnabled: false };
+	// border
+	var extrudeSettings = { depth: .01, curveSegments: 1, bevelEnabled: false };
 	var geop = new THREE.ExtrudeGeometry( shape, extrudeSettings );
 	geop.translate(0, 0, 15.);
+
+	// map
 	extrudeSettings = { depth: 15, curveSegments: 1, bevelEnabled: false };
 	var geom = new THREE.ExtrudeGeometry( shape, extrudeSettings );
-
 	geom.computeBoundingSphere();
 
 	var mesh;
@@ -159,7 +193,7 @@ function geoMesh(jsonMesh, wireframe) {
 	var geo = new THREE.EdgesGeometry( geop ); // or WireframeGeometry
 	var mat = new THREE.LineBasicMaterial( { color: 0x003f00, linewidth: 1 } );
 
-	if (wireframe) {
+	if (optn.wireframe) {
 		var wire = new THREE.Mesh( geom,
 			new THREE.MeshBasicMaterial( {
 				color: 0x222080,
@@ -173,8 +207,8 @@ function geoMesh(jsonMesh, wireframe) {
 	}
 	else {
 		var material = new THREE.ShaderMaterial( {
-			fragmentShader,
-			vertexShader,
+			fragmentShader: optn.gishader && optn.gishader.frag ? optn.gishader.frag : fragmentShader,
+			vertexShader: optn.gishader && optn.gishader.vert ? optn.gishader.vert : vertexShader,
 			uniforms: opts.uniforms,
 			opacity: 0.7 } );
 		material.transparent = true;

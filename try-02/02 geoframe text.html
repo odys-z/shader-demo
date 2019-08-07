@@ -9,7 +9,7 @@
 	<script type='text/javascript' src='../3rd-lib/three.js/three.min.js'></script>
 	<script type='text/javascript' src='../3rd-lib/three.js/OrbitControls.js'></script>
 	<script type='text/javascript' src='../lib/three meshes picker.js'></script>
-	<script type='text/javascript' src='res/geoframe t6.js'></script>
+	<script type='text/javascript' src='res/geoframe text.js'></script>
 
 	<link rel='stylesheet' type='text/css' href='../lib/shader.css'>
 </head>
@@ -124,8 +124,7 @@ const fragtoy1 = `
 	}
 
 	//Calculate maximum volumetric resolution of a 2D texture.
-	vec3 volumeSize(sampler2D tex) {
-	    // vec2 size2D = vec2(textureSize(tex,0));
+	vec3 volumeSize() {
 	    vec2 size2D = vec2(64., 64.);
 		return vec3(floor(pow(size2D.x * size2D.y, 1.0 / 3.0)));
 	}
@@ -135,22 +134,16 @@ const fragtoy1 = `
 	}
 
 	//Samples a texture as a psuedo-volumetric buffer.
-	vec4 texture3D(sampler2D tex, vec3 uvw, vec3 vres)
-	{
-	    // vec2 texRes = vec2(textureSize(tex,0));
-	    vec2 texRes = vec2(64., 64.);
-	    uvw = mod(floor(uvw * vres), vres);
-	    float idx = (uvw.z * (vres.x*vres.y)) + (uvw.y * vres.x) + uvw.x;
-	    // ivec2 uv = ivec2(mod(idx, texRes.x), floor(idx / texRes.x));
-	    // return texelFetch(tex, uv, 0);
-		vec2 uv = vec2(mod(idx, texRes.x), floor(idx / texRes.x));
-	    return texture2D(tex, uv);
+	vec4 texture3D(sampler2D tex, vec3 uvw, vec3 vres) {
+		return texture2D(tex, fract(uvw.xy * sin(iTime))) * 0.2
+		 	+ texture2D(tex, fract(uvw.yz) * cos(iTime)) * 3.
+			+ texture2D(tex, fract(uvw.zx)) * 1.5;
 	}
 
 	//texture3D with linear sampling.
 	vec4 texture3DLinear(sampler2D tex, vec3 uvw, vec3 vres)
 	{
-	    vec3 blend = fract(uvw*vres);
+	    vec3 blend = fract(uvw * vres);
 	    vec4 off = vec4(1.0/vres, 0.0);
 
 	    vec4 b000 = texture3D(tex, uvw + off.www, vres);
@@ -189,12 +182,12 @@ const fragtoy1 = `
 
 	    //Thumbnail mode
 		float scale = 0.;
-	    if(iMouse.xy == vec2(0)) {
+	    if(iMouse.xy == vec2(0.)) {
 	    	// camAngles = vec3(iTime * 0.2, 1.0, 0.0);
 	    	scale = 0.2;
 	    }
 		else {
-			scale = clamp( iMouse.x / iMouse.y, 0.1, .6);
+			scale = clamp( iMouse.x / iMouse.y, 0.1, .2);
 		}
 	    camAngles = vec3(iTime * scale, 1.0, 0.0);
 
@@ -210,7 +203,7 @@ const fragtoy1 = `
 	    vec3 planeDelta = planeNorm / parm.y * parm.x;
 
 	    vec3 outColor = vec3(0);
-	    vec3 volRes = volumeSize(iChannel0);
+	    vec3 volRes = volumeSize();
 
 	    for(float i = 0.0; i < 1000.; i++) {
 			if (i >= parm.y)
@@ -257,6 +250,7 @@ const fragtoy1 = `
 	mainImage(gl_FragColor, gl_FragCoord.xy);
   }
 `;
+
 const fragtoy2 = `
   uniform sampler2D iChannel0;
   varying vec2 vUv;
@@ -270,8 +264,70 @@ const fragtoy2 = `
   }
 `;
 
+/* https://www.shadertoy.com/view/4sf3zS */
+const fragtoy3 = `
+	uniform vec2 iResolution;
+	uniform float iTime;
+	uniform vec2 iMouse;
+	uniform sampler2D iChannel0;
+	uniform sampler2D iChannel1;
+
+	varying vec2 vUv;
+	varying vec3 P;
+	varying vec3 n;
+	varying vec4 cent;
+	varying vec4 world;
+	varying vec4 fragCent;
+
+	vec2 getDistortion(vec2 uv, float d, float t) {
+		uv.x += cos(d + cos(t * 0.0095)) * 0.25;
+		uv.y += sin(d + sin(t * 0.0075)) * 0.5;
+		return uv;
+	}
+
+	vec4 getDistortedTexture(sampler2D tex, vec2 uv) {
+		vec4 rgb = texture2D(tex, mod(uv, 1.));
+		return rgb;
+	}
+
+	void mainImage( out vec4 fragColor, in vec2 fragCoord ) {
+		// vec2 uv = fragCoord.xy / iResolution.xy;
+		vec2 uv = vUv;
+		float t = iTime;
+		// vec2 mid = vec2(0.5, 0.5);
+		vec2 focus = iMouse.xy / iResolution.xy;
+		float d1 = distance(focus + sin(t * 0.25) * 0.5, uv);
+		float d2 = distance(focus + cos(t * .1), uv);
+		vec4 rgb = getDistortedTexture(iChannel0, getDistortion(uv, d1, t));
+		// fragColor = texture2D(iChannel0, getDistortion(uv, d1, t));
+		// rgb += getDistortedTexture(iChannel0, getDistortion(uv, -d2, t));
+		rgb *= 0.5;
+
+		rgb.r /= d2;
+		rgb.g += -0.5 + d1;
+		rgb.b = -0.5 + (d1 + d2) / 2.0;
+
+		fragColor = rgb;
+
+		focus = fract(iMouse.xy / fragCoord);
+		d1 = distance(focus + sin(t * 0.25) * 1.5, uv);
+		d2 = distance(focus + cos(t * .1), uv);
+		vec4 rgb1 = getDistortedTexture(iChannel1, getDistortion(uv, d1, t));
+		fragColor = mix(rgb, rgb1, 0.1);
+		// fragColor = vec4(0.2, .1, 0.9, vUv.s + 0.5);
+		fragColor.a = dot(n, vec3(0., .1, 1.)) + 1. / ( 15. - P.z );
+	}
+
+	void main() {
+		mainImage(gl_FragColor, gl_FragCoord.xy);
+	}`;
+
 vertexShader = `
   uniform vec3 camPos;
+  // uniform vec2 giscentr; alwasy 0, 0
+  // x0, y0; w, h
+  uniform vec2 gisbound;
+  uniform vec2 gistart;
 
   varying vec2 vUv;
   varying vec3 I;
@@ -283,7 +339,7 @@ vertexShader = `
   varying vec3 n;
 
   void main() {
-    vUv = uv;
+    // vUv = normalize(uv) * 2. - 1.;
 	n = normal;
 
     // gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
@@ -294,25 +350,37 @@ vertexShader = `
     // vec4 P0 = viewMatrix * worldPosition;
 	// P = P0.xyz;
     I = normalize(camPos - worldPosition.xyz);
-    // cent = modelMatrix * vec4(0., 0., 0.0, 1.);
-    cent = viewMatrix * modelMatrix * vec4(0., 0., 70.0, 1.);
+
+    cent = modelMatrix * vec4(0., 0., 0.0, 1.);
+    vUv = (position.xy - gistart) / gisbound; // gisbound.zw;
+
     vec4 e = modelMatrix * vec4(camPos, 1.);
     eye = e.xyz;
 
     gl_Position = projectionMatrix * viewMatrix * worldPosition;
 
-	P = gl_Position.xyz;
-    fragCent = viewMatrix * modelMatrix * vec4(0., 0., 0.0, 1.);
+    // fragCent = viewMatrix * modelMatrix * vec4(0., 0., 0.0, 1.);
+    fragCent = projectionMatrix * cent;
   }
 `;
+	const loader = new THREE.TextureLoader();
+	// const tex0 = loader.load('res/tex/stars.no-copy.jpg');
+	const tex0 = loader.load('res/tex/stars.no-copy.jpg');
+	const tex1 = loader.load('res/tex/calibre.jpg');
 
 	loadMesh("res/Chengdu.geojson", {
+		// data box shader (fragment only)
 		datafrag: fragtoy1,
+		// gis map shader (vert is optional, but you need keep consist with default vert's varying values)
+		gishader: {frag: fragtoy3},
 		boxSize: [40, 40, 200],
 		boxes: [{center: c('c1'), size: [40, 40, 200]},
 				{center: c('c2'), size: [40, 40, 200]},
 				{center: c('c3'), size: [40, 40, 200]}],
-		uniforms: {parm: {value: new THREE.Vector3(500, 20, .05)}}
+		uniforms: {parm: {value: new THREE.Vector3(500, 20, .05)},
+					iChannel0: {value: tex0},
+					iChannel1: {value: tex1},
+				}
 	});
 
 	function c(tag) {
