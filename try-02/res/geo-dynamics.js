@@ -365,6 +365,7 @@ function deselect() {
 }
 
 ///////////////////////     dynamic model points      //////////////////////////
+var clock = new THREE.Clock();
 /**Postprocessing composer
  * @type {THREE.EffectComposer} */
 var composer;
@@ -381,26 +382,26 @@ function initDynamics(scene, optns) {
 		loader.load( f, function ( object ) {
 			var positions = combineBuffer( object, 'position' );
 			// pushed into dynameshes
-			createMesh( positions, scene, .405, - 50 + i * 20, - 35, 0, 0xff7744 );
-			// createMesh( positions, scene, .405, 50 + i * 20, - 35, 30, 0xff5522 );
-			// createMesh( positions, scene, .405, - 25 + i * 20, - 35, 30, 0xff9922 );
-			// createMesh( positions, scene, .405, - 25 + i * 20, - 35, - 30, 0xff99ff );
+			createMesh( positions, scene, .405, - 60 + i * 30, - 35, 0, 0xff7744 );
+			createMesh( positions, scene, .405, - 20 + i * 30, - 15, 0, 0xff5522 );
+			createMesh( positions, scene, .405,   20 + i * 30, - 35, 0, 0xff9922 );
+			createMesh( positions, scene, .405,   60 + i * 30, - 15, 0, 0xff99ff );
 		}, null, null, function(e) { /* console.log(e); */ } );
 	});
 
 	// postprocessing
 	var renderModel = new THREE.RenderPass( scene, camera );
-	var effectBloom = new THREE.BloomPass( 0.75 );
+	var effectBloom = new THREE.BloomPass( 0.15 );
 	var effectFilm = new THREE.FilmPass( 0.5, 0.5, 1448, false );
-	effectFocus = new THREE.ShaderPass( THREE.FocusShader );
 
+	effectFocus = new THREE.ShaderPass( THREE.FocusShader );
 	effectFocus.uniforms[ "screenWidth" ].value = window.innerWidth * window.devicePixelRatio;
 	effectFocus.uniforms[ "screenHeight" ].value = window.innerHeight * window.devicePixelRatio;
 
 	composer = new THREE.EffectComposer( renderer );
 	composer.addPass( renderModel );
-	composer.addPass( effectBloom );
-	composer.addPass( effectFilm );
+	// composer.addPass( effectBloom );
+	// composer.addPass( effectFilm );
 	composer.addPass( effectFocus );
 }
 
@@ -481,7 +482,7 @@ function createMesh( positions, scene, scale, x, y, z, color ) {
 					start: Math.floor( 100 + 200 * Math.random() ), } );
 }
 
-function onDyanRender(composer) {
+function onDyanRender() {
 	var delta = 10 * clock.getDelta();
 	delta = delta < 2 ? delta : 2;
 	// parent.rotation.y += - 0.02 * delta;
@@ -575,7 +576,6 @@ function onDyanRender(composer) {
 	}
 	composer.render( 0.01 );
 }
-
 
 function onWinDynaResize(composer, effectFocus, size) {
 	composer.setSize( size.w, size.h );
