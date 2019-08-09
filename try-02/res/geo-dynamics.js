@@ -59,8 +59,10 @@ Object.assign(opts,
 	}
 );
 
+/**Index map for find object by GPU picker */
 idToObject = [];
 idToObject.push({}); // id = 0 is the background color - bug of the example?
+
 /** data box meshes, when one picked, use this to change it's color, see pick()
  * The first one, ix = 0, is reserved for background
  */
@@ -72,13 +74,6 @@ function loadMesh(file, optns) {
 	Object.assign(opts.uniforms, optns.uniforms);
 
 	opts.picking = {x: 0, y: 0};
-
-	// var gisctr = worldxy(centre);
-	// opts.uniforms.giscentr = {value: THREE.Vector2(
-	// 		// centre[0] * longLatScale,
-	// 		// centre[1] * longLatScale )};
-	// 		gisctr[0],
-	// 		gisctr[1] )};
 
 	$.getJSON(file, function(json) {
 		console.log("geojson", json);

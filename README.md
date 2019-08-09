@@ -103,4 +103,4 @@ This source is copied in ./refrences
 
 - 3. [TyphoonLabs' OpenGL Shader Designer](https://www.opengl.org/sdk/tools/ShaderDesigner/)
 
-- 4. [GLSL Js Translator / Debugger](http://brrian.org/glsl-simulator/),
+- 4. [Brian Burg, Sophia WangGLSL, Js Translator / Debugger](http://brrian.org/glsl-simulator/),
