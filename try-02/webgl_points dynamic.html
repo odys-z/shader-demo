@@ -213,30 +213,21 @@
 			}
 
 			function animate() {
-
 				requestAnimationFrame( animate );
 				render();
 				stats.update();
-
 			}
 
 			function render() {
-
 				var delta = 10 * clock.getDelta();
-
 				delta = delta < 2 ? delta : 2;
-
 				parent.rotation.y += - 0.02 * delta;
-
 				for ( var j = 0; j < clonemeshes.length; j ++ ) {
-
 					var cm = clonemeshes[ j ];
 					cm.mesh.rotation.y += - 0.1 * delta * cm.speed;
-
 				}
 
 				for ( var j = 0; j < meshes.length; j ++ ) {
-
 					var data = meshes[ j ];
 					var positions = data.mesh.geometry.attributes.position;
 					var initialPositions = data.mesh.geometry.attributes.initialPosition;
@@ -244,48 +235,34 @@
 					var count = positions.count;
 
 					if ( data.start > 0 ) {
-
 						data.start -= 1;
-
 					} else {
-
 						if ( data.direction === 0 ) {
-
 							data.direction = - 1;
-
 						}
-
 					}
 
 					for ( var i = 0; i < count; i ++ ) {
-
 						var px = positions.getX( i );
 						var py = positions.getY( i );
 						var pz = positions.getZ( i );
 
 						// falling down
 						if ( data.direction < 0 ) {
-
 							if ( py > 0 ) {
-
-								positions.setXYZ(
-									i,
+								positions.setXYZ( i,
 									px + 1.5 * ( 0.50 - Math.random() ) * data.speed * delta,
 									py + 3.0 * ( 0.25 - Math.random() ) * data.speed * delta,
 									pz + 1.5 * ( 0.50 - Math.random() ) * data.speed * delta
 								);
 
 							} else {
-
 								data.verticesDown += 1;
-
 							}
-
 						}
 
 						// rising up
 						if ( data.direction > 0 ) {
-
 							var ix = initialPositions.getX( i );
 							var iy = initialPositions.getY( i );
 							var iz = initialPositions.getZ( i );
@@ -297,70 +274,46 @@
 							var d = dx + dy + dx;
 
 							if ( d > 1 ) {
-
-								positions.setXYZ(
-									i,
+								positions.setXYZ( i,
 									px - ( px - ix ) / dx * data.speed * delta * ( 0.85 - Math.random() ),
 									py - ( py - iy ) / dy * data.speed * delta * ( 1 + Math.random() ),
 									pz - ( pz - iz ) / dz * data.speed * delta * ( 0.85 - Math.random() )
 								);
-
 							} else {
-
 								data.verticesUp += 1;
-
 							}
-
 						}
-
 					}
 
 					// all vertices down
 					if ( data.verticesDown >= count ) {
-
 						if ( data.delay <= 0 ) {
-
 							data.direction = 1;
 							data.speed = 5;
 							data.verticesDown = 0;
 							data.delay = 320;
-
 						} else {
-
 							data.delay -= 1;
-
 						}
-
 					}
 
 					// all vertices up
 					if ( data.verticesUp >= count ) {
-
 						if ( data.delay <= 0 ) {
-
 							data.direction = - 1;
 							data.speed = 15;
 							data.verticesUp = 0;
 							data.delay = 120;
-
 						} else {
-
 							data.delay -= 1;
-
 						}
-
 					}
 
 					positions.needsUpdate = true;
-
 				}
 
 				composer.render( 0.01 );
-
 			}
-
 		</script>
-
 	</body>
-
 </html>

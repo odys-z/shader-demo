@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-	<title>Test Font</title>
+	<title>Dynamic Mesh &amp; Postprocessing</title>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
 
@@ -394,12 +394,12 @@ vertexShader = `
 					iChannel1: {value: tex1},
 				},
 		dynaObjs: [
-		'../3rd-lib/three.js/models/male02.obj',
-		'../3rd-lib/three.js/models/female02.obj' ]
+			'../3rd-lib/three.js/models/male02.obj',
+			'../3rd-lib/three.js/models/female02.obj' ]
 	});
 
 	function c(tag) {
-  	var input = document.querySelector('#' + tag);
+		var input = document.querySelector('#' + tag);
 		return input.value.split(',');
 	}
 </script>

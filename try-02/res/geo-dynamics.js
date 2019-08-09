@@ -380,23 +380,13 @@ function initDynamics(scene, optns) {
 		loader.setLogging(false, false); // material is missing, but not needed
 		loader.load( f, function ( object ) {
 			var positions = combineBuffer( object, 'position' );
-			createMesh( positions, scene, .405, - 50 + i * 20, - 35, 60, 0xff7744 );
-			createMesh( positions, scene, .405, 50 + i * 20, - 35, 0, 0xff5522 );
-			createMesh( positions, scene, .405, - 25 + i * 20, - 35, 150, 0xff9922 );
-			createMesh( positions, scene, .405, - 25 + i * 20, - 35, - 150, 0xff99ff );
+			// pushed into dynameshes
+			createMesh( positions, scene, .405, - 50 + i * 20, - 35, 0, 0xff7744 );
+			// createMesh( positions, scene, .405, 50 + i * 20, - 35, 30, 0xff5522 );
+			// createMesh( positions, scene, .405, - 25 + i * 20, - 35, 30, 0xff9922 );
+			// createMesh( positions, scene, .405, - 25 + i * 20, - 35, - 30, 0xff99ff );
 		}, null, null, function(e) { /* console.log(e); */ } );
 	});
-
-				// loader = new THREE.OBJLoader2();
-				// loader.setLogging(false, false); // material is missing, but not needed
-				// loader.load( '../3rd-lib/three.js/models/female02.obj', function ( object ) {
-				// 	var positions = combineBuffer( object, 'position' );
-				// 	createMesh( positions, scene, 4.05, - 1000, - 350, 0, 0xffdd44 );
-				// 	createMesh( positions, scene, 4.05, 0, - 350, 0, 0xffffff );
-				// 	createMesh( positions, scene, 4.05, 1000, - 350, 400, 0xff4422 );
-				// 	createMesh( positions, scene, 2.05, 250, - 350, 1500, 0xff9955 );
-				// 	createMesh( positions, scene, 4.05, 250, - 350, 2500, 0xff77dd );
-				// } );
 
 	// postprocessing
 	var renderModel = new THREE.RenderPass( scene, camera );
@@ -461,14 +451,14 @@ function createMesh( positions, scene, scale, x, y, z, color ) {
 	geometry.addAttribute( 'initialPosition', positions.clone() );
 	geometry.attributes.position.setDynamic( true );
 
-	var clones = [  [ 600, 0, - 400 ],
-					[ 500, 0, 0 ],
-					[ 100, 0, 500 ],
-					[ 100, 0, - 500 ],
-					[ 400, 0, 200 ],
-					[ - 400, 0, 100 ],
-					[ - 500, 0, - 500 ],
-					[ 0, 0, 0 ] ];
+	var clones = [  [ 600, - 400, 20 ],
+					[ 500, 0, 20 ],
+					[ 100, 500, 20 ],
+					[ 100, - 500, 20 ],
+					[ 400, 200, 20 ],
+					[ - 400, 100, 20 ],
+					[ - 500, - 500, 20 ],
+					[ 0, 0, 20 ] ];
 
 	for ( var i = 0; i < clones.length; i ++ ) {
 		var c = ( i < clones.length - 1 ) ? 0x052515 : color;
@@ -479,9 +469,10 @@ function createMesh( positions, scene, scale, x, y, z, color ) {
 		mesh.position.x = x + clones[ i ][ 0 ];
 		mesh.position.y = y + clones[ i ][ 1 ];
 		mesh.position.z = z + clones[ i ][ 2 ];
-		scene.add( mesh );
+		mesh.rotateX(Math.PI / 2);
 
-		clonemeshes.push( { mesh: mesh, speed: 0.5 + Math.random() } );
+		// clonemeshes.push( { mesh: mesh, speed: 0.5 + Math.random() } );
+		scene.add( mesh );
 	}
 
 	dynameshes.push( {  mesh: mesh,
@@ -515,34 +506,25 @@ function onDyanRender(composer) {
 		}
 
 		for ( var i = 0; i < count; i ++ ) {
-
 			var px = positions.getX( i );
 			var py = positions.getY( i );
 			var pz = positions.getZ( i );
 
 			// falling down
 			if ( data.direction < 0 ) {
-
 				if ( py > 0 ) {
-
-					positions.setXYZ(
-						i,
+					positions.setXYZ( i,
 						px + 1.5 * ( 0.50 - Math.random() ) * data.speed * delta,
 						py + 3.0 * ( 0.25 - Math.random() ) * data.speed * delta,
 						pz + 1.5 * ( 0.50 - Math.random() ) * data.speed * delta
 					);
-
 				} else {
-
 					data.verticesDown += 1;
-
 				}
-
 			}
 
 			// rising up
 			if ( data.direction > 0 ) {
-
 				var ix = initialPositions.getX( i );
 				var iy = initialPositions.getY( i );
 				var iz = initialPositions.getZ( i );
@@ -554,22 +536,16 @@ function onDyanRender(composer) {
 				var d = dx + dy + dx;
 
 				if ( d > 1 ) {
-
 					positions.setXYZ(
 						i,
 						px - ( px - ix ) / dx * data.speed * delta * ( 0.85 - Math.random() ),
 						py - ( py - iy ) / dy * data.speed * delta * ( 1 + Math.random() ),
 						pz - ( pz - iz ) / dz * data.speed * delta * ( 0.85 - Math.random() )
 					);
-
 				} else {
-
 					data.verticesUp += 1;
-
 				}
-
 			}
-
 		}
 
 		// all vertices down
