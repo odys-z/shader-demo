@@ -400,6 +400,7 @@ function initDynamics(scene, optns) {
 
 	composer = new THREE.EffectComposer( renderer );
 	composer.addPass( renderModel );
+	// why not working?
 	// composer.addPass( effectBloom );
 	// composer.addPass( effectFilm );
 	composer.addPass( effectFocus );

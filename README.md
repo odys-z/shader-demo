@@ -35,7 +35,11 @@ Shapes melding, because of power of "mix()".
 
 - geojson model, GPU pick
 
-![picking by gpu](https://github.com/odys-z/odys-z.github.io/blob/master/notes/opnGL/raymatching/screenshots/02%20t6%20geo%20data.png?raw=true)
+![picking by gpu](https://github.com/odys-z/odys-z.github.io/blob/master/notes/opnGL/raymatching/screenshots/02%20t6%20geo%20data.png?raw=true =300x)
+
+- dynamic points
+
+![dynamic points](https://github.com/odys-z/odys-z.github.io/blob/master/notes/opnGL/raymatching/screenshots/02%20dynamic-points.png?raw=true)
 
 # Quick Start
 
