@@ -66,7 +66,7 @@ see [Stackovrflow: Problems with jQuery getJSON using local files in Chrome](htt
 - 1. [Shadertoy](www.shadertoy.com)
 Shadertoy Home Page
 
-- 2. [Shadertoy to Three.js How to](https://threejsfundamentals.org/threejs/lessons/threejs-shadertoy.html "")
+- 2. [Shadertoy to Three.js How to](https://threejsfundamentals.org/threejs/lessons/threejs-shadertoy.html "Three.js Tutorial")
 A general way adapting shadertoy's shader to three.js.
 
 - 3. [Three.js Backgrounds and Skyboxes](https://threejsfundamentals.org/threejs/lessons/threejs-backgrounds.html "Three.js Backgrounds and Skyboxes")
@@ -101,6 +101,8 @@ This source is copied in ./refrences
 
 - 2. [graphtoy](http://www.iquilezles.org/apps/graphtoy)
 
-- 3. [TyphoonLabs' OpenGL Shader Designer](https://www.opengl.org/sdk/tools/ShaderDesigner/)
+- 3. [stackgl/glsl-transpiler](https://github.com/stackgl/glsl-transpiler) and [jarble Universal-transpiler](https://github.com/jarble/transpiler)
 
-- 4. [Brian Burg, Sophia WangGLSL, Js Translator / Debugger](http://brrian.org/glsl-simulator/),
+- 4. [TyphoonLabs' OpenGL Shader Designer](https://www.opengl.org/sdk/tools/ShaderDesigner/)
+
+- 5. [Brian Burg, Sophia WangGLSL, Js Translator / Debugger](http://brrian.org/glsl-simulator/),
