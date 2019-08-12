@@ -55,11 +55,13 @@ the others like Firefox or Chrome will report CROS error.
 If Chrome is reporting CROS error, that's because you opened the html file from file system
 and it's trying to load a local file. Chrome doesn't allow this access by default. So in Ubuntu:
 
-    google-chrome --allow-file-access-from-files
+    google-chrome --allow-file-access-from-files --allow-file-access --allow-cross-origin-auth-prompt
 
 Windows has the similar shooting.
 
 see [Stackovrflow: Problems with jQuery getJSON using local files in Chrome](https://stackoverflow.com/questions/2541949/problems-with-jquery-getjson-using-local-files-in-chrome);
+
+and [chrome support](https://chrome.google.com/webstore/detail/allow-control-allow-origi/nlfbmbojpeacfghkpbjhddihlkkiljbi?hl=en)
 
 # References
 
