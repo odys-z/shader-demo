@@ -1,0 +1,96 @@
+<html>
+<head>
+    <title>Tilesname WebCalc V1.0</title>
+</head>
+<body>
+<script type="text/javascript">
+    function toxy() {
+        var zoom = document.forms.Form1.zoom.value;
+        var vlong = document.forms.Form1.long.value;
+        var vlat  = document.forms.Form1.lat.value;
+        document.forms.Form1.xlong.value = long2tile(vlong,zoom);
+        document.forms.Form1.ylat.value = lat2tile(vlat,zoom);
+    }
+
+    function tolonlat() {
+        var vzoom = document.forms.Form1.zoom.value;
+        var xlong = 3.12;
+        xlong = document.forms.Form1.xlong.value;
+        var ylat  = document.forms.Form1.ylat.value;
+        document.forms.Form1.long.value=xlong = tile2long(xlong,vzoom);
+        document.forms.Form1.lat.value=ylat = tile2lat(ylat,vzoom);
+    }
+
+    function long2tile(lon, zoom1) {
+        tt = Number(lon);
+        return (Math.floor((tt+180)/360*Math.pow(2,zoom1)));
+    }
+
+    function lat2tile(lat,zoom2)  {
+    return (Math.floor((1-Math.log(Math.tan(lat*Math.PI/180) + 1/Math.cos(lat*Math.PI/180))/Math.PI)/2 *Math.pow(2,zoom2)));
+    }
+
+    function tile2long(x,z) {
+      return (x/Math.pow(2,z)*360-180);
+     }
+
+    function tile2lat(y,z) {
+      var n=Math.PI-2*Math.PI*y/Math.pow(2,z);
+      return (180/Math.PI*Math.atan(0.5*(Math.exp(n)-Math.exp(-n))));
+    }
+</script>
+<p>Reference: <a href='http://oms.wff.ch/calc.htm'>http://oms.wff.ch/calc.htm</a></p>
+<P>Please enter the lon/lat and press the button (to X,Y) to get the X,Y of the Tiles in OpenStreetMap.</P>
+<P>To obtain the lon/lat just fill in the values X and Y and press (to lon/lat) and you havee the result<BR>
+in the lon/lat fields</P>
+<form name="Form1" action="calc.htm">
+    <table>
+    <tr><td width="50px">zoom&nbsp;<td>
+      <select name="zoom" size="1" >
+      <option>1</option>
+      <option>2</option>
+      <option>3</option>
+      <option>4</option>
+      <option>5</option>
+      <option>6</option>
+      <option>7</option>
+      <option>8</option>
+      <option>9</option>
+      <option>10</option>
+      <option>11</option>
+      <option>12</option>
+      <option>13</option>
+      <option>14</option>
+      <option>15</option>
+      <option selected>16</option>
+      <option>17</option>
+      <option>18</option>
+      <option>19</option>
+      <option>20</option>
+    </select>
+    </td></tr>
+    <tr><td>lon<td><input name="long" value="104.09856"></td></tr>
+    <tr><td>lat<td><input name="lat" value="30.6765"></td></tr>
+    </table>
+    &nbsp;&nbsp;<input type="button" name="&nbsp;to X,Y&nbsp;" value="to X,Y"
+      onclick="toxy()">&nbsp;&nbsp;&nbsp;&nbsp;
+    <input type="button" name="&nbsp;to lon/lat&nbsp;" value="to lon/lat"
+      onclick="tolonlat()"><BR>
+    <table>
+        <tr><td colspan='2'>
+            x = floor((long + 180) / 360 * 2<sup>z</sup>),<br>
+            where z is zoom level;<br>
+            y = floor((1 - log(tan(lat * PI / 180) + 1 / cos(lat * PI / 180)) / PI / 2 * 2<sup>z</sup>)).
+        </td></tr>
+    <tr><td width="50px">X<td><input name="xlong"></td></tr>
+    <tr><td>Y<td><input name="ylat"></td></tr>
+    </table>
+</form>
+<HR><P>GNU GPL v2 or later</P>
+<!--
+    https://a.tile.openstreetmap.org/15/17605/10743.png
+    https://a.tile.openstreetmap.org/17/70420/42975.png
+-->
+<img src=''>OSM Tile</img>
+</body>
+</html>

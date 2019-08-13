@@ -14,17 +14,20 @@
         var map = new OSMBuildings({
         	container: 'map',
         	// position: { latitude: 52.51836, longitude: 13.40438 },
-        	position: { latitude: 30.666, longitude: 104.063 },
-        	zoom: 16,
-        	minZoom: 15,
+        	position: { latitude: 30.6765, longitude: 104.09856 },
+        	zoom: 18,
+        	minZoom: 0,
         	maxZoom: 20,
         	attribution: '© Data <a href="https://openstreetmap.org/copyright/">OpenStreetMap</a> © Map <a href="https://mapbox.com/">Mapbox</a> © 3D <a href="https://osmbuildings.org/copyright/">OSM Buildings</a>'
         });
 
         // map.addMapTiles('https://{s}.tiles.mapbox.com/v3/[YOUR_MAPBOX_KEY]/{z}/{x}/{y}.png');
+        // map.addMapTiles('https://{s}.tiles.mapbox.com/v3/anonymous/{z}/{x}/{y}.png');
+
+		map.addMapTiles('https://a.tile.openstreetmap.org/{z}/{x}/{y}.png');
         map.addGeoJSONTiles('https://{s}.data.osmbuildings.org/0.2/anonymous/tile/{z}/{x}/{y}.json');
         // map.addGeoJSON('https://{s}.data.osmbuildings.org/0.2/anonymous/tile/{z}/{x}/{y}.json', {rotation: 30});
-        map.setRotation(70);
+        // map.setRotation(70);
     </script>
     <a href='https://osmbuildings.org/documentation/viewer/'>Reference: OSM Buildings</a>
 </body>
