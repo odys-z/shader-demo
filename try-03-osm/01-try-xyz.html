@@ -8,8 +8,15 @@
         var zoom = document.forms.Form1.zoom.value;
         var vlong = document.forms.Form1.long.value;
         var vlat  = document.forms.Form1.lat.value;
-        document.forms.Form1.xlong.value = long2tile(vlong,zoom);
-        document.forms.Form1.ylat.value = lat2tile(vlat,zoom);
+        // document.forms.Form1.xlong.value = long2tile(vlong,zoom);
+        // document.forms.Form1.ylat.value = lat2tile(vlat,zoom);
+        var x = long2tile(vlong, zoom);
+        var y = lat2tile(vlat, zoom);
+        document.forms.Form1.xlong.value = x;
+        document.forms.Form1.ylat.value = y;
+
+        // ody
+        loadTile('tile', x, y, zoom);
     }
 
     function tolonlat() {
@@ -38,6 +45,17 @@
       var n=Math.PI-2*Math.PI*y/Math.pow(2,z);
       return (180/Math.PI*Math.atan(0.5*(Math.exp(n)-Math.exp(-n))));
     }
+
+    function loadTile(id, x, y, z) {
+		// map.addMapTiles('https://a.tile.openstreetmap.org/{z}/{x}/{y}.png');
+        var tile = {x: x, y: y, z: z};
+        var url = `https://a.tile.openstreetmap.org/${tile.z}/${tile.x}/${tile.y}.png`;
+        document.querySelector(`#${id}`).src = url;
+    }
+
+    function findTiles(txt) {
+
+    }
 </script>
 <p>Reference: <a href='http://oms.wff.ch/calc.htm'>http://oms.wff.ch/calc.htm</a></p>
 <P>Please enter the lon/lat and press the button (to X,Y) to get the X,Y of the Tiles in OpenStreetMap.</P>
@@ -45,52 +63,104 @@
 in the lon/lat fields</P>
 <form name="Form1" action="calc.htm">
     <table>
-    <tr><td width="50px">zoom&nbsp;<td>
-      <select name="zoom" size="1" >
-      <option>1</option>
-      <option>2</option>
-      <option>3</option>
-      <option>4</option>
-      <option>5</option>
-      <option>6</option>
-      <option>7</option>
-      <option>8</option>
-      <option>9</option>
-      <option>10</option>
-      <option>11</option>
-      <option>12</option>
-      <option>13</option>
-      <option>14</option>
-      <option>15</option>
-      <option selected>16</option>
-      <option>17</option>
-      <option>18</option>
-      <option>19</option>
-      <option>20</option>
-    </select>
-    </td></tr>
-    <tr><td>lon<td><input name="long" value="104.09856"></td></tr>
-    <tr><td>lat<td><input name="lat" value="30.6765"></td></tr>
-    </table>
-    &nbsp;&nbsp;<input type="button" name="&nbsp;to X,Y&nbsp;" value="to X,Y"
-      onclick="toxy()">&nbsp;&nbsp;&nbsp;&nbsp;
-    <input type="button" name="&nbsp;to lon/lat&nbsp;" value="to lon/lat"
-      onclick="tolonlat()"><BR>
-    <table>
-        <tr><td colspan='2'>
+        <tr><td width="50px">zoom&nbsp;</td>
+            <td><select name="zoom" size="1" >
+                  <option>1</option>
+                  <option>2</option>
+                  <option>3</option>
+                  <option>4</option>
+                  <option>5</option>
+                  <option>6</option>
+                  <option>7</option>
+                  <option>8</option>
+                  <option>9</option>
+                  <option>10</option>
+                  <option>11</option>
+                  <option>12</option>
+                  <option>13</option>
+                  <option>14</option>
+                  <option>15</option>
+                  <option selected>16</option>
+                  <option>17</option>
+                  <option>18</option>
+                  <option>19</option>
+                  <option>20</option>
+                </select>
+            </td>
+            <td rowspan='7'>
+                <img id='tile' src='' alt='OSM Tile'></img>
+            </td>
+        </tr>
+        <tr><td>lon<td><input name="long" value="104.09856"></td></tr>
+        <tr><td>lat<td><input name="lat" value="30.6765"></td></tr>
+        <tr><td><input type="button" name="&nbsp;to X,Y&nbsp;"
+                value="to X,Y" onclick="toxy()"></td>
+            <td><input type="button" name="&nbsp;to lon/lat&nbsp;"
+                value="to lon/lat" onclick="tolonlat()"></td>
+        </tr>
+        <tr><td width="50px">X<td><input name="xlong"></td></tr>
+        <tr><td>Y<td><input name="ylat"></td></tr>
+        <tr><td colspan='3'>
             x = floor((long + 180) / 360 * 2<sup>z</sup>),<br>
             where z is zoom level;<br>
             y = floor((1 - log(tan(lat * PI / 180) + 1 / cos(lat * PI / 180)) / PI / 2 * 2<sup>z</sup>)).
+            <br>see <a href='https://wiki.openstreetmap.org/wiki/Slippy_map_tilenames'>OSM Wiki: Slippy map tilenames</a>.
         </td></tr>
-    <tr><td width="50px">X<td><input name="xlong"></td></tr>
-    <tr><td>Y<td><input name="ylat"></td></tr>
     </table>
 </form>
-<HR><P>GNU GPL v2 or later</P>
+<HR>
 <!--
     https://a.tile.openstreetmap.org/15/17605/10743.png
     https://a.tile.openstreetmap.org/17/70420/42975.png
+<table>
+    <tr><td>Polygon</td>
+        <td><textarea rows='30' cols='50'>[[
+                [104.09664988517761,30.675037177974446],
+                [104.10176753997803,30.676578174823774],
+                [104.10169780254364,30.677348664028926],
+                [104.10149931907654,30.677814645535538],
+                [104.10125255584715,30.677740826832867],
+                [104.1006463766098,30.679304848529366],
+                [104.09918189048767,30.679761593449925],
+                [104.0980875492096,30.68028292592132],
+                [104.09735262393951,30.6804859218746],
+                [104.0969181060791,30.68055051140659],
+                [104.09660696983337,30.680684303871192],
+                [104.09638166427612,30.680845777288514],
+                [104.09625291824341,30.680965728795172],
+                [104.0952980518341,30.680610487361935],
+                [104.09450411796568,30.680338288496348],
+                [104.0946753,30.67989231916597],
+                [104.09430027008057,30.67969],
+                [104.09428027008057,30.67955040447617],
+                [104.09420155844116,30.67943680546777],
+                [104.09443974494934,30.67929562133699],
+                [104.09421443939209,30.679101850093524],
+                [104.09443974494934,30.678714306440238],
+                [104.09508347511292,30.678091465168038],
+                [104.09443974494934,30.677602416613283],
+                [104.09472942352295,30.677288686047948],
+                [104.09493863582611,30.677030318934815],
+                [104.09511029720305,30.676776564847376],
+                [104.09522294998169,30.67656433364413],
+                [104.09564137458801,30.676684290468476],
+                [104.0956574678421,30.67664738069224],
+                [104.09572184085846,30.67666583558214],
+                [104.09575939178467,30.676587402275757],
+                [104.09601151943207,30.67666583558214],
+                [104.09664988517761,30.675037177974446]
+            ]]</textarea></td>
+        <td><input type="button" name="Find Tiles" value="Find Tiles" onclick="findTiles()">
+            <p>Use <a href='http://geojson.io/#map=17/30.6765/104.09856'>geojson.io OSM</a>
+            to compare the tiles</p>
+            uper left<br>
+            <img id='ul' src='' alt='Upper Left Tile'></img><br>
+            lower right<br>
+            <img id='lr' src='' alt='Lower Right Tile'></img><br>
+        </td>
+    </tr>
+</table>
 -->
-<img src=''>OSM Tile</img>
+<P>GNU GPL v2 or later</P>
 </body>
 </html>
