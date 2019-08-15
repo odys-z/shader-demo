@@ -30,31 +30,45 @@
 
     function long2tile(lon, zoom1) {
         tt = Number(lon);
-        return (Math.floor((tt+180)/360*Math.pow(2,zoom1)));
+        return (Math.floor((tt + 180) / 360 * Math.pow(2, zoom1)));
     }
 
-    function lat2tile(lat,zoom2)  {
-    return (Math.floor((1-Math.log(Math.tan(lat*Math.PI/180) + 1/Math.cos(lat*Math.PI/180))/Math.PI)/2 *Math.pow(2,zoom2)));
+    function lat2tile(lat, zoom2)  {
+        return (Math.floor((1 - Math.log(Math.tan(lat * Math.PI / 180)
+            + 1 / Math.cos(lat * Math.PI / 180)) / Math.PI) / 2 * Math.pow(2, zoom2)));
     }
 
-    function tile2long(x,z) {
-      return (x/Math.pow(2,z)*360-180);
+    function tile2long(x, z) {
+        return (x / Math.pow(2, z) * 360 - 180);
      }
 
-    function tile2lat(y,z) {
-      var n=Math.PI-2*Math.PI*y/Math.pow(2,z);
-      return (180/Math.PI*Math.atan(0.5*(Math.exp(n)-Math.exp(-n))));
+    function tile2lat(y, z) {
+        var n=Math.PI - 2 * Math.PI * y / Math.pow(2, z);
+        return (180 / Math.PI * Math.atan( 0.5 *( Math.exp(n) - Math.exp(-n))));
     }
 
     function loadTile(id, x, y, z) {
 		// map.addMapTiles('https://a.tile.openstreetmap.org/{z}/{x}/{y}.png');
-        var tile = {x: x, y: y, z: z};
-        var url = `https://a.tile.openstreetmap.org/${tile.z}/${tile.x}/${tile.y}.png`;
+        var url = `https://a.tile.openstreetmap.org/${z}/${x}/${y}.png`;
         document.querySelector(`#${id}`).src = url;
     }
 
-    function findTiles(txt) {
+    function findTiles(z, id) {
+        // X goes from 0 (left edge is 180 °W) to 2zoom − 1 (right edge is 180 °E)<br>
+        // Y goes from 0 (top edge is 85.0511 °N) to 2zoom − 1 (bottom edge is 85.0511 °S) in a Mercator projection
+        var max = Math.exp(2, z) - 1;
+        var grids = [];
+        for (var x = 0; x < max; x++) {
+            lats = [];
+            for (var y = 0; y < max; y++) {
+                lats.push([tile2long(x, z), tile2lat(y, z)]);
+            }
+            grids.push(lats);
+        }
 
+        document.querySelector(`#${id}`).value = grids.toString();
+        console.log(grids);
+        return grids;
     }
 </script>
 <p>Reference: <a href='http://oms.wff.ch/calc.htm'>http://oms.wff.ch/calc.htm</a></p>
@@ -108,59 +122,14 @@ in the lon/lat fields</P>
         </td></tr>
     </table>
 </form>
-<HR>
-<!--
-    https://a.tile.openstreetmap.org/15/17605/10743.png
-    https://a.tile.openstreetmap.org/17/70420/42975.png
-<table>
-    <tr><td>Polygon</td>
-        <td><textarea rows='30' cols='50'>[[
-                [104.09664988517761,30.675037177974446],
-                [104.10176753997803,30.676578174823774],
-                [104.10169780254364,30.677348664028926],
-                [104.10149931907654,30.677814645535538],
-                [104.10125255584715,30.677740826832867],
-                [104.1006463766098,30.679304848529366],
-                [104.09918189048767,30.679761593449925],
-                [104.0980875492096,30.68028292592132],
-                [104.09735262393951,30.6804859218746],
-                [104.0969181060791,30.68055051140659],
-                [104.09660696983337,30.680684303871192],
-                [104.09638166427612,30.680845777288514],
-                [104.09625291824341,30.680965728795172],
-                [104.0952980518341,30.680610487361935],
-                [104.09450411796568,30.680338288496348],
-                [104.0946753,30.67989231916597],
-                [104.09430027008057,30.67969],
-                [104.09428027008057,30.67955040447617],
-                [104.09420155844116,30.67943680546777],
-                [104.09443974494934,30.67929562133699],
-                [104.09421443939209,30.679101850093524],
-                [104.09443974494934,30.678714306440238],
-                [104.09508347511292,30.678091465168038],
-                [104.09443974494934,30.677602416613283],
-                [104.09472942352295,30.677288686047948],
-                [104.09493863582611,30.677030318934815],
-                [104.09511029720305,30.676776564847376],
-                [104.09522294998169,30.67656433364413],
-                [104.09564137458801,30.676684290468476],
-                [104.0956574678421,30.67664738069224],
-                [104.09572184085846,30.67666583558214],
-                [104.09575939178467,30.676587402275757],
-                [104.09601151943207,30.67666583558214],
-                [104.09664988517761,30.675037177974446]
-            ]]</textarea></td>
-        <td><input type="button" name="Find Tiles" value="Find Tiles" onclick="findTiles()">
-            <p>Use <a href='http://geojson.io/#map=17/30.6765/104.09856'>geojson.io OSM</a>
-            to compare the tiles</p>
-            uper left<br>
-            <img id='ul' src='' alt='Upper Left Tile'></img><br>
-            lower right<br>
-            <img id='lr' src='' alt='Lower Right Tile'></img><br>
-        </td>
-    </tr>
-</table>
--->
-<P>GNU GPL v2 or later</P>
+<HR><P>GNU GPL v2 or later</P>
+<p>Grids (z = 5)<br>
+    X goes from 0 (left edge is 180 °W) to 2zoom − 1 (right edge is 180 °E)<br>
+    Y goes from 0 (top edge is 85.0511 °N) to 2zoom − 1 (bottom edge is 85.0511 °S) in a Mercator projection
+</p>
+<input type="button" name="Find Tiles" value="Find Tiles" onclick="findTiles(5, 'tiles')">
+<p>Use <a href='http://geojson.io/#map=17/30.6765/104.09856'>geojson.io OSM</a>
+    to compare the tiles</p>
+<textarea id='tiles' rows='24' cols='120'></textarea>
 </body>
 </html>
