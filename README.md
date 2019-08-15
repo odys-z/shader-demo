@@ -65,6 +65,8 @@ and [chrome support](https://chrome.google.com/webstore/detail/allow-control-all
 
 # References
 
+## try-01 and try-02
+
 - 1. [Shadertoy](www.shadertoy.com)
 Shadertoy Home Page
 
@@ -92,12 +94,11 @@ Find distance to terrian quickly.
 
 This source is copied in ./refrences
 
-
-- x. [Inigo Quilez's website](http://www.iquilezles.org/www/index.htm "inigo quilez website")
-
-- x. [An advanced rendering tech survey](http://advances.realtimerendering.com/s2015/index.html "Advanced Tech Survey")
+- 9. [An advanced rendering tech survey](http://advances.realtimerendering.com/s2015/index.html "Advanced Tech Survey")
 
 # Resources
+
+## Three.js & Shadertoy
 
 - 1. [Three.js Fundamentals](https://threejsfundamentals.org/threejs/lessons/threejs-fundamentals.html#toc)
 
@@ -108,3 +109,25 @@ This source is copied in ./refrences
 - 4. [TyphoonLabs' OpenGL Shader Designer](https://www.opengl.org/sdk/tools/ShaderDesigner/)
 
 - 5. [Brian Burg, Sophia WangGLSL, Js Translator / Debugger](http://brrian.org/glsl-simulator/),
+
+- 6. [Inigo Quilez's website](http://www.iquilezles.org/www/index.htm "inigo quilez website")
+
+## OSM, Mapbox, etc.
+
+- 1. [OSM 3D Buildings](https://osmbuildings.org/documentation/viewer/)
+
+- 2. [OSM 3D wiki](https://wiki.openstreetmap.org/wiki/Main_Page)
+
+- 3. [Mapbox Vector tiles](https://docs.mapbox.com/vector-tiles/reference/)
+
+- 4. [geojson.io](http://geojson.io)
+
+- 5. [F4 Map Demo](https://demo.f4map.com/#lat=52.5157537&lon=13.4070502&zoom=21&camera.theta=80&camera.phi=-24.637)
+
+- 6. [Google Desgin, Prototyping a Smoother Map, A glimpse into how Google Maps works](https://medium.com/google-design/google-maps-cb0326d165f5)
+
+## Basic 3D Algorithms
+
+- 1. [Geometric Tools](https://www.geometrictools.com/Source/Intersection3D.html)
+
+- 2. [Ray Tracing Resources Page, (Gems, Static Intersection, etc.)](http://www.realtimerendering.com/intersections.html)
