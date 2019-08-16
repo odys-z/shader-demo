@@ -374,10 +374,10 @@ vertexShader = `
 		// gis map shader (vert is optional, but you need keep consist with default vert's varying values)
 		gishader: {frag: fragtoy3},
 		boxSize: [40, 40, 200],
-		boxes: [{center: c('c1'), size: [40, 40, 200]},
-				{center: c('c2'), size: [40, 40, 200]},
-				{center: c('c3'), size: [40, 40, 200]}],
-		uniforms: {parm: {value: new THREE.Vector3(500, 20, .05)},
+		boxes:	[{center: c('c1'), size: [40, 40, 200]},
+				 {center: c('c2'), size: [40, 40, 200]},
+				 {center: c('c3'), size: [40, 40, 200]}],
+		uniforms: { parm: {value: new THREE.Vector3(500, 20, .05)},
 					iChannel0: {value: tex0},
 					iChannel1: {value: tex1},
 				}

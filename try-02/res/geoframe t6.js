@@ -96,11 +96,6 @@ function loadMesh(file, optns) {
 			}
 		}
 
-		// dataMeshes.forEach((m, ix) => {
-		// 	if (ix > 0) {
-		// 		geoMeshes.push(m);
-		// 	}
-		// });
 		geoMeshes.push.apply(geoMeshes, dataMeshes);
 
 		// <script src='lib/three meshes.js'></script>
