@@ -37,14 +37,14 @@
 		 * with prime meridian at z = 0, x > 0, y to north, negative z to the east hemishphere.
 		 */
 		function osmGlobeTiles(zoom, a) {
-		    // X goes from 0 (left edge is 180 °W) to 2zoom − 1 (right edge is 180 °E)<br>
-		    // Y goes from 0 (top edge is 85.0511 °N) to 2zoom − 1 (bottom edge is 85.0511 °S) in a Mercator projection
-		    var max = Math.pow(2, zoom) - 1;
-		    var grids = new Float32Array( max * max * 3 );
-		    for (var ix = 0; ix < max; ix++) {
-		        var long = tile2long(ix, zoom);
+			// X goes from 0 (left edge is 180 °W) to 2zoom − 1 (right edge is 180 °E)<br>
+			// Y goes from 0 (top edge is 85.0511 °N) to 2zoom − 1 (bottom edge is 85.0511 °S) in a Mercator projection
+			var max = Math.pow(2, zoom) - 1;
+			var grids = new Float32Array( max * max * 3 );
+			for (var ix = 10; ix < max - 10; ix++) {
+				var long = tile2long(ix, zoom);
 				long *= Math.PI / 180;
-		        for (var iy = 0; iy < max; iy++) {
+				for (var iy = 10; iy < max - 10; iy++) {
 					var lat = tile2lat(iy, zoom);
 					if (lat > 85 || lat < -85) continue;
 					lat *= Math.PI / 180;
@@ -52,15 +52,14 @@
 					var x = r * Math.cos(long);
 					var y = a * Math.sin(lat);
 					var z = r * Math.sin(lat);
-					var idx = (ix + iy) * 3;
-		            grids[idx] = x;
-		            grids[idx + 1] = y;
-		            grids[idx + 2] = z;
-					break;
-		        }
-		    }
+					var idx = (ix * max + iy) * 3;
+					grids[idx] = x;
+					grids[idx + 1] = y;
+					grids[idx + 2] = z;
+			    }
+			}
 			console.log(grids);
-		    return grids;
+			return grids;
 		}
 
 		function pointsBuff(z, a) {
@@ -113,7 +112,7 @@
 
 			// parent = new THREE.Object3D();
 			// scene.add( parent );
-			var globe = pointsBuff(5, 500);
+			var globe = pointsBuff(6, 500);
 			scene.add(globe);
 
 			controls = new THREE.OrbitControls( camera, renderer.domElement );
