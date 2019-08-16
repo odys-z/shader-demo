@@ -1,0 +1,156 @@
+
+<!DOCTYPE HTML>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>OSM Tiles</title>
+	<script type='text/javascript' src='../3rd-lib/three.js/three.min.js'></script>
+	<script type='text/javascript' src='../3rd-lib/three.js/OrbitControls.js'></script>
+    <script src="res/osm-utils.js"></script>
+</head>
+<body>
+    <div id="container" style="width:100%; height:700px"></div>
+    <script>
+		/** Earth Radius hold by OSM,
+		 * see https://wiki.openstreetmap.org/wiki/Zoom_levels */
+		const R = 6372.7982;
+
+		/** a of Mercator Projection
+		 * see https://en.wikipedia.org/wiki/Mercator_projection#Cylindrical_projections */
+		const a = 500;
+
+		const opts = {
+			uniforms: {
+				iTime: { value: 0 },
+				iResolution:  { value: new THREE.Vector3() },
+				iMouse: {value: new THREE.Vector2()},
+			},
+		};
+
+
+		var camera, scene, renderer, controls;
+
+		init('container');
+		animate();
+
+		/**Step through all tile girds, then change longitude / latitude to Cartesian,
+		 * with prime meridian at z = 0, x > 0, y to north, negative z to the east hemishphere.
+		 */
+		function osmGlobeTiles(zoom, a) {
+		    // X goes from 0 (left edge is 180 °W) to 2zoom − 1 (right edge is 180 °E)<br>
+		    // Y goes from 0 (top edge is 85.0511 °N) to 2zoom − 1 (bottom edge is 85.0511 °S) in a Mercator projection
+		    var max = Math.pow(2, zoom) - 1;
+		    var grids = new Float32Array( max * max * 3 );
+		    for (var ix = 0; ix < max; ix++) {
+		        var long = tile2long(ix, zoom);
+				long *= Math.PI / 180;
+		        for (var iy = 0; iy < max; iy++) {
+					var lat = tile2lat(iy, zoom);
+					if (lat > 85 || lat < -85) continue;
+					lat *= Math.PI / 180;
+					var r = a * Math.cos(lat);
+					var x = r * Math.cos(long);
+					var y = a * Math.sin(lat);
+					var z = r * Math.sin(lat);
+					var idx = (ix + iy) * 3;
+		            grids[idx] = x;
+		            grids[idx + 1] = y;
+		            grids[idx + 2] = z;
+					break;
+		        }
+		    }
+			console.log(grids);
+		    return grids;
+		}
+
+		function pointsBuff(z, a) {
+			if (a === undefined)
+				a = 500;
+			var step = 10;
+
+			var points = osmGlobeTiles(z, a); // a = 500
+			// var points = pointsBuff(grids);
+			// var points = new THREE.PlaneBufferGeometry( a, a, 32, 32 );
+			// var buff = new THREE.PlaneBufferGeometry();
+			// var vertices = new Float32Array( 18 );
+			// for (var ix = 0; ix < 18; ix += 3) {
+			// 	vertices[ix] = (ix - 9) * step;
+			// 	vertices[ix + 1] = (ix % 3 - 3) * step;
+			// 	vertices[ix + 2] = 0. * step;
+			// }
+			// buff.addAttribute( 'position', new THREE.BufferAttribute( points, 3 ) );
+			// combined.set( buffer.array, offset );
+
+			var geometry = new THREE.BufferGeometry();
+			geometry.addAttribute( 'position', new THREE.BufferAttribute( points, 3 ) );
+
+			var grid = new THREE.Points(geometry,
+					new THREE.PointsMaterial( { color: 0xffffff, size: 10 } ) );
+
+			grid.position.y = - 0;
+			grid.rotation.x = Math.PI / 6;
+			return grid;
+		}
+
+		/**Initialize.
+		 * @param {string} container id for rendering.
+		 * @param {string} a model radius, for calculating R/a, optinal, default 1000.
+		 * see https://en.wikipedia.org/wiki/Mercator_projection#Cylindrical_projections
+		 */
+		function init(contid, a) {
+			var container = document.querySelector( '#' + contid );
+			scene = new THREE.Scene();
+			scene.background = new THREE.Color( 0x000104 );
+			// camera = new THREE.PerspectiveCamera( 20, window.innerWidth / window.innerHeight, 1, 50000 );
+			camera = new THREE.PerspectiveCamera( 50, container.clientWidth / container.clientHeight, 1, 50000 );
+			camera.position.set( 0, 0, 300 );
+			camera.lookAt( scene.position );
+
+			renderer = new THREE.WebGLRenderer( { antialias: true } );
+			renderer.setPixelRatio( window.devicePixelRatio );
+			renderer.setSize( container.clientWidth, container.clientHeight );
+			container.appendChild( renderer.domElement );
+
+			// parent = new THREE.Object3D();
+			// scene.add( parent );
+			var globe = pointsBuff(5, 500);
+			scene.add(globe);
+
+			controls = new THREE.OrbitControls( camera, renderer.domElement );
+			window.addEventListener( 'resize', onWindowResize, false );
+		}
+
+		function onWindowResize() {
+			camera.aspect = window.innerWidth / window.innerHeight;
+			camera.updateProjectionMatrix();
+			camera.lookAt( scene.position );
+
+			renderer.setSize( window.innerWidth, window.innerHeight );
+
+			effectFocus.uniforms[ "screenWidth" ].value = window.innerWidth * window.devicePixelRatio;
+			effectFocus.uniforms[ "screenHeight" ].value = window.innerHeight * window.devicePixelRatio;
+		}
+
+		function animate(time) {
+			requestAnimationFrame( animate );
+			controls.update();
+			render(time);
+		}
+
+		function render(time) {
+		    time *= 0.001;  // convert to seconds
+			opts.uniforms.iTime.value = time;
+
+			if (opts.picker){
+		    	// pick(pickPosition, scene, camera, time);
+		    	pick(opts.picking, pickingScene, camera, time);
+			}
+			renderer.render( scene, camera );
+
+			if (typeof onDyanRender === 'function') {
+				onDyanRender();
+			}
+		}
+	</script>
+</body>
+</html>
