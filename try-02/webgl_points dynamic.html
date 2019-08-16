@@ -133,7 +133,7 @@
 
 			/**Extract geometry attributes, named <i>attr</i>
 			 * @param {event} OBJLoader2.load() callback event.
-			 * @param {string} name of attribute
+			 * @param {string} name of THREE.Geometry attribute, e.g. position
 			 * @return {Float32Array} the combined attributes.
 			 */
 			function combineBuffer( event, bufferName ) {
@@ -159,11 +159,11 @@
 				return new THREE.BufferAttribute( combined, 3 );
 			}
 
-			/**1. Create a mesh, with <i>position</i> and <i>initialPosition</i>;<br>
+			/**1. Create a mesh at some copied position, get vertices' <i>position</i> and <i>initialPosition</i>;<br>
 			 * 2. Clone each instance<br>
 			 * 3. Setup verices up/down information for animation.<br>
 			 * 4. Add these meshes to parent
-			 * @param {Array} position
+			 * @param {Array} position model's vertex position buffer
 			 * @param {THREE.Scene} scene
 			 * @param {number} scale
 			 * @param {number} x
@@ -178,38 +178,32 @@
 				geometry.attributes.position.setDynamic( true );
 
 				var clones = [
-					[ 6000, 0, - 4000 ],
-					[ 5000, 0, 0 ],
-					[ 1000, 0, 5000 ],
-					[ 1000, 0, - 5000 ],
-					[ 4000, 0, 2000 ],
-					[ - 4000, 0, 1000 ],
-					[ - 5000, 0, - 5000 ],
-					[ 0, 0, 0 ]
+					[ 6000, 0, -4000 ], [ 5000, 0, 0 ],
+					[ 1000, 0, 5000 ], [ 1000, 0, -5000 ],
+					[ 4000, 0, 2000 ], [ -4000, 0, 1000 ],
+					[ -5000, 0, -5000 ], [ 0, 0, 0 ]
 				];
 
 				for ( var i = 0; i < clones.length; i ++ ) {
-
 					var c = ( i < clones.length - 1 ) ? 0x252525 : color;
 
 					mesh = new THREE.Points( geometry, new THREE.PointsMaterial( { size: 30, color: c } ) );
 					mesh.scale.x = mesh.scale.y = mesh.scale.z = scale;
-
 					mesh.position.x = x + clones[ i ][ 0 ];
 					mesh.position.y = y + clones[ i ][ 1 ];
 					mesh.position.z = z + clones[ i ][ 2 ];
 
 					parent.add( mesh );
-
+					// all meshes here
 					clonemeshes.push( { mesh: mesh, speed: 0.5 + Math.random() } );
-
 				}
 
+				// set colored meshes
 				meshes.push( {
-					mesh: mesh, verticesDown: 0, verticesUp: 0, direction: 0, speed: 15, delay: Math.floor( 200 + 200 * Math.random() ),
+					mesh: mesh, verticesDown: 0, verticesUp: 0,
+					direction: 0, speed: 15, delay: Math.floor( 200 + 200 * Math.random() ),
 					start: Math.floor( 100 + 200 * Math.random() ),
 				} );
-
 			}
 
 			function animate() {
