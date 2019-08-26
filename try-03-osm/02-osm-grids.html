@@ -9,7 +9,23 @@
     <script src="res/osm-utils.js"></script>
 </head>
 <body>
-    <div id="container" style="width:60%; height:800px"></div>
+	<table style="width:100%">
+		<tr><td>TODO: <a href='https://docs.mapbox.com/vector-tiles/reference/'>Vector Tiles</a></td></tr>
+		<tr><td style="width:60%"><div id="container" style="height:900px"></div></td>
+			<td>a = 500,<br>
+				camera up (world) = [ <input id='ux' style='width:2em' placeholder='x' value='45'></input>
+							  <input id='uy' style='width:2em' placeholder='y' value='30'></input>
+							  <input id='uz' style='width:2em' placeholder='z' value='30'></input> ]<br>
+				postion (gis) = [ <input id='px' style='width:6em' placeholder='longitude' value='104.09856'></input>
+							<input id='py' style='width:6em' placeholder='latitude' value='30.6765'></input>
+							<input id='pz' style='width:3em' placeholder='height' value='20'></input> ]<br>
+				lookAt (gis) = [ <input id='lx' style='width:6em' placeholder='longitude' value='104.09856'></input>
+							<input id='ly' style='width:6em' placeholder='latitude' value='30.7765'></input>
+							<input id='lz' style='width:3em' placeholder='height' value='0'></input> ]
+				<input type='button' onclick='updateFustum(scene)' value='update'></input>
+			</td>
+		</tr>
+	</table>
     <script>
 		/** Earth Radius hold by OSM,
 		 * see https://wiki.openstreetmap.org/wiki/Zoom_levels */
@@ -27,14 +43,14 @@
 			},
 		};
 
+		var frustum, camera, scene, renderer, controls;
 
-		var camera, scene, renderer, controls;
-
-		init('container');
+		scene = init('container');
+		updateFustum(scene);
 		animate();
 
 		/**Step through all tile girds, then change longitude / latitude to Cartesian,
-		 * with prime meridian at z = 0, x > 0, y to north, negative z to the east hemishphere.
+		 * with prime meridian at z = 0, x = R, y = 0, to north, negative z to the east hemishphere.
 		 */
 		function osmGlobeTiles(zoom, a) {
 			// X goes from 0 (left edge is 180 °W) to 2zoom − 1 (right edge is 180 °E)<br>
@@ -46,48 +62,44 @@
 				long *= Math.PI / 180;
 				for (var iy = 0; iy < max; iy++) {
 					var lat = tile2lat(iy, zoom);
-					// if (lat > 85 || lat < -85) continue;
 					lat *= Math.PI / 180;
-					var r = a * Math.cos(lat);
-					var x = r * Math.cos(long);
-					var y = a * Math.sin(lat);
-					var z = -r * Math.sin(long);
+					// var r = a * Math.cos(lat);
+					// var x = r * Math.cos(long);
+					// var y = a * Math.sin(lat);
+					// var z = -r * Math.sin(long);
+					// var idx = (ix * max + iy) * 3;
+					// grids[idx] = x;
+					// grids[idx + 1] = y;
+					// grids[idx + 2] = z;
+					var wld = rad2cart(long, lat, a);
 					var idx = (ix * max + iy) * 3;
-					grids[idx] = x;
-					grids[idx + 1] = y;
-					grids[idx + 2] = z;
+					grids[idx] = wld.x;
+					grids[idx + 1] = wld.y;
+					grids[idx + 2] = wld.z;
 			    }
 			}
 			console.log(grids);
 			return grids;
 		}
 
+		/**Build points buffer, convert all tile grid into world position.
+		 * @param {number} z zoom level of OSM XYZ
+		 * @param {number} a a of Mercator Projection, see
+		 * <a href=https://en.wikipedia.org/wiki/Mercator_projection#Cylindrical_projections'>Mercator Projection</a>
+		 * @return {}
+		 */
 		function pointsBuff(z, a) {
 			if (a === undefined)
 				a = 500;
 			var step = 10;
 
 			var points = osmGlobeTiles(z, a); // a = 500
-			// var points = pointsBuff(grids);
-			// var points = new THREE.PlaneBufferGeometry( a, a, 32, 32 );
-			// var buff = new THREE.PlaneBufferGeometry();
-			// var vertices = new Float32Array( 18 );
-			// for (var ix = 0; ix < 18; ix += 3) {
-			// 	vertices[ix] = (ix - 9) * step;
-			// 	vertices[ix + 1] = (ix % 3 - 3) * step;
-			// 	vertices[ix + 2] = 0. * step;
-			// }
-			// buff.addAttribute( 'position', new THREE.BufferAttribute( points, 3 ) );
-			// combined.set( buffer.array, offset );
-
 			var geometry = new THREE.BufferGeometry();
 			geometry.addAttribute( 'position', new THREE.BufferAttribute( points, 3 ) );
 
 			var grid = new THREE.Points(geometry,
 					new THREE.PointsMaterial( { color: 0xffffff, size: 1 } ) );
 
-			// grid.position.y = -200;
-			// grid.rotation.x = Math.PI / 6;
 			return grid;
 		}
 
@@ -98,7 +110,7 @@
 		 */
 		function init(contid, a) {
 			var container = document.querySelector( '#' + contid );
-			scene = new THREE.Scene();
+			var scene = new THREE.Scene();
 			scene.background = new THREE.Color( 0x000104 );
 			// camera = new THREE.PerspectiveCamera( 20, window.innerWidth / window.innerHeight, 1, 50000 );
 			camera = new THREE.PerspectiveCamera( 50, container.clientWidth / container.clientHeight, 1, 50000 );
@@ -112,11 +124,56 @@
 
 			// parent = new THREE.Object3D();
 			// scene.add( parent );
-			var globe = pointsBuff(6, 500);
+			var globe = pointsBuff(6, a);
 			scene.add(globe);
 
 			controls = new THREE.OrbitControls( camera, renderer.domElement );
 			window.addEventListener( 'resize', onWindowResize, false );
+			return scene;
+		}
+
+		/** Collect transform settings
+		 * @return {THREE.Matrix4}
+		 */
+		function trans(a) {
+			var m4 = new THREE.Matrix4();
+			var px = document.querySelector('#px').value;
+			var py = document.querySelector('#py').value;
+			var pz = document.querySelector('#pz').value;
+			var p = rad2cart(px * Math.PI / 180, py * Math.PI / 180, a + pz * 1.);
+			m4.setPosition(p.x, p.y, p.z);
+
+			var lx = document.querySelector('#lx').value;
+			var ly = document.querySelector('#ly').value;
+			var lz = document.querySelector('#lz').value;
+			var look = rad2cart(lx * Math.PI / 180, ly * Math.PI / 180, a + lz * 1.);
+			// m4.lookAt(lxy.x, lxy.y, lz);
+			// m4.lookAt(0, 0, 0);
+
+			var rx = document.querySelector('#ux').value;
+			var ry = document.querySelector('#uy').value;
+			var rz = document.querySelector('#uz').value;
+			// m4.makeRotationX(rx);
+			// m4.makeRotationY(ry);
+			// m4.makeRotationZ(rz);
+			return m4;
+		}
+
+		function updateFustum(scene) {
+			if (frustum === undefined) {
+				var geometry = new THREE.ConeGeometry( 20, 50, 4);
+				// var material = new THREE.LineBasicMaterial( { color: 0x7fffff, linewidth: 2 } );
+				var material = new THREE.MeshBasicMaterial( {
+										color: 0x332588,
+										wireframe: true,
+										opacity: 0.5 } );
+				frustum = new THREE.Mesh( geometry, material );
+				// TODO add shadow camera
+				scene.add( frustum );
+			}
+
+			var mat4 = trans(a);
+			frustum.applyMatrix(mat4);
 		}
 
 		function onWindowResize() {

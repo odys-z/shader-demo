@@ -23,6 +23,21 @@
 //     document.forms.Form1.lat.value=ylat = tile2lat(ylat,vzoom);
 // }
 
+/**Convert long-lat to world position in Cartesian.
+ * @param {number} long longitude in radians ( degree *= pi / 180)
+ * @param {number} lat latitude in radians ( degree *= pi / 180)
+ * @param {number} a a of Mercator Projection, see
+ * <a href=https://en.wikipedia.org/wiki/Mercator_projection#Cylindrical_projections'>Mercator Projection</a>
+ * @return {object} x, y, z in world
+ */
+function rad2cart(long, lat, a) {
+	var r = a * Math.cos(lat);
+	var x = r * Math.cos(long);
+	var y = a * Math.sin(lat);
+	var z = -r * Math.sin(long);
+	return {x : x, y: y, z: z};
+}
+
 function long2tile(lon, zoom1) {
     tt = Number(lon);
     return (Math.floor((tt + 180) / 360 * Math.pow(2, zoom1)));
