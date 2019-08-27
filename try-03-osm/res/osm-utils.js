@@ -96,3 +96,40 @@ function loadImgTile(id, xyz) {
 //     console.log(grids);
 //     return grids;
 // }
+
+const fragFindTile = `
+	varying vec3 P;
+	uniform sampler2D tex0;
+	uniform sampler2D tex1;
+
+	void mainImage( out vec4 fragColor, in vec2 fragCoord ) {
+		// fragColor = vec4(normalize(P.xyz), abs(cos(iTime) * .2 + .8));
+	}
+
+	void main() {
+		mainImage(gl_FragColor, gl_FragCoord.xy);
+	}
+`;
+
+const vertFindTile = `
+	uniform vec3 camPos;
+
+	varying vec3 I;
+	varying vec3 P;
+	varying vec3 n;
+	varying vec4 cent;
+
+	void main() {
+		n = normal;
+
+		// gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
+		vec4 worldPosition = modelMatrix * vec4(position, 1.0);
+
+		P = worldPosition.xyz;
+		I = normalize(camPos - worldPosition.xyz);
+
+		cent = modelMatrix * vec4(0., 0., 0., 1.);
+
+		gl_Position = projectionMatrix * viewMatrix * worldPosition;
+	}
+`;

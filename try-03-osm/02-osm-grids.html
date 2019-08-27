@@ -12,17 +12,28 @@
 	<table style="width:100%">
 		<tr><td>TODO: <a href='https://docs.mapbox.com/vector-tiles/reference/'>Vector Tiles</a></td></tr>
 		<tr><td style="width:60%"><div id="container" style="height:900px"></div></td>
-			<td>a = 500,<br>
-				camera up (world) = [ <input id='ux' style='width:2em' placeholder='x' value='45'></input>
-							  <input id='uy' style='width:2em' placeholder='y' value='30'></input>
-							  <input id='uz' style='width:2em' placeholder='z' value='30'></input> ]<br>
+			<td>a = 500, R = 6372.7982<br>
+				rotation (degree) = [ <input id='ux' style='width:2em' placeholder='x' value='0'></input>
+							  <input id='uy' style='width:2em' placeholder='y' value='0'></input>
+							  <input id='uz' style='width:2em' placeholder='z' value='5'></input> ]<br>
 				postion (gis) = [ <input id='px' style='width:6em' placeholder='longitude' value='104.09856'></input>
-							<input id='py' style='width:6em' placeholder='latitude' value='30.6765'></input>
-							<input id='pz' style='width:3em' placeholder='height' value='20'></input> ]<br>
+							<input id='py' style='width:6em' placeholder='latitude' value='30.3765'></input>
+							<input id='pz' style='width:3em' placeholder='height' value='2'></input> ]<br>
 				lookAt (gis) = [ <input id='lx' style='width:6em' placeholder='longitude' value='104.09856'></input>
-							<input id='ly' style='width:6em' placeholder='latitude' value='30.7765'></input>
+							<input id='ly' style='width:6em' placeholder='latitude' value='30.6765'></input>
+							<input id='lz' style='width:3em' placeholder='height' value='1.2'></input> ]
+				<!--
+				rotation (degree) = [ <input id='ux' style='width:2em' placeholder='x' value='0'></input>
+							  <input id='uy' style='width:2em' placeholder='y' value='1'></input>
+							  <input id='uz' style='width:2em' placeholder='z' value='0'></input> ]<br>
+				postion (gis) = [ <input id='px' style='width:6em' placeholder='longitude' value='0'></input>
+							<input id='py' style='width:6em' placeholder='latitude' value='0'></input>
+							<input id='pz' style='width:3em' placeholder='height' value='20'></input> ]<br>
+				lookAt (gis) = [ <input id='lx' style='width:6em' placeholder='longitude' value='0'></input>
+							<input id='ly' style='width:6em' placeholder='latitude' value='0'></input>
 							<input id='lz' style='width:3em' placeholder='height' value='0'></input> ]
-				<input type='button' onclick='updateFustum(scene)' value='update'></input>
+						-->
+				<input type='button' onclick='updateFrustum(scene)' value='update'></input>
 			</td>
 		</tr>
 	</table>
@@ -35,6 +46,9 @@
 		 * see https://en.wikipedia.org/wiki/Mercator_projection#Cylindrical_projections */
 		const a = 500;
 
+		/** Sampling points segments, a pix * pix grids */
+		const pix = 8;
+
 		const opts = {
 			uniforms: {
 				iTime: { value: 0 },
@@ -43,10 +57,12 @@
 			},
 		};
 
-		var frustum, camera, scene, renderer, controls;
+		var osmCamera, osmCanvas;
+		var frustum; // for camera illustration
+		var camera, scene, renderer, controls;
 
 		scene = init('container');
-		updateFustum(scene);
+		updateFrustum(scene);
 		animate();
 
 		/**Step through all tile girds, then change longitude / latitude to Cartesian,
@@ -132,52 +148,71 @@
 			return scene;
 		}
 
-		/** Collect transform settings
-		 * @return {THREE.Matrix4}
+		/** Collect transform settings set by inputs.
+		 * @param {THREE.Object3D} obj
+		 * @param {number} a model radius
+		 * @return {THREE.Object3D} obj
 		 */
-		function trans(a) {
-			var m4 = new THREE.Matrix4();
+		function trans2(obj, a) {
 			var px = document.querySelector('#px').value;
 			var py = document.querySelector('#py').value;
 			var pz = document.querySelector('#pz').value;
 			var p = rad2cart(px * Math.PI / 180, py * Math.PI / 180, a + pz * 1.);
-			m4.setPosition(p.x, p.y, p.z);
+			obj.position.set(p.x, p.y, p.z);
 
 			var lx = document.querySelector('#lx').value;
 			var ly = document.querySelector('#ly').value;
 			var lz = document.querySelector('#lz').value;
 			var look = rad2cart(lx * Math.PI / 180, ly * Math.PI / 180, a + lz * 1.);
-			// m4.lookAt(lxy.x, lxy.y, lz);
-			// m4.lookAt(0, 0, 0);
-			TODO ....
-			TODO ....
-			TODO ....
-			TODO ....
+			obj.lookAt(look.x, look.y, look.z);
 
 			var rx = document.querySelector('#ux').value;
 			var ry = document.querySelector('#uy').value;
 			var rz = document.querySelector('#uz').value;
-			// m4.makeRotationX(rx);
-			// m4.makeRotationY(ry);
-			// m4.makeRotationZ(rz);
-			return m4;
+			obj.rotateX(rx * Math.PI / 180);
+			obj.rotateY(ry * Math.PI / 180);
+			obj.rotateZ(rz * Math.PI / 180);
+
+			return obj;
 		}
 
-		function updateFustum(scene) {
+		const uniforms = {
+			tex0: { value: memTex() },
+			tex1: { value: memTex() },
+		};
+
+		function updateFrustum(scene) {
 			if (frustum === undefined) {
-				var geometry = new THREE.ConeGeometry( 20, 50, 4);
-				// var material = new THREE.LineBasicMaterial( { color: 0x7fffff, linewidth: 2 } );
+				var geometry = new THREE.ConeGeometry( 50, 100, 4, 1, false, Math.PI / 4);
 				var material = new THREE.MeshBasicMaterial( {
-										color: 0x332588,
+										color: 0xffffff,
 										wireframe: true,
 										opacity: 0.5 } );
 				frustum = new THREE.Mesh( geometry, material );
-				// TODO add shadow camera
 				scene.add( frustum );
+
+				// add shadow camera
+				var w = 50 * 1.414;
+				osmCamera = new THREE.PerspectiveCamera( w, 1, 0.1, a * 2 ); // hemishphere is enough?
+				rayScreen = new THREE.PlaneGeometry( 50, 100, 4, 1);
+
+				var matFindTile = new THREE.ShaderMaterial( {
+					fragmentShader: fragFindTile,
+					vertexShader: vertFindTile,
+					uniforms: uniforms,
+					opacity: 1.0 } );
+				rayScreen  = new THREE.Mesh( rayScreen, matFindTile );
+				rayScreen.translate(0, 0, -100);
+				osmCamera.addChild(rayScreen);
 			}
 
-			var mat4 = trans(a);
-			frustum.applyMatrix(mat4);
+			trans2(osmCamera, a);
+
+			// frustum's lookAt not shown by the geometry shape
+			// - actually rotated from the y axis.
+			// trans2() only keep consists with camera's lookAt.
+			trans2(frustum, a);
+			frustum.rotateX(- Math.PI / 2);
 		}
 
 		function onWindowResize() {
@@ -187,8 +222,8 @@
 
 			renderer.setSize( window.innerWidth, window.innerHeight );
 
-			effectFocus.uniforms[ "screenWidth" ].value = window.innerWidth * window.devicePixelRatio;
-			effectFocus.uniforms[ "screenHeight" ].value = window.innerHeight * window.devicePixelRatio;
+			// effectFocus.uniforms[ "screenWidth" ].value = window.innerWidth * window.devicePixelRatio;
+			// effectFocus.uniforms[ "screenHeight" ].value = window.innerHeight * window.devicePixelRatio;
 		}
 
 		function animate(time) {
@@ -210,6 +245,24 @@
 			if (typeof onDyanRender === 'function') {
 				onDyanRender();
 			}
+		}
+
+		/**<p>Calculate Tile Planes for Rendering</p>
+		 * <pre>ray -- d -- z -- tiles -- plane (x, y, w, h)
+		 * 		\-- -- p -- --|     \        \
+		 *             \-- - uv -- --\-- -- material</pre>
+		 * <p> 1. ray casting for distance;<br>
+		 * 2. get world positiong of ray casting at earth surface;<br>
+		 * 3. from p and d, get tiles and OSM XYZ, then build plane models;<br>
+		 * 4. from tile XYZ and p, get texture's uv;<br>
+		 * 5. build rendering planes (boxes) with OSM tiles as texture.</p>
+		 * @param {object} cam
+		 * @param {THREE.Vector3} cam.pos
+		 * @param {THREE.Vector3} cam.lookAt
+		 * @param {THREE.Vector3} cam.up
+		 * @return {array} array of THREE.Mesh for rendering map
+		 */
+		function getTiles(cam) {
 		}
 	</script>
 </body>
