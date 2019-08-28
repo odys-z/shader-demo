@@ -121,6 +121,7 @@ function loadMesh(file, optns) {
 
 const longLatScale = 1000;
 const centre = [104.063, 30.666];
+
 /**Change longitude and latitude to world position xy.<br>
  * @param {array} longlat [long, lat]
  * @return [x, y] in world */
