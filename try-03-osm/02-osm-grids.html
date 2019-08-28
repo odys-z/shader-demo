@@ -6,6 +6,7 @@
 	<title>OSM Tiles</title>
 	<script type='text/javascript' src='../3rd-lib/three.js/three.min.js'></script>
 	<script type='text/javascript' src='../3rd-lib/three.js/OrbitControls.js'></script>
+	<script type='text/javascript' src='../lib/GPUComputationRenderer_odys-z.js'></script>
     <script src="res/osm-utils.js"></script>
 </head>
 <body>
@@ -32,11 +33,43 @@
 				lookAt (gis) = [ <input id='lx' style='width:6em' placeholder='longitude' value='0'></input>
 							<input id='ly' style='width:6em' placeholder='latitude' value='0'></input>
 							<input id='lz' style='width:3em' placeholder='height' value='0'></input> ]
-						-->
+				-->
 				<input type='button' onclick='updateFrustum(scene)' value='update'></input>
 			</td>
 		</tr>
 	</table>
+	<script type="x-shader/x-fragment" id="vertXyz">
+		uniform vec3 camPos;
+		varying vec4 P;
+		varying vec3 I;
+        void main()	{
+			// passthru: // gl_Position = vec4( position, 1.0 );
+			vec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );
+			gl_PointSize = 1.0;
+			gl_Position = projectionMatrix * mvPosition;
+
+			P = modelMatrix * vec4( position, 1.0 );
+			I = P.xyz - camPos;
+		}
+	</script>
+	<script type="x-shader/x-fragment" id="fragXyz">
+		uniform vec3 camPos;
+		uniform float a0;
+		varying vec4 P;
+		varying vec3 I;
+
+		void main() {
+			float a = 500.;
+			if (a0 > 0.)
+				a = a0;
+			vec2 xy = gl_FragCoord.xy / resolution.xy;
+
+			// gl_FragColor = vec4( xy.x * a, xy.y * a, resolution.x, resolution.y );
+			float d = length(P.xyz - camPos) / a;
+			gl_FragColor = vec4( xy.x * d, xy.y * d, resolution.x, resolution.y );
+		}
+	</script>
+
     <script>
 		/** Earth Radius hold by OSM,
 		 * see https://wiki.openstreetmap.org/wiki/Zoom_levels */
@@ -47,7 +80,7 @@
 		const a = 500;
 
 		/** Sampling points segments, a pix * pix grids */
-		const pix = 8;
+		const PIX = 8;
 
 		const opts = {
 			uniforms: {
@@ -94,7 +127,7 @@
 					grids[idx + 2] = wld.z;
 			    }
 			}
-			console.log(grids);
+			console.log(`osm tiles (z = ${zoom})`, grids);
 			return grids;
 		}
 
@@ -138,14 +171,36 @@
 			renderer.setSize( container.clientWidth, container.clientHeight );
 			container.appendChild( renderer.domElement );
 
-			// parent = new THREE.Object3D();
-			// scene.add( parent );
 			var globe = pointsBuff(6, a);
 			scene.add(globe);
 
 			controls = new THREE.OrbitControls( camera, renderer.domElement );
 			window.addEventListener( 'resize', onWindowResize, false );
 			return scene;
+		}
+
+		var osmxyz, osmxyzUniforms;
+		function initTileFinder(renderer, cam, a, vert, frag) {
+			var gpuCompute = new GPUComputationRenderer( PIX, PIX, renderer );
+			var texyz = gpuCompute.createTexture();
+			osmxyz = gpuCompute.addVariable( "osmxyz", {
+				vert: document.getElementById( vert ).textContent,
+				frag: document.getElementById( frag ).textContent,
+				},
+				texyz );
+			// gpuCompute.setVariableDependencies( positionVariable, [ positionVariable, velocityVariable ] );
+			osmxyzUniforms = osmxyz.material.uniforms;
+			osmxyzUniforms[ "camPos" ] = { value: cam.position };
+			osmxyzUniforms[ "a0" ] = { value: a };
+
+			osmxyz.wrapS = THREE.RepeatWrapping;
+			osmxyz.wrapT = THREE.RepeatWrapping;
+
+			var error = gpuCompute.init();
+			if ( error !== null ) {
+			    console.error( error );
+			}
+			return gpuCompute;
 		}
 
 		/** Collect transform settings set by inputs.
@@ -176,11 +231,6 @@
 			return obj;
 		}
 
-		const uniforms = {
-			tex0: { value: memTex() },
-			tex1: { value: memTex() },
-		};
-
 		function updateFrustum(scene) {
 			if (frustum === undefined) {
 				var geometry = new THREE.ConeGeometry( 50, 100, 4, 1, false, Math.PI / 4);
@@ -199,11 +249,13 @@
 				var matFindTile = new THREE.ShaderMaterial( {
 					fragmentShader: fragFindTile,
 					vertexShader: vertFindTile,
-					uniforms: uniforms,
+					// uniforms: uniforms,
 					opacity: 1.0 } );
 				rayScreen  = new THREE.Mesh( rayScreen, matFindTile );
-				rayScreen.translate(0, 0, -100);
-				osmCamera.addChild(rayScreen);
+				rayScreen.translateOnAxis(new THREE.Vector3(0, 0, 1), -100);
+				osmCamera.attach(rayScreen);
+
+				opts.tileHelper = initTileFinder(renderer, osmCamera, a, 'vertXyz', 'fragXyz');
 			}
 
 			trans2(osmCamera, a);
@@ -213,6 +265,10 @@
 			// trans2() only keep consists with camera's lookAt.
 			trans2(frustum, a);
 			frustum.rotateX(- Math.PI / 2);
+
+			if (opts.tileHelper) {
+				findTiles(opts.tileHelper, osmCamera);
+			}
 		}
 
 		function onWindowResize() {
@@ -236,15 +292,7 @@
 		    time *= 0.001;  // convert to seconds
 			opts.uniforms.iTime.value = time;
 
-			if (opts.picker){
-		    	// pick(pickPosition, scene, camera, time);
-		    	pick(opts.picking, pickingScene, camera, time);
-			}
 			renderer.render( scene, camera );
-
-			if (typeof onDyanRender === 'function') {
-				onDyanRender();
-			}
 		}
 
 		/**<p>Calculate Tile Planes for Rendering</p>
@@ -256,13 +304,22 @@
 		 * 3. from p and d, get tiles and OSM XYZ, then build plane models;<br>
 		 * 4. from tile XYZ and p, get texture's uv;<br>
 		 * 5. build rendering planes (boxes) with OSM tiles as texture.</p>
-		 * @param {object} cam
-		 * @param {THREE.Vector3} cam.pos
-		 * @param {THREE.Vector3} cam.lookAt
-		 * @param {THREE.Vector3} cam.up
+		 * @param {THREE.GPUComputationRenderer} gpuCompute
+		 * @param {object} cam osm camera
 		 * @return {array} array of THREE.Mesh for rendering map
 		 */
-		function getTiles(cam) {
+		function findTiles(gpuCompute, cam) {
+			gpuCompute.compute();
+			osmxyzUniforms[ "camPos" ] = { value: cam.position };
+
+			var tex = gpuCompute.getCurrentRenderTarget( osmxyz );//.texture;
+
+			// var pixelBuffer = new Uint8Array(8 * 8 * 4);
+			// at lest working in Chrome
+			var pixelBuffer = new Float32Array(PIX * PIX * 4);
+
+			renderer.readRenderTargetPixels(tex, 0, 0, PIX, PIX, pixelBuffer)
+			console.log(pixelBuffer);
 		}
 	</script>
 </body>

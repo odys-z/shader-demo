@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<title>GPU Computation</title>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+
+	<script type='text/javascript' src='../3rd-lib/three.js/three.min.js'></script>
+	<script type='text/javascript' src='../3rd-lib/three.js/OrbitControls.js'></script>
+	<script type='text/javascript' src='../3rd-lib/three.js/stats.module.js'></script>
+	<script type='text/javascript' src='../3rd-lib/three.js/GPUComputationRenderer_odys-z.js'></script>
+	<script src="res/osm-utils.js"></script>
+</head>
+<body>
+	<p>... ... ... ... ... ...[Only Chrome?] Try GPU calculation and get results.
+		<input type='button' onclick='getGpu()' value='get gpu results (see log)'></input>
+		See <a href='https://threejs.org/examples/?q=birds#webgl_gpgpu_birds'>three.js GPUComputationRenferer</a>
+		(<a href='https://stackoverflow.com/questions/17981163/webgl-read-pixels-from-floating-point-render-target'>and trouble</a>)</p>
+	<div id="container"></div>
+
+	<script type="x-shader/x-vertex" id="vertexshader">
+		attribute float size;
+		attribute vec3 customColor;
+		varying vec3 vColor;
+
+		void main() {
+			vColor = customColor;
+			vec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );
+			gl_PointSize = size * ( 300.0 / -mvPosition.z );
+			gl_Position = projectionMatrix * mvPosition;
+		}
+	</script>
+
+	<script type="x-shader/x-fragment" id="fragmentshader">
+		uniform vec3 color;
+		uniform sampler2D pointTexture;
+		varying vec3 vColor;
+
+		void main() {
+			gl_FragColor = vec4( color * vColor, 1.0 );
+			gl_FragColor = gl_FragColor * texture2D( pointTexture, gl_PointCoord );
+			if ( gl_FragColor.a < ALPHATEST ) discard;
+		}
+	</script>
+
+	<script type="x-shader/x-vertex" id="osmVert">
+		uniform float job;
+		uniform vec3 camPos;
+		varying vec3 I;
+
+		void main() {
+			vec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );
+			gl_PointSize = 1.0;
+			gl_Position = projectionMatrix * mvPosition;
+
+			vec4 world = modelMatrix * vec4( position, 1.0 );
+			I = world.xyz - camPos;
+		}
+	</script>
+
+	<script type="x-shader/x-fragment" id="fragXyz">
+		uniform float a0;
+		varying vec3 I;
+
+		void main() {
+			float a = 500.;
+			if (a0 > 0.)
+				a = a0;
+			vec2 xy = gl_FragCoord.xy / resolution.xy;
+			gl_FragColor = vec4( xy.x, xy.y, resolution.x, resolution.y );
+		}
+	</script>
+
+	<script type="x-shader/x-fragment" id="ptsFrag">
+		uniform float job;
+		uniform float a;
+		varying vec3 I;
+
+		void main() {
+			gl_FragColor = vec4( normalize(abs(I)), 1.0 );
+		}
+	</script>
+
+	<script type="text/javascript">
+		const PIX = 8;
+		var renderer, scene, camera, stats;
+		var mouse, INTERSECTED;
+		var PARTICLE_SIZE = 20;
+
+		var osmPoints, gpuCompute, positionVariable;
+
+		init();
+		animate();
+
+		function init() {
+			var container = document.getElementById( 'container' );
+			scene = new THREE.Scene();
+			camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 10000 );
+			camera.position.z = 250;
+
+			var vertices = new THREE.BoxGeometry( 100, 100, 100, 4, 4, 4 ).vertices;
+			var positions = new Float32Array( vertices.length * 3 );
+			// var colors = new Float32Array( vertices.length * 3 );
+			// var sizes = new Float32Array( vertices.length );
+
+			var vertex;
+			// var color = new THREE.Color();
+
+			for ( var i = 0, l = vertices.length; i < l; i ++ ) {
+				vertex = vertices[ i ];
+				vertex.toArray( positions, i * 3 );
+				// color.setHSL( 0.01 + 0.1 * ( i / l ), 1.0, 0.5 );
+				// color.toArray( colors, i * 3 );
+				// sizes[ i ] = PARTICLE_SIZE * 0.5;
+			}
+
+			var geometry = new THREE.BufferGeometry();
+			geometry.addAttribute( 'position', new THREE.BufferAttribute( positions, 3 ) );
+			// geometry.addAttribute( 'customColor', new THREE.BufferAttribute( colors, 3 ) );
+			// geometry.addAttribute( 'size', new THREE.BufferAttribute( sizes, 1 ) );
+
+			var osmMaterial = new THREE.ShaderMaterial( {
+				uniforms: {
+					job: { value: 0 },	// 0: xyz, 1: u v w h
+				},
+				vertexShader: document.getElementById( 'osmVert' ).textContent,
+				fragmentShader: document.getElementById( 'ptsFrag' ).textContent,
+				alphaTest: 1.
+			} );
+			osmPoints = new THREE.Points( geometry, osmMaterial );
+			scene.add(osmPoints);
+
+			//
+			renderer = new THREE.WebGLRenderer();
+			renderer.setPixelRatio( window.devicePixelRatio );
+			renderer.setSize( window.innerWidth, window.innerHeight );
+			container.appendChild( renderer.domElement );
+
+			gpuCompute = initComputeRenderer(renderer);
+			//
+			mouse = new THREE.Vector2();
+
+			//
+			stats = new Stats();
+			container.appendChild( stats.dom );
+
+			//
+			window.addEventListener( 'resize', onWindowResize, false );
+			document.addEventListener( 'mousemove', onDocumentMouseMove, false );
+		}
+
+		function initComputeRenderer(renderer) {
+			var gpuCompute = new GPUComputationRenderer( PIX, PIX, renderer );
+			var dtPosition = gpuCompute.createTexture();
+			fillTexture( dtPosition );
+			positionVariable = gpuCompute.addVariable( "texturePosition", document.getElementById( 'fragXyz' ).textContent, dtPosition );
+			// gpuCompute.setVariableDependencies( positionVariable, [ positionVariable, velocityVariable ] );
+			positionUniforms = positionVariable.material.uniforms;
+			positionUniforms[ "time" ] = { value: 0.0 };
+			positionUniforms[ "camPos" ] = { value: new THREE.Vector3(0, 0, 800) };
+
+			positionVariable.wrapS = THREE.RepeatWrapping;
+			positionVariable.wrapT = THREE.RepeatWrapping;
+
+			var error = gpuCompute.init();
+			if ( error !== null ) {
+			    console.error( error );
+			}
+			return gpuCompute;
+		}
+
+		/**Texture initialization example
+		 * @param {THREE.Texture} texture
+		 */
+		function fillTexture( texture ) {
+			var theArray = texture.image.data;
+			for ( var k = 0, kl = theArray.length; k < kl; k += 4 ) {
+				// var x = Math.random() * BOUNDS - BOUNDS_HALF;
+				// var y = Math.random() * BOUNDS - BOUNDS_HALF;
+				// var z = Math.random() * BOUNDS - BOUNDS_HALF;
+				var x = k;
+				var y = k + 1;
+				var z = k + 2;
+				theArray[ k + 0 ] = x;
+				theArray[ k + 1 ] = y;
+				theArray[ k + 2 ] = z;
+				theArray[ k + 3 ] = 1;
+			}
+		}
+
+		function getGpu() {
+			var tex = gpuCompute.getCurrentRenderTarget( positionVariable );//.texture;
+
+			// var pixelBuffer = new Uint8Array(8 * 8 * 4);
+			// at lest working in Chrome
+			var pixelBuffer = new Float32Array(PIX * PIX * 4);
+
+			renderer.readRenderTargetPixels(tex, 0, 0, PIX, PIX, pixelBuffer)
+			console.log(pixelBuffer);
+		}
+
+		function onDocumentMouseMove( event ) {
+			event.preventDefault();
+			mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
+			mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
+		}
+
+		function onWindowResize() {
+			camera.aspect = window.innerWidth / window.innerHeight;
+			camera.updateProjectionMatrix();
+			renderer.setSize( window.innerWidth, window.innerHeight );
+		}
+
+		function animate() {
+			requestAnimationFrame( animate );
+			render();
+			stats.update();
+		}
+
+		function render() {
+			// var geometry = osmPoints.geometry;
+			// var attributes = geometry.attributes;
+			gpuCompute.compute();
+			renderer.render( scene, camera );
+		}
+	</script>
+</body>
+</html>
