@@ -6,7 +6,8 @@
 	<title>OSM Tiles</title>
 	<script type='text/javascript' src='../3rd-lib/three.js/three.min.js'></script>
 	<script type='text/javascript' src='../3rd-lib/three.js/OrbitControls.js'></script>
-	<script type='text/javascript' src='../lib/GPUComputationRenderer_raycast.js'></script>
+	<!--<script type='text/javascript' src='../lib/GPUComputationRenderer_raycast.js'></script>-->
+	<script type='text/javascript' src='../3rd-lib/three.js/GPUComputationRenderer.js'></script>
     <script src="res/osm-utils.js"></script>
 </head>
 <body>
@@ -38,11 +39,6 @@
 			</td>
 		</tr>
 	</table>
-	<script type="x-shader/x-fragment" id="vertStub">
-        void main()	{
-			gl_Position = vec4( position, 1.0 );
-		}
-	</script>
 	<script type="x-shader/x-fragment" id="fragStub">
 		uniform vec3 camPos;
 		void main() {
@@ -52,7 +48,7 @@
 		}
 	</script>
 
-	<script type="x-shader/x-vertex" id="vertXyz">
+	<script type="x-shader/x-fragment" id="vertXyz">
 		uniform vec3 camPos;
 		varying vec4 P;
 		varying vec3 I;
@@ -80,9 +76,9 @@
 
 			// gl_FragColor = vec4( xy.x * a, xy.y * a, resolution.x, resolution.y );
 			float d = length(P.xyz - camPos) / a;
-			// gl_FragColor = vec4( xy.x * d, xy.y * d, resolution.x, resolution.y );
+			gl_FragColor = vec4( xy.x * d, xy.y * d, length(P), a );
 			// gl_FragColor = vec4(camPos, 1.);
-			gl_FragColor = vec4(1.);
+			// gl_FragColor = vec4(1.);
 		}
 	</script>
 
@@ -96,7 +92,7 @@
 		const a = 500;
 
 		/** Sampling points segments, a pix * pix grids */
-		// orignal version: const PIX = 8;
+		const PIX = 8;
 
 		const opts = {
 			uniforms: {
@@ -195,20 +191,18 @@
 			return scene;
 		}
 
-		/** gpu variable and uniforms */
 		var osmxyz, osmxyzUniforms;
 		function initTileFinder(renderer, cam, a, vert, frag) {
-			// origin ver: var gpuCompute = new GPUComputationRenderer( PIX, PIX, renderer );
-			var gpuCompute = new GPUComputationRenderer( renderer );
+			// raycast ver: var gpuCompute = new GPUComputationRenderer( renderer );
+			// origin ver:
+			var gpuCompute = new GPUComputationRenderer( PIX, PIX, renderer );
 
-			// TODO hide this calling
-			var texyz = gpuCompute.createTexture({x: 8, y: 8});
-			// osmxyz = gpuCompute.addVariable( "osmxyz", document.getElementById( 'fragStub' ).textContent, texyz );
-			osmxyz = gpuCompute.addVariable( "osmxyz", {
-							vert: document.getElementById( vert ).textContent,
-							frag: document.getElementById( frag ).textContent,
-						}, texyz );
-
+			var texyz = gpuCompute.createTexture();
+			// osmxyz = gpuCompute.addVariable( "osmxyz", {
+			// 				vert: document.getElementById( vert ).textContent,
+			// 				frag: document.getElementById( frag ).textContent,
+			// 			}, texyz );
+			osmxyz = gpuCompute.addVariable( "osmxyz", document.getElementById( 'fragStub' ).textContent, texyz );
 			// gpuCompute.setVariableDependencies( positionVariable, [ positionVariable, velocityVariable ] );
 			osmxyzUniforms = osmxyz.material.uniforms;
 			osmxyzUniforms[ "camPos" ] = { value: cam.position };
@@ -217,11 +211,13 @@
 			osmxyz.wrapS = THREE.RepeatWrapping;
 			osmxyz.wrapT = THREE.RepeatWrapping;
 
-			var error = gpuCompute.init({w: 8, h: 8, x: 8, y: 8}, cam);
+			// raycast version: var error = gpuCompute.init({w: PIX, h: PIX, x: PIX, y: PIX}, cam);
+			// origin ver:
+			var error = gpuCompute.init();
+
 			if ( error !== null ) {
 			    console.error( error );
 			}
-			trans2(gpuCompute.castarget(), a);
 			return gpuCompute;
 		}
 
@@ -278,7 +274,7 @@
 				rayScreen.translateOnAxis(new THREE.Vector3(0, 0, 1), -f);
 				osmCamera.attach(rayScreen);
 
-				opts.tileHelper = initTileFinder(renderer, osmCamera, a, 'vertStub', 'fragStub');
+				opts.tileHelper = initTileFinder(renderer, osmCamera, a, 'vertXyz', 'fragXyz');
 			}
 
 			trans2(osmCamera, a);
@@ -338,14 +334,14 @@
 
 			var tex = gpuCompute.getCurrentRenderTarget( osmxyz );//.texture;
 
-			// at lest working in Chrome
 			// var pixelBuffer = new Uint8Array(8 * 8 * 4);
+			// at lest working in Chrome
 			var size = gpuCompute.texsize;
 			// var pixelBuffer = new Float32Array(size.x * size.y * 4);
-			var pixelBuffer = new Float32Array(4);
+			// original version:
+			var pixelBuffer = new Float32Array(PIX * PIX * 4);
 
-			// renderer.readRenderTargetPixels(tex, 0, 0, size.x, size.y, pixelBuffer)
-			renderer.readRenderTargetPixels(tex, 0, 0, 1, 1, pixelBuffer)
+			renderer.readRenderTargetPixels(tex, 0, 0, PIX, PIX, pixelBuffer)
 			console.log(pixelBuffer);
 		}
 	</script>
