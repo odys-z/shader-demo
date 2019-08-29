@@ -66,7 +66,9 @@
 
 			// gl_FragColor = vec4( xy.x * a, xy.y * a, resolution.x, resolution.y );
 			float d = length(P.xyz - camPos) / a;
-			gl_FragColor = vec4( xy.x * d, xy.y * d, resolution.x, resolution.y );
+			// gl_FragColor = vec4( xy.x * d, xy.y * d, resolution.x, resolution.y );
+			// gl_FragColor = vec4(camPos, 1.);
+			gl_FragColor = P;
 		}
 	</script>
 
@@ -233,7 +235,8 @@
 
 		function updateFrustum(scene) {
 			if (frustum === undefined) {
-				var geometry = new THREE.ConeGeometry( 50, 100, 4, 1, false, Math.PI / 4);
+				const f = 100;
+				var geometry = new THREE.ConeGeometry( 50, f, 4, 1, false, Math.PI / 4);
 				var material = new THREE.MeshBasicMaterial( {
 										color: 0xffffff,
 										wireframe: true,
@@ -244,7 +247,7 @@
 				// add shadow camera
 				var w = 50 * 1.414;
 				osmCamera = new THREE.PerspectiveCamera( w, 1, 0.1, a * 2 ); // hemishphere is enough?
-				rayScreen = new THREE.PlaneGeometry( 50, 100, 4, 1);
+				rayScreen = new THREE.PlaneGeometry( 50 * 1.414, 50 * 1.414, 4, 1 ); // w, h, w-seg, h-seg
 
 				var matFindTile = new THREE.ShaderMaterial( {
 					fragmentShader: fragFindTile,
@@ -252,7 +255,7 @@
 					// uniforms: uniforms,
 					opacity: 1.0 } );
 				rayScreen  = new THREE.Mesh( rayScreen, matFindTile );
-				rayScreen.translateOnAxis(new THREE.Vector3(0, 0, 1), -100);
+				rayScreen.translateOnAxis(new THREE.Vector3(0, 0, 1), -f);
 				osmCamera.attach(rayScreen);
 
 				opts.tileHelper = initTileFinder(renderer, osmCamera, a, 'vertXyz', 'fragXyz');
