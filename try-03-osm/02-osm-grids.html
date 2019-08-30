@@ -14,6 +14,7 @@
 		<tr><td>TODO: <a href='https://docs.mapbox.com/vector-tiles/reference/'>Vector Tiles</a></td></tr>
 		<tr><td style="width:60%"><div id="container" style="height:900px"></div></td>
 			<td>a = 500, R = 6372.7982<br>
+				<!--
 				rotation (degree) = [ <input id='ux' style='width:2em' placeholder='x' value='0'></input>
 							  <input id='uy' style='width:2em' placeholder='y' value='0'></input>
 							  <input id='uz' style='width:2em' placeholder='z' value='5'></input> ]<br>
@@ -23,17 +24,16 @@
 				lookAt (gis) = [ <input id='lx' style='width:6em' placeholder='longitude' value='104.09856'></input>
 							<input id='ly' style='width:6em' placeholder='latitude' value='30.6765'></input>
 							<input id='lz' style='width:3em' placeholder='height' value='1.2'></input> ]
-				<!--
+				-->
 				rotation (degree) = [ <input id='ux' style='width:2em' placeholder='x' value='0'></input>
-							  <input id='uy' style='width:2em' placeholder='y' value='1'></input>
+							  <input id='uy' style='width:2em' placeholder='y' value='0'></input>
 							  <input id='uz' style='width:2em' placeholder='z' value='0'></input> ]<br>
-				postion (gis) = [ <input id='px' style='width:6em' placeholder='longitude' value='0'></input>
+				postion (gis) = [ <input id='px' style='width:6em' placeholder='longitude' value='-90'></input>
 							<input id='py' style='width:6em' placeholder='latitude' value='0'></input>
-							<input id='pz' style='width:3em' placeholder='height' value='20'></input> ]<br>
-				lookAt (gis) = [ <input id='lx' style='width:6em' placeholder='longitude' value='0'></input>
+							<input id='pz' style='width:3em' placeholder='height' value='100'></input> ]<br>
+				lookAt (gis) = [ <input id='lx' style='width:6em' placeholder='longitude' value='-90'></input>
 							<input id='ly' style='width:6em' placeholder='latitude' value='0'></input>
 							<input id='lz' style='width:3em' placeholder='height' value='0'></input> ]
-				-->
 				<input type='button' onclick='updateFrustum(scene)' value='update'></input>
 			</td>
 		</tr>
@@ -48,10 +48,11 @@
 		void main() {
 			vec2 xy = gl_FragCoord.xy / resolution.xy;
 			gl_FragColor = vec4( xy.x, xy.y, resolution.x, resolution.y );
-			// gl_FragColor = vec4(camPos, 1.);
+			gl_FragColor = vec4(0.1);
 		}
 	</script>
-
+<!--
+-->
 	<script type="x-shader/x-vertex" id="vertXyz">
 		uniform vec3 camPos;
 		varying vec4 P;
@@ -60,9 +61,16 @@
 			// passthru: // gl_Position = vec4( position, 1.0 );
 			vec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );
 			gl_PointSize = 1.0;
-			gl_Position = projectionMatrix * mvPosition;
 
-			P = modelMatrix * vec4( position, 1.0 );
+			gl_Position = vec4( position, 1.);
+			// gl_Position = projectionMatrix * mvPosition;
+			// gl_Position = vec4( .5 );
+
+			// P = modelMatrix * vec4( position, 1.0 );// + vec4(camPos, 0.);
+			// P = modelViewMatrix * vec4( position + camPos, 1.0 );
+			P = vec4( position, 1.0 );
+			// P = vec4(camPos, 0.);
+			// P = mvPosition;
 			I = P.xyz - camPos;
 		}
 	</script>
@@ -73,16 +81,7 @@
 		varying vec3 I;
 
 		void main() {
-			float a = 500.;
-			if (a0 > 0.)
-				a = a0;
-			vec2 xy = gl_FragCoord.xy / resolution.xy;
-
-			// gl_FragColor = vec4( xy.x * a, xy.y * a, resolution.x, resolution.y );
-			float d = length(P.xyz - camPos) / a;
-			// gl_FragColor = vec4( xy.x * d, xy.y * d, resolution.x, resolution.y );
-			// gl_FragColor = vec4(camPos, 1.);
-			gl_FragColor = vec4(1.);
+			gl_FragColor = P;
 		}
 	</script>
 
@@ -124,6 +123,7 @@
 		function osmGlobeTiles(zoom, a) {
 			// X goes from 0 (left edge is 180 °W) to 2zoom − 1 (right edge is 180 °E)<br>
 			// Y goes from 0 (top edge is 85.0511 °N) to 2zoom − 1 (bottom edge is 85.0511 °S) in a Mercator projection
+			zoom = Math.min(zoom, 8);
 			var max = Math.pow(2, zoom);
 			var grids = new Float32Array( max * max * 3 );
 			for (var ix = 0; ix < max; ix++) {
@@ -164,7 +164,6 @@
 
 			var grid = new THREE.Points(geometry,
 					new THREE.PointsMaterial( { color: 0xffffff, size: 3 } ) );
-
 			return grid;
 		}
 
@@ -198,17 +197,12 @@
 		/** gpu variable and uniforms */
 		var osmxyz, osmxyzUniforms;
 		function initTileFinder(renderer, cam, a, vert, frag) {
-			// origin ver: var gpuCompute = new GPUComputationRenderer( PIX, PIX, renderer );
 			var gpuCompute = new GPUComputationRenderer( renderer );
 
-			// TODO hide this calling
-			var texyz = gpuCompute.createTexture({x: 8, y: 8});
-			// osmxyz = gpuCompute.addVariable( "osmxyz", document.getElementById( 'fragStub' ).textContent, texyz );
 			osmxyz = gpuCompute.addVariable( "osmxyz", {
 							vert: document.getElementById( vert ).textContent,
 							frag: document.getElementById( frag ).textContent,
-						}, texyz );
-
+						}, {x: 2, y: 2} );
 			// gpuCompute.setVariableDependencies( positionVariable, [ positionVariable, velocityVariable ] );
 			osmxyzUniforms = osmxyz.material.uniforms;
 			osmxyzUniforms[ "camPos" ] = { value: cam.position };
@@ -217,11 +211,11 @@
 			osmxyz.wrapS = THREE.RepeatWrapping;
 			osmxyz.wrapT = THREE.RepeatWrapping;
 
-			var error = gpuCompute.init({w: 8, h: 8, x: 8, y: 8}, cam);
+			var error = gpuCompute.init({w: 100, h: 100, f: 100}, cam);
 			if ( error !== null ) {
 			    console.error( error );
 			}
-			trans2(gpuCompute.castarget(), a);
+			// trans2(gpuCompute.castarget(), a);
 			return gpuCompute;
 		}
 
@@ -250,6 +244,7 @@
 			obj.rotateY(ry * Math.PI / 180);
 			obj.rotateZ(rz * Math.PI / 180);
 
+			console.log(obj.type, 'world', obj.matrix);
 			return obj;
 		}
 
@@ -266,23 +261,13 @@
 
 				// add shadow camera
 				var w = 50 * 1.414;
-				osmCamera = new THREE.PerspectiveCamera( w, 1, 0.1, a * 2 ); // hemishphere is enough?
-				rayScreen = new THREE.PlaneGeometry( 50 * 1.414, 50 * 1.414, 4, 1 ); // w, h, w-seg, h-seg
-
-				var matFindTile = new THREE.ShaderMaterial( {
-					fragmentShader: fragFindTile,
-					vertexShader: vertFindTile,
-					// uniforms: uniforms,
-					opacity: 1.0 } );
-				rayScreen  = new THREE.Mesh( rayScreen, matFindTile );
-				rayScreen.translateOnAxis(new THREE.Vector3(0, 0, 1), -f);
-				osmCamera.attach(rayScreen);
-
+				osmCamera = new THREE.PerspectiveCamera( w, 1, 0.1, a * 10 ); // hemishphere is enough?
+				// opts.tileHelper = initTileFinder(renderer, osmCamera, a, 'vertXyz', 'fragXyz');
 				opts.tileHelper = initTileFinder(renderer, osmCamera, a, 'vertStub', 'fragStub');
 			}
 
 			trans2(osmCamera, a);
-			// trans2(opts.tileHelper.castarget(), a); // translate target
+			// trans2(opts.tileHelper.castarget('osmxyz'), a); // translate target
 
 			// frustum's lookAt not shown by the geometry shape
 			// - actually rotated from the y axis.
@@ -338,14 +323,10 @@
 
 			var tex = gpuCompute.getCurrentRenderTarget( osmxyz );//.texture;
 
-			// at lest working in Chrome
-			// var pixelBuffer = new Uint8Array(8 * 8 * 4);
-			var size = gpuCompute.texsize;
-			// var pixelBuffer = new Float32Array(size.x * size.y * 4);
-			var pixelBuffer = new Float32Array(4);
+			var size = gpuCompute.texsize('osmxyz');
+			var pixelBuffer = new Float32Array(size.x * size.y * 4);
 
-			// renderer.readRenderTargetPixels(tex, 0, 0, size.x, size.y, pixelBuffer)
-			renderer.readRenderTargetPixels(tex, 0, 0, 1, 1, pixelBuffer)
+			renderer.readRenderTargetPixels(tex, 0, 0, size.x, size.y, pixelBuffer)
 			console.log(pixelBuffer);
 		}
 	</script>
