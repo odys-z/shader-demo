@@ -171,6 +171,7 @@ function geoMesh(jsonMesh, wireframe) {
 
 	mesh.add( new THREE.LineSegments( geo, mat ));
 
+	// console.log(mesh.geometry);
 	return mesh;
 }
 
@@ -208,5 +209,6 @@ function initBox(opts) {
 	var m = new THREE.Mesh( box, material );
 	// var vertexNormalsHelper = new THREE.VertexNormalsHelper( m, 1 );
 	// m.add( vertexNormalsHelper );
+	console.log(m.geometry);
 	return m;
 }
