@@ -41,16 +41,19 @@
 	</table>
 	<script type="x-shader/x-fragment" id="fragStub">
 		uniform vec3 camPos;
+		// passThru vert: P = position;
+		varying vec3 P;
 		void main() {
 			vec2 xy = gl_FragCoord.xy / resolution.xy;
 			gl_FragColor = vec4( xy.x, xy.y, resolution.x, resolution.y );
 			// gl_FragColor = vec4(camPos, 1.);
+			gl_FragColor = vec4(P, 1.25);
 		}
 	</script>
 
 	<script type="x-shader/x-fragment" id="vertXyz">
 		uniform vec3 camPos;
-		varying vec4 P;
+		varying vec3 P;
 		varying vec3 I;
         void main()	{
 			// passthru: // gl_Position = vec4( position, 1.0 );
@@ -65,7 +68,7 @@
 	<script type="x-shader/x-fragment" id="fragXyz">
 		uniform vec3 camPos;
 		uniform float a0;
-		varying vec4 P;
+		varying vec3 P;
 		varying vec3 I;
 
 		void main() {
@@ -75,9 +78,10 @@
 			vec2 xy = gl_FragCoord.xy / resolution.xy;
 
 			// gl_FragColor = vec4( xy.x * a, xy.y * a, resolution.x, resolution.y );
-			float d = length(P.xyz - camPos) / a;
-			gl_FragColor = vec4( xy.x * d, xy.y * d, length(P), a );
-			// gl_FragColor = vec4(camPos, 1.);
+			// float d = length(P.xyz - camPos) / a;
+			// gl_FragColor = vec4( xy.x * d, xy.y * d, length(P), a );
+			err
+			gl_FragColor = vec4(P, 1.);
 			// gl_FragColor = vec4(1.);
 		}
 	</script>
@@ -202,7 +206,7 @@
 			// 				vert: document.getElementById( vert ).textContent,
 			// 				frag: document.getElementById( frag ).textContent,
 			// 			}, texyz );
-			osmxyz = gpuCompute.addVariable( "osmxyz", document.getElementById( 'fragStub' ).textContent, texyz );
+			osmxyz = gpuCompute.addVariable( "osmxyz", document.getElementById( frag ).textContent, texyz );
 			// gpuCompute.setVariableDependencies( positionVariable, [ positionVariable, velocityVariable ] );
 			osmxyzUniforms = osmxyz.material.uniforms;
 			osmxyzUniforms[ "camPos" ] = { value: cam.position };
@@ -274,7 +278,7 @@
 				rayScreen.translateOnAxis(new THREE.Vector3(0, 0, 1), -f);
 				osmCamera.attach(rayScreen);
 
-				opts.tileHelper = initTileFinder(renderer, osmCamera, a, 'vertXyz', 'fragXyz');
+				opts.tileHelper = initTileFinder(renderer, osmCamera, a, 'vertXyz', 'fragStub');
 			}
 
 			trans2(osmCamera, a);

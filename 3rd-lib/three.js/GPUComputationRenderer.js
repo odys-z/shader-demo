@@ -132,9 +132,35 @@ var GPUComputationRenderer = function ( sizeX, sizeY, renderer ) {
 
 	var passThruShader = createShaderMaterial( getPassThroughFragmentShader(), passThruUniforms );
 
-	var mesh = new THREE.Mesh( new THREE.PlaneBufferGeometry( 2, 2 ), passThruShader );
+	// var mesh = new THREE.Mesh( new THREE.PlaneBufferGeometry( 2, 2 ), passThruShader );
+    var mesh = castingPointsBuff( passThruShader );
+	mesh = new THREE.Mesh( new THREE.PlaneBufferGeometry( 2, 2, 7, 7 ), passThruShader );
+	console.log('mesh', mesh.geometry);
 	scene.add( mesh );
 
+	function castingPointsBuff ( materail ) {
+		var w = 4;
+		var h = 4;
+		var a = 500;
+		var size = {x: 8, y: 8};
+
+		var grids = new Float32Array( w * h * 3 );
+		for (var iw = 0; iw < w; iw++) {
+			var px = (iw - w / 2 ) * (size.x / w);
+			for (var ih = 0; ih < h; ih++) {
+				var py = (ih - h / 2 ) * (size.y / h);
+				var idx = (iw * w + ih) * 3;
+				grids[idx] = px * 0.1;
+				grids[idx + 1] = py * 0.1;
+				grids[idx + 2] = 0;
+			}
+		}
+
+		var geometry = new THREE.BufferGeometry();
+		geometry.addAttribute( 'position', new THREE.BufferAttribute( grids, 3 ) );
+        console.log('casting points: ', geometry);
+		return new THREE.Mesh( geometry, materail );
+	};
 
 	this.addVariable = function ( variableName, computeFragmentShader, initialValueTexture ) {
 
@@ -249,6 +275,7 @@ var GPUComputationRenderer = function ( sizeX, sizeY, renderer ) {
 
 	function addResolutionDefine( materialShader ) {
 		materialShader.defines.resolution = 'vec2( ' + sizeX.toFixed( 1 ) + ', ' + sizeY.toFixed( 1 ) + " )";
+		console.log(materialShader.defines.resolution);
 	}
 	this.addResolutionDefine = addResolutionDefine;
 
@@ -321,23 +348,24 @@ var GPUComputationRenderer = function ( sizeX, sizeY, renderer ) {
 	// Shaders
 
 	function getPassThroughVertexShader() {
-		return	"void main()	{\n" +
-				"\n" +
-				"	gl_Position = vec4( position, 1.0 );\n" +
-				"\n" +
-				"}\n";
+		return	`varying vec3 P;
+				void main()	{
+					// gl_Position = vec4(0.8); // all zero output
+					gl_Position = vec4( position, 1.0 );
+				// 	gl_Position = vec4( normalize(position) - 0.5, 1.0 );
+					P = position;
+					P.y = 5.;
+				}`;
 	}
 
 	function getPassThroughFragmentShader() {
-		return	"uniform sampler2D passThruTexture;\n" +
-				"\n" +
-				"void main() {\n" +
-				"\n" +
-				"	vec2 uv = gl_FragCoord.xy / resolution.xy;\n" +
-				"\n" +
-				"	gl_FragColor = texture2D( passThruTexture, uv );\n" +
-				"\n" +
-				"}\n";
+		return	`uniform sampler2D passThruTexture;
+				varying vec3 P;
+				void main() {
+					vec2 uv = gl_FragCoord.xy / resolution.xy;
+					// gl_FragColor = texture2D( passThruTexture, uv );
+					gl_FragColor = vec4(P, 1.);
+				}`;
 	}
 
 };
