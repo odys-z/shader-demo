@@ -265,8 +265,9 @@
 
 				// add shadow camera
 				var w = 50 * 1.414;
-				// osmCamera = new THREE.PerspectiveCamera( w, 1, 0.1, a * 10 ); // hemishphere is enough?
-				osmCamera = new THREE.OrthographicCamera( -2, 2, 2, -2 ); // hemishphere is enough?
+				// both not working
+				osmCamera = new THREE.PerspectiveCamera( w, 1, 0.1, a * 10 ); // hemishphere is enough?
+				// osmCamera = new THREE.OrthographicCamera( -2, 2, 2, -2 ); // hemishphere is enough?
 				opts.tileHelper = initTileFinder(renderer, osmCamera, a, 'vertXyz', 'fragXyz');
 			}
 
