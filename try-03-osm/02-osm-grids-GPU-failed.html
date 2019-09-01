@@ -1,3 +1,4 @@
+
 <!DOCTYPE HTML>
 <html>
 <head>
@@ -5,12 +6,14 @@
 	<title>OSM Tiles</title>
 	<script type='text/javascript' src='../3rd-lib/three.js/three.min.js'></script>
 	<script type='text/javascript' src='../3rd-lib/three.js/OrbitControls.js'></script>
+	<script type='text/javascript' src='../lib/GPUComputationRenderer_raycast.js'></script>
     <script src="res/osm-utils.js"></script>
+    <link rel='stylesheet' type='text/css' href='../lib/shader.css'>
 </head>
 <body>
 	<table style="width:100%">
 		<tr><td>TODO: <a href='https://docs.mapbox.com/vector-tiles/reference/'>Vector Tiles</a></td></tr>
-		<tr><td style="width:60%"><div id="container" style="height:900px"></div></td>
+		<tr><td rowspan='2' style="width:60%"><div id="container" style="height:900px"></div></td>
 			<td>a = 500, R = 6372.7982<br>
 				<!--
 				rotation (degree) = [ <input id='ux' style='width:2em' placeholder='x' value='0'></input>
@@ -32,10 +35,95 @@
 				lookAt (gis) = [ <input id='lx' style='width:6em' placeholder='longitude' value='-90'></input>
 							<input id='ly' style='width:6em' placeholder='latitude' value='0'></input>
 							<input id='lz' style='width:3em' placeholder='height' value='0'></input> ]
-				<input type='button' onclick='updateFrustum(scene)' value='update'></input>
+				<input type='button' onclick='updateFrustum(scene)' value='update'></input><br>
+			</td>
+		</tr>
+		<tr>
+			<td><p>This page is a step stone showing GPU computation is not done as expected.</p>
+				<p>In vertex shader, gl_Position is affecting varying variables.
+					<div class='code'>gl_Position = vec4( position, 1.);<br>
+						P = vec4(position, 1.);
+					</div>
+					The above shader will produce output 10 times less than the flowing one.<br>
+					<div class='code'>gl_Position = vec4( position, 10.);<br>
+						// or same as this:<br>
+						// gl_Position = vec4( position * 0.1, 1.);<br>
+						P = vec4(position, 1.);
+					</div>
+					The output is produced by fragment shader:
+					<div class='code'>gl_FragColor = P;</div>
+				</p>
+				<p>References:
+					<ol>
+						<li>For what's exactly gl_Position is and it's range, see
+							<a href='https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API/WebGL_model_view_projection'>
+								Clip Space explained in WebGL model view projection</a>.</li>
+						<li>For why gl_Position.w is affecting scaling, see
+							<a href='http://www.songho.ca/opengl/gl_projectionmatrix.html'>
+								OpenGL Projection Matrix</a>.</li>
+					</ol>
+				</p>
+				<p>TODO reading task:<br>
+					Why and how to handling gl_Position's scaling?<br>
+					For now, only CPU computation for finding out targeting tiles is possible.</p>
 			</td>
 		</tr>
 	</table>
+	<!--
+	<script type="x-shader/x-fragment" id="vertStub">
+        void main()	{
+			gl_Position = vec4( position, 1.0 );
+		}
+	</script>
+	<script type="x-shader/x-fragment" id="fragStub">
+		uniform vec3 camPos;
+		void main() {
+			vec2 xy = gl_FragCoord.xy / resolution.xy;
+			gl_FragColor = vec4( xy.x, xy.y, resolution.x, resolution.y );
+			gl_FragColor = vec4(0.1);
+		}
+	</script>
+	-->
+	<script type="x-shader/x-vertex" id="vertXyz">
+		attribute vec3 worldp;
+		uniform vec3 camPos;
+		varying vec4 P;
+		varying vec3 I;
+        void main()	{
+			// passthru: // gl_Position = vec4( position, 1.0 );
+			vec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );
+			gl_PointSize = 1.0;
+
+			gl_Position = vec4( position, 1.);
+			// gl_Position = projectionMatrix * mvPosition;
+			// gl_Position = vec4( .1 );
+			// gl_Position = vec4(normalize( position ), 1.0);
+			// gl_Position = vec4( normalize(position) - 0.4, 1.0 );
+			// gl_Position = vec4( normalize(vec3(position.x, position.y, 10.)), .9);
+
+			// P = modelMatrix * vec4( position, 1.0 );// + vec4(camPos, 0.);
+			// P = modelViewMatrix * vec4( position + camPos, 1.0 );
+			// P = vec4( position, 1.0 );
+			// P = mvPosition;
+			P = vec4(worldp * 40., 1.);
+
+			// This case shows unforms are not modified:
+			// P = vec4(camPos, 0.);
+
+			I = P.xyz - camPos;
+		}
+	</script>
+	<script type="x-shader/x-fragment" id="fragXyz">
+		uniform vec3 camPos;
+		uniform float a0;
+		varying vec4 P;
+		varying vec3 I;
+
+		void main() {
+			gl_FragColor = P;
+			// gl_FragColor += vec4(1.0);
+		}
+	</script>
 
     <script>
 		/** Earth Radius hold by OSM,
@@ -46,6 +134,9 @@
 		 * see https://en.wikipedia.org/wiki/Mercator_projection#Cylindrical_projections */
 		const a = 500;
 
+		/** Sampling points segments, a pix * pix grids */
+		// orignal version: const PIX = 8;
+
 		const opts = {
 			uniforms: {
 				iTime: { value: 0 },
@@ -54,7 +145,7 @@
 			},
 		};
 
-		// var osmCamera, osmCanvas;
+		var osmCamera, osmCanvas;
 		var frustum; // for camera illustration
 		var camera, scene, renderer, controls;
 
@@ -143,6 +234,31 @@
 			return scene;
 		}
 
+		/** gpu variable and uniforms */
+		var osmxyz, osmxyzUniforms;
+		function initTileFinder(renderer, cam, a, vert, frag) {
+			var gpuCompute = new GPUComputationRenderer( renderer );
+
+			osmxyz = gpuCompute.addVariable( "osmxyz", {
+							vert: document.getElementById( vert ).textContent,
+							frag: document.getElementById( frag ).textContent,
+						}, {x: 8, y: 8} );
+			// gpuCompute.setVariableDependencies( positionVariable, [ positionVariable, velocityVariable ] );
+			osmxyzUniforms = osmxyz.material.uniforms;
+			osmxyzUniforms[ "camPos" ] = { value: cam.position };
+			osmxyzUniforms[ "a0" ] = { value: a };
+
+			osmxyz.wrapS = THREE.RepeatWrapping;
+			osmxyz.wrapT = THREE.RepeatWrapping;
+
+			var error = gpuCompute.init({w: 100, h: 100, f: 100}, cam);
+			if ( error !== null ) {
+			    console.error( error );
+			}
+			// trans2(gpuCompute.castarget(), a);
+			return gpuCompute;
+		}
+
 		/** Collect transform settings set by inputs.
 		 * @param {THREE.Object3D} obj
 		 * @param {number} a model radius
@@ -177,36 +293,33 @@
 				const f = 100;
 				var geometry = new THREE.ConeGeometry( 50, f, 4, 1, false, Math.PI / 4);
 				var material = new THREE.MeshBasicMaterial( {
-										color: 0x0077ff,
+										color: 0xffffff,
 										wireframe: true,
 										opacity: 0.5 } );
 				frustum = new THREE.Mesh( geometry, material );
 				scene.add( frustum );
 
-				var castscreen = new THREE.Mesh( new THREE.PlaneBufferGeometry (80, 80, 10, 8),
-							material );
-            	castscreen.rotateX(Math.PI / 2);
-            	castscreen.translateOnAxis(new THREE.Vector3(0, 0, 1), 100);
-				frustum.attach(castscreen);
-				console.log('screen model', castscreen.geometry.attributes.position);
-
-				scene.add( frustum );
-
-				var pos = castscreen.geometry.attributes.position.clone();
-				var p0 = castscreen.position.clone();
-				console.log('p0', p0);
-				p0 = castscreen.localToWorld(p0);
-				//pos.applyMatrix4( screen.matrixWorld );
-				console.log('screen world', p0, pos);
-				p0 = new THREE.Vector3();
-				p0 = castscreen.localToWorld(p0);
-				console.log('p0 - 0', p0 );
+				// add shadow camera
+				var w = 50 * 1.414;
+				// both not working
+				osmCamera = new THREE.PerspectiveCamera( w, 1, 0.1, a * 10 ); // hemishphere is enough?
+				// osmCamera = new THREE.OrthographicCamera( -2, 2, 2, -2 ); // hemishphere is enough?
+				opts.tileHelper = initTileFinder(renderer, osmCamera, a, 'vertXyz', 'fragXyz');
 			}
 
+			trans2(osmCamera, a);
+			osmCamera.updateProjectionMatrix();
+			// trans2(opts.tileHelper.castarget('osmxyz'), a); // translate target
+
+			// frustum's lookAt not shown by the geometry shape
 			// - actually rotated from the y axis.
+			// trans2() only keep consists with camera's lookAt.
 			trans2(frustum, a);
 			frustum.rotateX(- Math.PI / 2);
-			console.log('matrix', frustum.matrix, frustum.matrixWorld);
+
+			if (opts.tileHelper) {
+				findTiles(opts.tileHelper, osmCamera);
+			}
 		}
 
 		function onWindowResize() {
@@ -231,6 +344,32 @@
 			opts.uniforms.iTime.value = time;
 
 			renderer.render( scene, camera );
+		}
+
+		/**<p>Calculate Tile Planes for Rendering</p>
+		 * <pre>ray -- d -- z -- tiles -- plane (x, y, w, h)
+		 * 		\-- -- p -- --|     \        \
+		 *             \-- - uv -- --\-- -- material</pre>
+		 * <p> 1. ray casting for distance;<br>
+		 * 2. get world positiong of ray casting at earth surface;<br>
+		 * 3. from p and d, get tiles and OSM XYZ, then build plane models;<br>
+		 * 4. from tile XYZ and p, get texture's uv;<br>
+		 * 5. build rendering planes (boxes) with OSM tiles as texture.</p>
+		 * @param {THREE.GPUComputationRenderer} gpuCompute
+		 * @param {object} cam osm camera
+		 * @return {array} array of THREE.Mesh for rendering map
+		 */
+		function findTiles(gpuCompute, cam) {
+			gpuCompute.compute();
+			osmxyzUniforms[ "camPos" ] = { value: cam.position };
+
+			var tex = gpuCompute.getCurrentRenderTarget( osmxyz );//.texture;
+
+			var size = gpuCompute.texsize('osmxyz');
+			var pixelBuffer = new Float32Array(size.x * size.y * 4);
+
+			renderer.readRenderTargetPixels(tex, 0, 0, size.x, size.y, pixelBuffer)
+			console.log(pixelBuffer);
 		}
 	</script>
 </body>

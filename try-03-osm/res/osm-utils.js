@@ -79,6 +79,48 @@ function loadImgTile(id, xyz) {
     document.querySelector(`#${id}`).src = url;
 }
 
+/**Find out sphere intersect point with ray.
+  * @param {vec3} eye camera postion in world
+  * @param {vec3} l direction norm
+  * @param {float} r sphere radius
+  * @param {vec3} cent shpere center position in world
+  * @return intersect position
+ */
+function castPosition (eye, dir, r, cent) {
+	if (cent === undefined) {
+		cent = [0, 0, 0];
+	}
+
+	var d = distSphere(eye, dir, r, cent);
+	if (d < 0)
+		return
+	else {
+		var p = [d * dir[0], d * dir[1], d * dir[2]];
+		return [p[0] + eye[0], p[1] + eye[1], p[2] + eye[2]];
+	}
+}
+
+ /**Vector distance  to orignal point.
+  * See https://en.wikipedia.org/wiki/Line%E2%80%93sphere_intersection
+  * @param {vec3} eye camera postion in world
+  * @param {vec3} l direction norm
+  * @param {float} r sphere radius
+  * @param {vec3} cent shpere center position in world
+  * @return distance
+  */
+function distSphere( eye, l, r, cent ) {
+	 // e = o - c, where o = eye, c = cent
+	 var e = eye - cent;
+	 // delta = (l . (o - c))^2 + r^2 - |(o - c)|^2
+	 var delta = Math.pow( dot( l, e ), 2. ) + Math.pow( r, 2. ) - Math.dot(e, e);
+	 if (delta < 0.) return delta;
+	 // d = - u.e +/- delta^0.5
+	 delta = Math.pow( delta, 0.5 );
+	 return Maht.min( - Math.dot( l, e ) + delta, - Math.dot( l, e ) - delta );
+ }
+
+
+
 // function findTiles(z, id) {
 //     // X goes from 0 (left edge is 180 °W) to 2zoom − 1 (right edge is 180 °E)<br>
 //     // Y goes from 0 (top edge is 85.0511 °N) to 2zoom − 1 (bottom edge is 85.0511 °S) in a Mercator projection
