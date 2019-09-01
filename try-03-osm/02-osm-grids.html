@@ -55,7 +55,8 @@
 		};
 
 		// var osmCamera, osmCanvas;
-		var frustum; // for camera illustration
+		// var frustum, castscreen; // for camera illustration
+		var osmgroup; // for camera illustration
 		var camera, scene, renderer, controls;
 
 		scene = init('container');
@@ -173,40 +174,53 @@
 		}
 
 		function updateFrustum(scene) {
-			if (frustum === undefined) {
+			// if (frustum === undefined) {
+			if (osmgroup === undefined) {
 				const f = 100;
 				var geometry = new THREE.ConeGeometry( 50, f, 4, 1, false, Math.PI / 4);
 				var material = new THREE.MeshBasicMaterial( {
 										color: 0x0077ff,
 										wireframe: true,
 										opacity: 0.5 } );
-				frustum = new THREE.Mesh( geometry, material );
-				scene.add( frustum );
+				var frustum = new THREE.Mesh( geometry, material );
+				frustum.rotateX(- Math.PI / 2);
+				// scene.add( frustum );
 
 				var castscreen = new THREE.Mesh( new THREE.PlaneBufferGeometry (80, 80, 10, 8),
 							material );
-            	castscreen.rotateX(Math.PI / 2);
-            	castscreen.translateOnAxis(new THREE.Vector3(0, 0, 1), 100);
-				frustum.attach(castscreen);
-				console.log('screen model', castscreen.geometry.attributes.position);
+				// see https://threejs.org/docs/#manual/en/introduction/Matrix-transformations
+				// castscreen.matrixAutoUpdate = false;
+				castscreen.translateOnAxis( new THREE.Vector3(0, 0, 1), 100 );
 
-				scene.add( frustum );
+            	// castscreen.rotateX(Math.PI / 2);
+            	// castscreen.translateOnAxis(new THREE.Vector3(0, 0, 1), 500);
+				console.log('after create (position, matrix, matrixWorld)',
+					castscreen.geometry.attributes.position,
+					castscreen.matrix, castscreen.matrixWorld);
+
+				// scene.add( frustum );
+				// scene.add( castscreen );
+				osmgroup = new THREE.Group();
+				osmgroup.add(frustum);
+				osmgroup.add(castscreen);
 
 				var pos = castscreen.geometry.attributes.position.clone();
 				var p0 = castscreen.position.clone();
 				console.log('p0', p0);
-				p0 = castscreen.localToWorld(p0);
+				var p1 = castscreen.localToWorld(p0);
 				//pos.applyMatrix4( screen.matrixWorld );
-				console.log('screen world', p0, pos);
-				p0 = new THREE.Vector3();
-				p0 = castscreen.localToWorld(p0);
-				console.log('p0 - 0', p0 );
+				console.log('screen p0, p1, pos', p0, p1, pos);
+
+				scene.add(osmgroup);
 			}
 
+			trans2(osmgroup, a);
 			// - actually rotated from the y axis.
-			trans2(frustum, a);
-			frustum.rotateX(- Math.PI / 2);
-			console.log('matrix', frustum.matrix, frustum.matrixWorld);
+			// trans2(frustum, a);
+			// frustum.rotateX(- Math.PI / 2);
+			// console.log('matrix', frustum.matrix, frustum.matrixWorld);
+			// castscreen.position.copy( frustum.position );
+			// castscreen.matrix = frustum.matrix.clone();
 		}
 
 		function onWindowResize() {
