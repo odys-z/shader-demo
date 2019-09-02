@@ -137,7 +137,7 @@ vec3 shading( vec3 v, vec3 n, vec3 dir, vec3 eye ) {
 		vec3 light_pos   = vec3( 20.0, 20.0, 20.0 );
 		vec3 light_color = vec3( .9, 0.7, 0.7 );
 
-        // from color's postion to light position
+        // from color's position to light position
 		vec3 vl = normalize( light_pos - v );
 
         // 1/2 |cos(light distance, norm)|

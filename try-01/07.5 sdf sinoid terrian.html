@@ -40,7 +40,7 @@ const fragmentShader = `
   const vec2 dxdz = vec2(0.01);
 
   /** get ray direction in world
-   * input: varying P, world postion of the pixel:
+   * input: varying P, world position of the pixel:
    * modelMatrix * vec4(position, 1.0);
    * @param eye ray origin
    * @return dir norm
@@ -50,7 +50,7 @@ const fragmentShader = `
   }
 
   /**
-   * @param xz world postion (x, 0, z), will be normalized with texize.wz
+   * @param xz world position (x, 0, z), will be normalized with texize.wz
    * @return height  (length of pixel color)
    */
   float textureHight (vec2 xz) {
@@ -147,7 +147,7 @@ const fragmentShader = `
    * When (e + rd * t).y == 0, t define the distance.
    * t = - e.y / rd.y
    * d = dot(rd * t) ^ 0.5 (if rd is normalized, d == t)
-   * @param e eye postion in world
+   * @param e eye position in world
    * @param rd ray direction, in world
    * @return vec4 [intersect-point, distance]
    */

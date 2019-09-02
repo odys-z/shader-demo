@@ -2,9 +2,9 @@
 
 1. The gl_Position range is [vec3(-1), vec3(1)]
 
-This is the clip space
+This is the clip space renge
 
-see
+see 02-osm-grids-GPU-failed.html#References.
 
 2. For "02-osm-grids.temp.htm", all "gl_Position = 0.5" won't makes fragment working
 

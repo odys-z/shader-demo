@@ -80,7 +80,7 @@ function loadImgTile(id, xyz) {
 }
 
 /**Find out sphere intersect point with ray.
-  * @param {vec3} eye camera postion in world
+  * @param {vec3} eye camera position in world
   * @param {vec3} l direction norm
   * @param {float} r sphere radius
   * @param {vec3} cent shpere center position in world
@@ -102,7 +102,7 @@ function castPosition (eye, dir, r, cent) {
 
  /**Vector distance  to orignal point.
   * See https://en.wikipedia.org/wiki/Line%E2%80%93sphere_intersection
-  * @param {vec3} eye camera postion in world
+  * @param {vec3} eye camera position in world
   * @param {vec3} l direction norm
   * @param {float} r sphere radius
   * @param {vec3} cent shpere center position in world

@@ -16,7 +16,7 @@
 				rotation (degree) = [ <input id='ux' style='width:2em' placeholder='x' value='0'></input>
 							  <input id='uy' style='width:2em' placeholder='y' value='0'></input>
 							  <input id='uz' style='width:2em' placeholder='z' value='5'></input> ]<br>
-				postion (gis) = [ <input id='px' style='width:6em' placeholder='longitude' value='104.09856'></input>
+				position (gis) = [ <input id='px' style='width:6em' placeholder='longitude' value='104.09856'></input>
 							<input id='py' style='width:6em' placeholder='latitude' value='30.3765'></input>
 							<input id='pz' style='width:3em' placeholder='height' value='2'></input> ]<br>
 				lookAt (gis) = [ <input id='lx' style='width:6em' placeholder='longitude' value='104.09856'></input>
@@ -26,7 +26,7 @@
 				rotation (degree) = [ <input id='ux' style='width:2em' placeholder='x' value='0'></input>
 							  <input id='uy' style='width:2em' placeholder='y' value='0'></input>
 							  <input id='uz' style='width:2em' placeholder='z' value='0'></input> ]<br>
-				postion (gis) = [ <input id='px' style='width:6em' placeholder='longitude' value='-90'></input>
+				position (gis) = [ <input id='px' style='width:6em' placeholder='longitude' value='-90'></input>
 							<input id='py' style='width:6em' placeholder='latitude' value='0'></input>
 							<input id='pz' style='width:3em' placeholder='height' value='100'></input> ]<br>
 				lookAt (gis) = [ <input id='lx' style='width:6em' placeholder='longitude' value='-90'></input>
@@ -56,7 +56,8 @@
 
 		// var osmCamera, osmCanvas;
 		// var frustum, castscreen; // for camera illustration
-		var osmgroup; // for camera illustration
+		var osmgroup, castscreen; // for camera illustration
+		var rays;	// rays in world for findout osm tiles
 		var camera, scene, renderer, controls;
 
 		scene = init('container');
@@ -169,7 +170,7 @@
 			obj.rotateY(ry * Math.PI / 180);
 			obj.rotateZ(rz * Math.PI / 180);
 
-			console.log(obj.type, 'world', obj.matrix);
+			console.log(`trans2(${obj.type}.matrix, ${a})`, obj.matrix);
 			return obj;
 		}
 
@@ -186,41 +187,65 @@
 				frustum.rotateX(- Math.PI / 2);
 				// scene.add( frustum );
 
-				var castscreen = new THREE.Mesh( new THREE.PlaneBufferGeometry (80, 80, 10, 8),
+				castscreen = new THREE.Mesh( new THREE.PlaneBufferGeometry (80, 80, 10, 8),
 							material );
 				// see https://threejs.org/docs/#manual/en/introduction/Matrix-transformations
 				// castscreen.matrixAutoUpdate = false;
-				castscreen.translateOnAxis( new THREE.Vector3(0, 0, 1), 100 );
+				castscreen.translateOnAxis( new THREE.Vector3(0, 0, 1), -200 );
 
             	// castscreen.rotateX(Math.PI / 2);
             	// castscreen.translateOnAxis(new THREE.Vector3(0, 0, 1), 500);
-				console.log('after create (position, matrix, matrixWorld)',
-					castscreen.geometry.attributes.position,
+				console.log('after create (screen-matrix, screen-matrixWorld)',
 					castscreen.matrix, castscreen.matrixWorld);
 
-				// scene.add( frustum );
-				// scene.add( castscreen );
 				osmgroup = new THREE.Group();
 				osmgroup.add(frustum);
 				osmgroup.add(castscreen);
-
-				var pos = castscreen.geometry.attributes.position.clone();
-				var p0 = castscreen.position.clone();
-				console.log('p0', p0);
-				var p1 = castscreen.localToWorld(p0);
-				//pos.applyMatrix4( screen.matrixWorld );
-				console.log('screen p0, p1, pos', p0, p1, pos);
-
 				scene.add(osmgroup);
 			}
 
 			trans2(osmgroup, a);
-			// - actually rotated from the y axis.
-			// trans2(frustum, a);
-			// frustum.rotateX(- Math.PI / 2);
-			// console.log('matrix', frustum.matrix, frustum.matrixWorld);
-			// castscreen.position.copy( frustum.position );
-			// castscreen.matrix = frustum.matrix.clone();
+			console.log('after trans2() - group.matrix, screen-wrold',
+						osmgroup.matrix, castscreen.matrixWorld);
+
+			// add rays
+			if (rays === undefined) {
+				console.log('before getTargets(screen-world, screen-matrix)',
+						castscreen.matrixWorld, castscreen.matrix);
+				var raytarges = getTargets(castscreen.geometry.attributes.position.clone(),
+						castscreen.matrixWorld, castscreen.matrix);
+
+				var c0 = osmgroup.position;
+				var geometry = new THREE.Geometry();
+				for ( var ix = 0; ix < raytarges.count; ix++ ) {
+					geometry.vertices.push(new THREE.Vector3(
+						raytarges.getX(ix), raytarges.getY(ix), raytarges.getZ(ix) ));
+					geometry.vertices.push(c0);
+				}
+				rays = new THREE.LineSegments(geometry,
+							new THREE.LineBasicMaterial({ color: 0x7777ff }));
+				scene.add(rays);
+			}
+		}
+
+		function getTargets(poses, matWorld, matLocal) {
+			// var mat = matLocal.clone();
+			console.log('in getTargets() matWorld', matWorld);
+			// mat = mat.multiply(matWorld);
+			// console.log(mat);
+			var mat = new THREE.Matrix4();
+			mat.copy(matWorld);
+			console.log('copied mat, matWorld: ', mat, matWorld);
+
+			for ( var ix = 0; ix < poses.count; ix++ ) {
+				var v = new THREE.Vector3(poses.getX(ix),
+							poses.getY(ix), poses.getZ(ix));
+				v.applyMatrix4(matWorld);
+				v.applyMatrix4(mat);
+				poses.setXYZ(ix, v.x, v.y, v.z);
+			};
+			// console.log('targets-world: (by mats) ', poses, matLocal, matWorld);
+			return poses;
 		}
 
 		function onWindowResize() {
