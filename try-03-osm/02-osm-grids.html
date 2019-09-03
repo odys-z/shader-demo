@@ -219,21 +219,14 @@
 										color: 0x0077ff,
 										wireframe: true,
 										opacity: 0.5 } );
-				// var frustum = new THREE.Mesh( geometry, material );
-				// frustum.rotateX(- Math.PI / 2);
-
 				castscreen = new THREE.Mesh( new THREE.PlaneBufferGeometry (80, 80, 2, 2),
-							material );
+										material );
 				// see https://threejs.org/docs/#manual/en/introduction/Matrix-transformations
 				// castscreen.matrixAutoUpdate = false;
 				castscreen.translateOnAxis( new THREE.Vector3(0, 0, 1), 100 );
 
-            	// castscreen.rotateX(Math.PI / 2);
-            	// castscreen.translateOnAxis(new THREE.Vector3(0, 0, 1), 500);
-
 				osmgroup = new THREE.Group();
 				osmgroup.matrixAutoUpdate = false;
-				// osmgroup.add(frustum);
 				osmgroup.add(castscreen);
 				scene.add(osmgroup);
 				console.log('screen created with matrices (screen-matrix, screen-matrixWorld)',
@@ -255,6 +248,7 @@
 
 			// add rays
 			if (rays !== undefined) {
+				// can we just move the position?
 				scene.remove(scene.getObjectByName('rays'));
 			}
 			castscreen.updateMatrix();
@@ -268,9 +262,23 @@
 
 			var geometry = new THREE.Geometry();
 			for ( var ix = 0; ix < raytarges.count; ix++ ) {
-				geometry.vertices.push(new THREE.Vector3(
-					raytarges.getX(ix), raytarges.getY(ix), raytarges.getZ(ix) ));
+				var x = raytarges.getX(ix);
+				var y = raytarges.getY(ix);
+				var z = raytarges.getZ(ix);
+				geometry.vertices.push(new THREE.Vector3( x, y, z ));
 				geometry.vertices.push(c0);
+
+				// temp: also calculate XYZ
+				var dir = normalize([x, y, z], [c0.x, c0.y, c0.z]);
+				var p = castPosition ([c0.x, c0.y, c0.z], dir, a);
+				if (p) {
+					var longlat = cart2rad(p);
+					var osmz = 6;
+			        var osmx = long2tile(longlat.long, osmz);
+			        var osmy = lat2tile(longlat.lat, osmz);
+					var osmurl = `https://a.tile.openstreetmap.org/${osmz}/${osmx}/${osmy}.png`;
+					console.log(osmurl);
+				}
 			}
 			rays = new THREE.LineSegments(geometry,
 						new THREE.LineBasicMaterial({ color: 0x7777ff }));
@@ -278,7 +286,9 @@
 			scene.add(rays);
 		}
 
-		/**
+		/**Apply matWorld to poses position.
+		 * If poses is cast screen's points, and mat is user's settings,
+		 * this function will return it's positions in world.
 		 * @param {Float32Array} poses the verices buffer
 		 * @param {THREE.Matrix4} matWorld world matrix
 		 * @param {THREE.Matrix4} matLocal model matrix
@@ -293,12 +303,9 @@
 			for ( var ix = 0; ix < poses.count; ix++ ) {
 				var v = new THREE.Vector3(poses.getX(ix),
 							poses.getY(ix), poses.getZ(ix));
-				// v.applyMatrix4(matLocal);
-				// v.applyMatrix4(matWorld);
 				v.applyMatrix4(mat);
 				poses.setXYZ(ix, v.x, v.y, v.z);
 			};
-			// console.log('targets-world: (by mats) ', poses, matLocal, matWorld);
 			return poses;
 		}
 

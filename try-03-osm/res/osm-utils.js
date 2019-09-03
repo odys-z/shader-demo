@@ -38,6 +38,27 @@ function rad2cart(long, lat, a) {
 	return {x : x, y: y, z: z};
 }
 
+/**See https://keisan.casio.com/exec/system/1359533867
+ * and https://en.wikipedia.org/wiki/Spherical_coordinate_system
+ * @param {object} p position {x, y, z}
+ * @param {object} c0 center (x, y, z)
+ * @return {object} {long, lat, r}
+ */
+function cart2rad(p, c0) {
+	if (c0 === undefined)
+		c0 = {x: 0, y: 0, z: 0};
+	var x = p.x - c0.x;
+	var y = p.y - c0.y;
+	var z = p.z - c0.z;
+
+	var r = Math.sqrt((x * x + y * y + z * z), 0.5);
+	var phi = Math.atan(y / x);
+	var theta = Math.acos(z / r);
+
+	// with prime meridian at z = 0, x = R, y = 0, to north, negative z to the east hemishphere.
+	return {long: theta - Math.PI / 2, lat: phi, r};
+}
+
 function long2tile(lon, zoom1) {
     tt = Number(lon);
     return (Math.floor((tt + 180) / 360 * Math.pow(2, zoom1)));
@@ -81,22 +102,23 @@ function loadImgTile(id, xyz) {
 
 /**Find out sphere intersect point with ray.
   * @param {vec3} eye camera position in world
-  * @param {vec3} l direction norm
+  * @param {vec3} dir direction norm
   * @param {float} r sphere radius
-  * @param {vec3} cent shpere center position in world
-  * @return intersect position
+  * @param {vec3} c0 shpere center position in world
+  * @return {object} (x, y, z): intersect position in world
  */
-function castPosition (eye, dir, r, cent) {
-	if (cent === undefined) {
-		cent = [0, 0, 0];
+function castPosition (eye, dir, r, c0) {
+	if (c0 === undefined) {
+		c0 = [0, 0, 0];
 	}
 
-	var d = distSphere(eye, dir, r, cent);
+	var d = distSphere(eye, dir, r, c0);
 	if (d < 0)
 		return
 	else {
 		var p = [d * dir[0], d * dir[1], d * dir[2]];
-		return [p[0] + eye[0], p[1] + eye[1], p[2] + eye[2]];
+		// return [p[0] + eye[0], p[1] + eye[1], p[2] + eye[2]];
+		return {x: p[0] + eye[0], y: p[1] + eye[1], z: p[2] + eye[2]};
 	}
 }
 
@@ -110,16 +132,51 @@ function castPosition (eye, dir, r, cent) {
   */
 function distSphere( eye, l, r, cent ) {
 	 // e = o - c, where o = eye, c = cent
-	 var e = eye - cent;
+	 var e = [eye[0] - cent[0], eye[1] - cent[1], eye[2] - cent[2]];
 	 // delta = (l . (o - c))^2 + r^2 - |(o - c)|^2
-	 var delta = Math.pow( dot( l, e ), 2. ) + Math.pow( r, 2. ) - Math.dot(e, e);
+	 var delta = Math.pow( dot( l, e ), 2. ) + Math.pow( r, 2. ) - dot(e, e);
 	 if (delta < 0.) return delta;
 	 // d = - u.e +/- delta^0.5
 	 delta = Math.pow( delta, 0.5 );
-	 return Maht.min( - Math.dot( l, e ) + delta, - Math.dot( l, e ) - delta );
+	 return Math.min( - dot( l, e ) + delta, - dot( l, e ) - delta );
  }
 
+function normalize( v, v0 ) {
+	if ( v0 === undefined )
+		v0 = [0, 0, 0];
 
+	v = [v[0] - v0[0], v[1] - v0[1], v[2] - v0[2]];
+	var mag = Math.sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
+	if (mag - 0. < 0.0000000001) {
+		console.warn('magnitude is too small to find norm: ', v, v0);
+		return [0, 0, 1];
+	}
+	else {
+		return [v[0] / mag, v[1] / mag, v[2] / mag];
+	}
+}
+
+function dot( v, u ) {
+	if (!Array.isArray(v))
+		v = toVec3(v);
+	if (!Array.isArray(u))
+		u = toVec3(u);
+
+	var s = 0;
+	for (var ix = 0; ix < v.length; ix ++) {
+		s += v[ix] * u[ix];
+	}
+	return s;
+}
+
+function toVec3(obj) {
+	var a = [obj.x, obj.y];
+	if (obj.z)
+		a.push(obj.z);
+	if (obj.w)
+		a.push(obj.w);
+	return a;
+}
 
 // function findTiles(z, id) {
 //     // X goes from 0 (left edge is 180 °W) to 2zoom − 1 (right edge is 180 °E)<br>
