@@ -94,7 +94,7 @@
 					grids[idx + 2] = wld.z;
 			    }
 			}
-			console.log(`osm tiles (z = ${zoom})`, grids);
+			// console.log(`osm tiles (z = ${zoom})`, grids);
 			return grids;
 		}
 
@@ -175,7 +175,6 @@
 		}
 
 		function updateFrustum(scene) {
-			// if (frustum === undefined) {
 			if (osmgroup === undefined) {
 				const f = 100;
 				var geometry = new THREE.ConeGeometry( 50, f, 4, 1, false, Math.PI / 4);
@@ -185,7 +184,6 @@
 										opacity: 0.5 } );
 				var frustum = new THREE.Mesh( geometry, material );
 				frustum.rotateX(- Math.PI / 2);
-				// scene.add( frustum );
 
 				castscreen = new THREE.Mesh( new THREE.PlaneBufferGeometry (80, 80, 10, 8),
 							material );
@@ -193,12 +191,11 @@
 				// castscreen.matrixAutoUpdate = false;
 				castscreen.translateOnAxis( new THREE.Vector3(0, 0, 1), -200 );
 
-            	// castscreen.rotateX(Math.PI / 2);
-            	// castscreen.translateOnAxis(new THREE.Vector3(0, 0, 1), 500);
 				console.log('after create (screen-matrix, screen-matrixWorld)',
-					// castscreen.matrix, castscreen.matrixWorld
-					JSON.parse(JSON.stringify(castscreen.matrix)),
-					JSON.parse(JSON.stringify(castscreen.matrixWorld))
+					// Use this to log a snapshot:
+					// JSON.parse(JSON.stringify(castscreen.matrix)),
+					// JSON.parse(JSON.stringify(castscreen.matrixWorld))
+					castscreen.matrix, castscreen.matrixWorld
 				);
 
 				osmgroup = new THREE.Group();
@@ -209,19 +206,22 @@
 
 			trans2(osmgroup, a);
 			console.log('after trans2() - group.matrix, screen-world',
-						// osmgroup.matrix, castscreen.matrixWorld);
-						JSON.parse(JSON.stringify(osmgroup.matrix)),
-						JSON.parse(JSON.stringify(castscreen.matrixWorld))
+						// Use this to log a snapshot:
+						// JSON.parse(JSON.stringify(osmgroup.matrix)),
+						// JSON.parse(JSON.stringify(castscreen.matrixWorld))
+						osmgroup.matrix, castscreen.matrixWorld
 					);
 
 			// add rays
 			if (rays === undefined) {
-				castscreen.updateMatrix();
-				castscreen.updateMatrixWorld();
+				// This solves problem 2:
+				// castscreen.updateMatrix();
+				// castscreen.updateMatrixWorld();
 				console.log('before getTargets(screen-matrix, screen-world)',
-						// castscreen.matrixWorld, castscreen.matrix
-						JSON.parse(JSON.stringify(castscreen.matrix)),
-						JSON.parse(JSON.stringify(castscreen.matrixWorld))
+						// Use this to log a snapshot:
+						// JSON.parse(JSON.stringify(castscreen.matrix)),
+						// JSON.parse(JSON.stringify(castscreen.matrixWorld))
+						castscreen.matrixWorld, castscreen.matrix
 					);
 				var raytarges = getTargets(castscreen.geometry.attributes.position.clone(),
 						castscreen.matrixWorld, castscreen.matrix);
@@ -246,24 +246,27 @@
 		 * @return {Float32Array} the verices buffer
 		 */
 		function getTargets(poses, matWorld, matLocal) {
-			// var mat = matLocal.clone();
-			console.log('in getTargets() matWorld', JSON.parse(JSON.stringify(matWorld)));
-			// mat = mat.multiply(matWorld);
-			// console.log(mat);
+			console.log('in getTargets() matWorld',
+						// Use this to log a snapshot:
+						// JSON.parse(JSON.stringify(matWorld))
+						matWorld
+					);
 			var mat = new THREE.Matrix4();
-			mat.copy(matWorld);
+			mat.copy(matLocal);
+			mat = mat.multiply(matWorld);
 			console.log('copied mat, matWorld: ',
-				JSON.parse(JSON.stringify(mat)),
-				JSON.parse(JSON.stringify(matWorld)));
+				// Use this to log a snapshot:
+				// JSON.parse(JSON.stringify(mat)),
+				// JSON.parse(JSON.stringify(matWorld))
+				mat, matWorld
+			);
 
 			for ( var ix = 0; ix < poses.count; ix++ ) {
 				var v = new THREE.Vector3(poses.getX(ix),
 							poses.getY(ix), poses.getZ(ix));
-				v.applyMatrix4(matWorld);
 				v.applyMatrix4(mat);
 				poses.setXYZ(ix, v.x, v.y, v.z);
 			};
-			// console.log('targets-world: (by mats) ', poses, matLocal, matWorld);
 			return poses;
 		}
 
