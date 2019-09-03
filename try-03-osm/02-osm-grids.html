@@ -145,11 +145,11 @@
 			return scene;
 		}
 
-		/** Collect transform settings set by inputs.
+		/**@deprecated Use getUserMatrix(a)
+		 * Collect transform settings set by inputs.
 		 * @param {THREE.Object3D} obj
 		 * @param {number} a model radius
 		 * @return {THREE.Object3D} obj
-		 */
 		function trans2(obj, a) {
 			var px = document.querySelector('#px').value;
 			var py = document.querySelector('#py').value;
@@ -170,8 +170,44 @@
 			obj.rotateY(ry * Math.PI / 180);
 			obj.rotateZ(rz * Math.PI / 180);
 
+			castscreen.updateMatrix();
+			castscreen.updateMatrixWorld();
 			console.log(`trans2(${obj.type}.matrix, ${a})`, obj.matrix);
 			return obj;
+		}
+		 */
+
+		function getUserPos(a) {
+			var px = document.querySelector('#px').value;
+			var py = document.querySelector('#py').value;
+			var pz = document.querySelector('#pz').value;
+			var p = rad2cart(px * Math.PI / 180, py * Math.PI / 180, a + pz * 1.);
+			return p;
+		}
+
+		function getUserMatrix(a) {
+			var obj = new THREE.Object3D();
+
+			var p = getUserPos(a);
+			obj.position.set(p.x, p.y, p.z);
+
+			var lx = document.querySelector('#lx').value;
+			var ly = document.querySelector('#ly').value;
+			var lz = document.querySelector('#lz').value;
+			var look = rad2cart(lx * Math.PI / 180, ly * Math.PI / 180, a + lz * 1.);
+			obj.lookAt(look.x, look.y, look.z);
+
+			var rx = document.querySelector('#ux').value;
+			var ry = document.querySelector('#uy').value;
+			var rz = document.querySelector('#uz').value;
+			obj.rotateX(rx * Math.PI / 180);
+			obj.rotateY(ry * Math.PI / 180);
+			obj.rotateZ(rz * Math.PI / 180);
+
+			obj.updateMatrix();
+			obj.updateMatrixWorld();
+			console.log(`matrix: (${obj.matrix}), world-matrix: (${obj.matrixWorld})`);
+			return obj.matrixWorld;
 		}
 
 		function updateFrustum(scene) {
@@ -183,60 +219,63 @@
 										color: 0x0077ff,
 										wireframe: true,
 										opacity: 0.5 } );
-				var frustum = new THREE.Mesh( geometry, material );
-				frustum.rotateX(- Math.PI / 2);
-				// scene.add( frustum );
+				// var frustum = new THREE.Mesh( geometry, material );
+				// frustum.rotateX(- Math.PI / 2);
 
-				castscreen = new THREE.Mesh( new THREE.PlaneBufferGeometry (80, 80, 10, 8),
+				castscreen = new THREE.Mesh( new THREE.PlaneBufferGeometry (80, 80, 2, 2),
 							material );
 				// see https://threejs.org/docs/#manual/en/introduction/Matrix-transformations
 				// castscreen.matrixAutoUpdate = false;
-				castscreen.translateOnAxis( new THREE.Vector3(0, 0, 1), -200 );
+				castscreen.translateOnAxis( new THREE.Vector3(0, 0, 1), 100 );
 
             	// castscreen.rotateX(Math.PI / 2);
             	// castscreen.translateOnAxis(new THREE.Vector3(0, 0, 1), 500);
-				console.log('after create (screen-matrix, screen-matrixWorld)',
-					// castscreen.matrix, castscreen.matrixWorld
-					JSON.parse(JSON.stringify(castscreen.matrix)),
-					JSON.parse(JSON.stringify(castscreen.matrixWorld))
-				);
 
 				osmgroup = new THREE.Group();
-				osmgroup.add(frustum);
+				osmgroup.matrixAutoUpdate = false;
+				// osmgroup.add(frustum);
 				osmgroup.add(castscreen);
 				scene.add(osmgroup);
+				console.log('screen created with matrices (screen-matrix, screen-matrixWorld)',
+					JSON.stringify(castscreen.matrix),
+					JSON.stringify(castscreen.matrixWorld)
+				);
 			}
 
-			trans2(osmgroup, a);
-			console.log('after trans2() - group.matrix, screen-world',
-						// osmgroup.matrix, castscreen.matrixWorld);
-						JSON.parse(JSON.stringify(osmgroup.matrix)),
-						JSON.parse(JSON.stringify(castscreen.matrixWorld))
-					);
+			var m = getUserMatrix(a);
+			console.log('user matrix: ', JSON.stringify(m));
+
+			// osmgroup's auto-update-matrix = false
+			osmgroup.matrix = m.clone();
+
+			var c0 = new THREE.Vector3();
+			var p = getUserPos(a);
+			c0.set(p.x, p.y, p.z);
+			console.log('c0: ', JSON.stringify(c0));
 
 			// add rays
-			if (rays === undefined) {
-				castscreen.updateMatrix();
-				castscreen.updateMatrixWorld();
-				console.log('before getTargets(screen-matrix, screen-world)',
-						// castscreen.matrixWorld, castscreen.matrix
-						JSON.parse(JSON.stringify(castscreen.matrix)),
-						JSON.parse(JSON.stringify(castscreen.matrixWorld))
-					);
-				var raytarges = getTargets(castscreen.geometry.attributes.position.clone(),
-						castscreen.matrixWorld, castscreen.matrix);
-
-				var c0 = osmgroup.position;
-				var geometry = new THREE.Geometry();
-				for ( var ix = 0; ix < raytarges.count; ix++ ) {
-					geometry.vertices.push(new THREE.Vector3(
-						raytarges.getX(ix), raytarges.getY(ix), raytarges.getZ(ix) ));
-					geometry.vertices.push(c0);
-				}
-				rays = new THREE.LineSegments(geometry,
-							new THREE.LineBasicMaterial({ color: 0x7777ff }));
-				scene.add(rays);
+			if (rays !== undefined) {
+				scene.remove(scene.getObjectByName('rays'));
 			}
+			castscreen.updateMatrix();
+			console.log('calling getTargets(), m, group.matrix, screen.matrix',
+					JSON.stringify(m),
+					JSON.stringify(osmgroup.matrix),
+					JSON.stringify(castscreen.matrix)
+				);
+			m.multiply(castscreen.matrix);
+			var raytarges = getTargets(castscreen.geometry.attributes.position.clone(), m);
+
+			var geometry = new THREE.Geometry();
+			for ( var ix = 0; ix < raytarges.count; ix++ ) {
+				geometry.vertices.push(new THREE.Vector3(
+					raytarges.getX(ix), raytarges.getY(ix), raytarges.getZ(ix) ));
+				geometry.vertices.push(c0);
+			}
+			rays = new THREE.LineSegments(geometry,
+						new THREE.LineBasicMaterial({ color: 0x7777ff }));
+			rays.name = 'rays';
+			scene.add(rays);
 		}
 
 		/**
@@ -245,21 +284,17 @@
 		 * @param {THREE.Matrix4} matLocal model matrix
 		 * @return {Float32Array} the verices buffer
 		 */
-		function getTargets(poses, matWorld, matLocal) {
-			// var mat = matLocal.clone();
+		function getTargets(poses, matWorld) {
 			console.log('in getTargets() matWorld', JSON.parse(JSON.stringify(matWorld)));
-			// mat = mat.multiply(matWorld);
-			// console.log(mat);
-			var mat = new THREE.Matrix4();
-			mat.copy(matWorld);
-			console.log('copied mat, matWorld: ',
-				JSON.parse(JSON.stringify(mat)),
-				JSON.parse(JSON.stringify(matWorld)));
+
+			var mat = matWorld.clone();
+			console.log('in getTargets() mat', JSON.parse(JSON.stringify(mat)));
 
 			for ( var ix = 0; ix < poses.count; ix++ ) {
 				var v = new THREE.Vector3(poses.getX(ix),
 							poses.getY(ix), poses.getZ(ix));
-				v.applyMatrix4(matWorld);
+				// v.applyMatrix4(matLocal);
+				// v.applyMatrix4(matWorld);
 				v.applyMatrix4(mat);
 				poses.setXYZ(ix, v.x, v.y, v.z);
 			};
