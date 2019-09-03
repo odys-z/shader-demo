@@ -1,13 +1,15 @@
 # Spooky browsers (Chrome, Firefox, ...)
 
 ## The spookiness
-When debugging js program, there are some spooky problem:
+When debugging js program, there are some spooky problems:
 
-1. If a break point is toggled on at 02-osm-grids-spooky.html line 257, the output of previous logs look like this:
+1. If a break point is toggled off at 02-osm-grids-spooky.html line 257, the output of previous logs look like this
+- with data been set previously:
 
 ![output with translate z = -200](spooky/1.png)
 
-2. If a break point is toggled off at 02-osm-grids-spooky.html line 257, the output of previous logs look like this:
+2. If a break point is toggled on at 02-osm-grids-spooky.html line 257, the output of previous logs look like this:
+- with data been erased:
 
 ![output with translate z = 0](spooky/2.png)
 
@@ -22,14 +24,28 @@ This happens from 2 things entangled:
 
 1. The browsers like Chrome usually show logged data when required. In other words, asynchronouslly.
 
-See [a similar problem not so look like a physical problem at StackOverflow](https://stackoverflow.com/questions/23429203/weird-behavior-with-objects-console-log)
+See [a similar problem not so look like a physics problem at StackOverflow](https://stackoverflow.com/questions/23429203/weird-behavior-with-objects-console-log)
 
-2. Three.js update object's matrix at each rendering by default.
+2. Three.js updates objects' matrices at each rendering by default.
 
 So, when you click at the object to expanding the data,
-it's showing data already updated by many rendering cycles. 
+it's showing data already updated by many rendering cycles.
 
 ## Untangle it
+
+1. Use "JSON.stringify(target)" or "JSON.parse(JSON.stringify(target))" to log snapshot,
+
+see the answer from stackoverflow.
+
+Examples can be found in each log's comments.
+
+2. Copy / clone data (matrices) you don't want Three.js updating.
+
+like this:
+    object.updateMatrix();
+    object.updateMatrixWorld();
+
+Have Fun!
 
 # Key points for GPU calculation (memo)
 
