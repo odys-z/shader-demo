@@ -3,13 +3,11 @@
 ## The spookiness
 When debugging js program, there are some spooky problems:
 
-1. If a break point is toggled off at 02-osm-grids-spooky.html line 257, the output of previous logs look like this
-- with data been set previously:
+1. If a break point is toggled off at 02-osm-grids-spooky.html line 257, the output of previous logs look like this - with data been set previously:
 
 ![output with translate z = -200](spooky/1.png)
 
-2. If a break point is toggled on at 02-osm-grids-spooky.html line 257, the output of previous logs look like this:
-- with data been erased:
+2. If a break point is toggled on at 02-osm-grids-spooky.html line 257, the output of previous logs look like this - with data been erased:
 
 ![output with translate z = 0](spooky/2.png)
 
@@ -47,7 +45,12 @@ like this:
 
 Have Fun!
 
-# Key points for GPU calculation (memo)
+## But why stopping program makes matrices data been erased?
+
+This must be the behaviour of Three.js, and I'm already got what I want,
+so "I have left open to the consideration of my readers."
+
+# Tips for GPU calculation with Three.js (memo)
 
 1. The gl_Position range is [vec3(-1), vec3(1)]
 
@@ -68,5 +71,3 @@ in GPUComputationRenderer:
 Output are all 0.
 
 3. THREE.Camera must call updateProjectionMatrix()
-
-4.
