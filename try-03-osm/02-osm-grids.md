@@ -1,13 +1,13 @@
 # Spooky browsers (Chrome, Firefox, ...)
 
 ## The spookiness
-When debugging js program, there are some spooky problems:
+When debugging js program in <i>02-osm-grids-spooky.html</i>, there are some spooky problems:
 
-1. If a break point is toggled off at 02-osm-grids-spooky.html line 257, the output of previous logs look like this - with data been set previously:
+1. If a break point is toggled off at line 257, the output of previous logs look like this - with data been set previously:
 
 ![output with translate z = -200](spooky/1.png)
 
-2. If a break point is toggled on at 02-osm-grids-spooky.html line 257, the output of previous logs look like this - with data been erased:
+2. If a break point is toggled on at line 257, the output of previous logs look like this - with data been erased:
 
 ![output with translate z = 0](spooky/2.png)
 
@@ -35,7 +35,7 @@ it's showing data already updated by many rendering cycles.
 
 see the answer from stackoverflow.
 
-Examples can be found in each log's comments.
+Examples can be found in each log's comments in 02-osm-grids-spooky.html.
 
 2. Copy / clone data (matrices) you don't want Three.js updating.
 
