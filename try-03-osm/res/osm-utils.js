@@ -88,6 +88,29 @@ function urlTile(x, y, z) {
     return `https://a.tile.openstreetmap.org/${z}/${x}/${y}.png`;
 }
 
+/**If xyz is not in tiles, add new xyz to tiles.
+ * @param {object} tiles {z: {x0: {y00: world00, ...}, {x1: {y10: world10, ...}, ...}}}
+ */
+function collectOsmTiles(tiles, xyz, longlat) {
+	if (tiles === undefined)
+		tiles = {};
+
+	if (tiles[xyz.z] === undefined) {
+		tiles[xyz.z] = {};
+	}
+	if (tiles[xyz.z][xyz.x] === undefined) {
+		tiles[xyz.z][xyz.x] = {};
+	}
+	if (tiles[xyz.z][xyz.x][xyz.y] === undefined) {
+		// tiles[xyz.z][xyz.x][xyz.y] = [xyz.x, xyz.y, xyz.z];
+		tiles[xyz.z][xyz.x][xyz.y] = {
+			lon: longlat.long.toFixed(3),
+			lat: longlat.lat.toFixed(3)}
+	}
+
+	return tiles;
+}
+
 /**Set img (#id)'s src as tile of OSM X/Y/Z.
  * src = 'https://a.tile.openstreetmap.org/{z}/{x}/{y}.png'
  * @param {string} id img id

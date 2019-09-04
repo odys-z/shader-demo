@@ -5,7 +5,11 @@
 	<title>OSM Tiles</title>
 	<script type='text/javascript' src='../3rd-lib/three.js/three.min.js'></script>
 	<script type='text/javascript' src='../3rd-lib/three.js/OrbitControls.js'></script>
-    <script src="res/osm-utils.js"></script>
+
+	<link rel="stylesheet" type="text/css" href="../3rd-lib/handsontable/full.min.css">
+	<script type='text/javascript' src="../3rd-lib/handsontable/full.min.js"></script>
+
+    <script type='text/javascript' src="res/osm-utils.js"></script>
 </head>
 <body>
 	<table style="width:100%">
@@ -33,6 +37,9 @@
 							<input id='ly' style='width:6em' placeholder='latitude' value='0'></input>
 							<input id='lz' style='width:3em' placeholder='height' value='0'></input> ]
 				<input type='button' onclick='updateFrustum(scene)' value='update'></input>
+				<input type='button' onclick='loadTile()' value='load tile'>
+				<div id="hot"></div>
+				<img id="tile"></img>
 			</td>
 		</tr>
 	</table>
@@ -59,9 +66,10 @@
 		var osmgroup, castscreen; // for camera illustration
 		var rays;	// rays in world for findout osm tiles
 		var camera, scene, renderer, controls;
+		var hot;
 
 		scene = init('container');
-		updateFrustum(scene);
+		updateFrustum(scene, 'hot', 'tile');
 		animate();
 
 		/**Step through all tile girds, then change longitude / latitude to Cartesian,
@@ -210,7 +218,7 @@
 			return obj.matrixWorld;
 		}
 
-		function updateFrustum(scene) {
+		function updateFrustum(scene, hotId, tileId) {
 			// if (frustum === undefined) {
 			if (osmgroup === undefined) {
 				const f = 100;
@@ -261,6 +269,7 @@
 			var raytarges = getTargets(castscreen.geometry.attributes.position.clone(), m);
 
 			var geometry = new THREE.Geometry();
+			osmTiles = {};
 			for ( var ix = 0; ix < raytarges.count; ix++ ) {
 				var x = raytarges.getX(ix);
 				var y = raytarges.getY(ix);
@@ -276,14 +285,90 @@
 					var osmz = 6;
 			        var osmx = long2tile(longlat.long, osmz);
 			        var osmy = lat2tile(longlat.lat, osmz);
-					var osmurl = `https://a.tile.openstreetmap.org/${osmz}/${osmx}/${osmy}.png`;
-					console.log(osmurl);
+					// var osmurl = `https://a.tile.openstreetmap.org/${osmz}/${osmx}/${osmy}.png`;
+					// console.log(osmurl);
+					collectOsmTiles(osmTiles, {x: osmx, y: osmy, z: osmz}, longlat);
 				}
 			}
+			console.log(osmTiles);
+			loadHot(osmTiles, hotId, tileId);
+
 			rays = new THREE.LineSegments(geometry,
 						new THREE.LineBasicMaterial({ color: 0x7777ff }));
 			rays.name = 'rays';
 			scene.add(rays);
+		}
+
+		function loadHot(osmTiles, hotId, tileId) {
+			var count = countRowCol(osmTiles);
+			var hotElement = document.querySelector('#hot');
+			var hotElementContainer = hotElement.parentNode;
+			var columns = new Array(count.x);
+			var rows = new Array(count.y);
+			var hotSettings = {
+			  data: rows,
+			  outsideClickDeselects: false,
+			  // columns: [ { data: 'id', type: 'text', width: 80 }, ],
+			  columns: columns,
+			  width: '100%',
+			  rowHeaders: true,
+			  colHeaders: [
+			    // 'ID',
+			  ],
+			  contextMenu: true,
+			  licenseKey: 'non-commercial-and-evaluation'
+			};
+
+			Object.keys(osmTiles).forEach(function(z, iz) {
+				Object.keys(osmTiles[z]).forEach(function(x, ix) {
+					Object.keys(osmTiles[z][x]).forEach(function(y, iy) {
+						if (rows[iy] === undefined){
+							rows[iy] = new Array(count.x);
+						}
+						var xyz = {longlat: osmTiles[z][x][y], osm: {x: x, y: y, z: z}};
+						rows[iy][ix] = JSON.stringify(xyz);
+					});
+				});
+			});
+
+			if (hot)
+				hot.updateSettings(hotSettings);
+			else
+				hot = new Handsontable(hotElement, hotSettings);
+		}
+
+		function countRowCol(tiles) {
+			var c = {x: 0, y: 0, z: Object.keys(tiles).length};
+			Object.keys(tiles).forEach(function(z, iz) {
+				if (c.x < Object.keys(tiles[z]).length) {
+					c.x = Object.keys(tiles[z]).length;
+				}
+				Object.keys(tiles[z]).forEach(function(x, ix) {
+					if (c.y < Object.keys(tiles[z][x]).length) {
+						c.y = Object.keys(tiles[z][x]).length;
+					}
+				});
+			});
+			console.log('xyz count:', c);
+			return c;
+		}
+
+		function loadTile() {
+			var id = 'tile', x, y, z;
+			var sel = hot.getSelected();
+			if (sel) {
+				var cel = hot.getDataAtCell(sel[0][0], sel[0][1]);
+				// console.log(cel);
+				try {
+					cel = JSON.parse(cel);
+					cel = col.osm;
+					var url = `https://a.tile.openstreetmap.org/${cel.z}/${cel.x}/${cel.y}.png`;
+					document.querySelector(`#${id}`).src = url;
+				} catch (e) {
+					alert('value not correct: ' + cel);
+				}
+			}
+			else alert('Please select a cell.');
 		}
 
 		/**Apply matWorld to poses position.
