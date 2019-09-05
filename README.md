@@ -41,7 +41,7 @@ Shapes melding, because of power of "mix()".
 
 ![dynamic points](https://github.com/odys-z/odys-z.github.io/blob/master/notes/opnGL/raymatching/screenshots/02%20dynamic-points.png?raw=true)
 
-- OSM axis convertion
+- [OSM](https://wiki.openstreetmap.org/wiki/Main_Page) axis convertion
 
 ![osm tile and world position](try-03-osm/res/02-osm-grids.png)
 
