@@ -10,23 +10,26 @@
 	<script type='text/javascript' src="../3rd-lib/handsontable/full.min.js"></script>
 
     <script type='text/javascript' src="res/osm-utils.js"></script>
+
+	<style>
+		.handsontable td {font-size: 0.6em}
+	</style>
 </head>
 <body>
 	<table style="width:100%">
 		<tr><td>TODO: <a href='https://docs.mapbox.com/vector-tiles/reference/'>Vector Tiles</a></td></tr>
 		<tr><td style="width:60%"><div id="container" style="height:900px"></div></td>
-			<td>a = 500, R = 6372.7982<br>
-				<!--
+			<td><h4>a = 500, R = 6372.7982</h4><br>
 				rotation (degree) = [ <input id='ux' style='width:2em' placeholder='x' value='0'></input>
 							  <input id='uy' style='width:2em' placeholder='y' value='0'></input>
 							  <input id='uz' style='width:2em' placeholder='z' value='5'></input> ]<br>
-				position (gis) = [ <input id='px' style='width:6em' placeholder='longitude' value='104.09856'></input>
-							<input id='py' style='width:6em' placeholder='latitude' value='30.3765'></input>
-							<input id='pz' style='width:3em' placeholder='height' value='2'></input> ]<br>
-				lookAt (gis) = [ <input id='lx' style='width:6em' placeholder='longitude' value='104.09856'></input>
-							<input id='ly' style='width:6em' placeholder='latitude' value='30.6765'></input>
-							<input id='lz' style='width:3em' placeholder='height' value='1.2'></input> ]
-				-->
+				position (gis) = [ height: <input id='pz' style='width:3em' placeholder='height' value='0.004'></input><br>
+							____________longitude: <input id='px' style='width:6em' placeholder='longitude' value='104.09856'></input><br>
+							_____________latitude :  <input id='py' style='width:6em' placeholder='latitude' value='30.6765'></input>]<br>
+				lookAt (gis) = [ height: <input id='lz' style='width:3em' placeholder='height' value='-0.002'></input><br>
+							___________longitude: <input id='lx' style='width:6em' placeholder='longitude' value='104.09856'></input><br>
+							____________latitude :  <input id='ly' style='width:6em' placeholder='latitude' value='30.6875'></input> ]<br>
+				<!--
 				rotation (degree) = [ <input id='ux' style='width:2em' placeholder='x' value='0'></input>
 							  <input id='uy' style='width:2em' placeholder='y' value='0'></input>
 							  <input id='uz' style='width:2em' placeholder='z' value='0'></input> ]<br>
@@ -35,10 +38,13 @@
 							<input id='pz' style='width:3em' placeholder='height' value='100'></input> ]<br>
 				lookAt (gis) = [ <input id='lx' style='width:6em' placeholder='longitude' value='-90'></input>
 							<input id='ly' style='width:6em' placeholder='latitude' value='0'></input>
-							<input id='lz' style='width:3em' placeholder='height' value='0'></input> ]
+							<input id='lz' style='width:3em' placeholder='height' value='0'></input> ]<br>
+				-->
+				<hr>
 				<input type='button' onclick='updateFrustum(scene)' value='update'></input>
 				<input type='button' onclick='loadTile()' value='load tile'>
-				<div id="hot"></div>
+				<p>Note: some z level may ignored. Check the log</p>
+				<div id="hot" style="font: 2.8em"></div>
 				<img id="tile"></img>
 			</td>
 		</tr>
@@ -78,6 +84,19 @@
 		 * @param {number} a model's radius
 		 * see https://en.wikipedia.org/wiki/Mercator_projection#Cylindrical_projections
 		 * @return {Float32Array} the verices buffer
+		 * For z = 6, the closest points include:<pre>
+		 	left
+			2973: -48.77, 48.93, 495.20
+			2976: -49.01, 0, 497.59
+			2979: -48.77, -48.93, 495.20
+
+			center
+			3168: 3.0e-14, 0, 500
+
+			right
+			3549: 97.08, 48.93, 488.04
+			3552: 97.55, 0, 490.39
+			3555: 97.08, -48.93, 488.04</pre>
 		 */
 		function osmGlobeTiles(zoom, a) {
 			// X goes from 0 (left edge is 180 °W) to 2zoom − 1 (right edge is 180 °E)<br>
@@ -277,18 +296,7 @@
 				geometry.vertices.push(new THREE.Vector3( x, y, z ));
 				geometry.vertices.push(c0);
 
-				// temp: also calculate XYZ
-				var dir = normalize([x, y, z], [c0.x, c0.y, c0.z]);
-				var p = castPosition ([c0.x, c0.y, c0.z], dir, a);
-				if (p) {
-					var longlat = cart2rad(p);
-					var osmz = 6;
-			        var osmx = long2tile(longlat.long, osmz);
-			        var osmy = lat2tile(longlat.lat, osmz);
-					// var osmurl = `https://a.tile.openstreetmap.org/${osmz}/${osmx}/${osmy}.png`;
-					// console.log(osmurl);
-					collectOsmTiles(osmTiles, {x: osmx, y: osmy, z: osmz}, longlat);
-				}
+				collectOsmTiles(osmTiles, [x, y, z], c0, a);
 			}
 			console.log(osmTiles);
 			loadHot(osmTiles, hotId, tileId);
@@ -316,6 +324,9 @@
 			    // 'ID',
 			  ],
 			  contextMenu: true,
+			  modifyColWidth: function(width, col){
+			      if(width > 110){ return 110; }
+			  },
 			  licenseKey: 'non-commercial-and-evaluation'
 			};
 
@@ -358,10 +369,9 @@
 			var sel = hot.getSelected();
 			if (sel) {
 				var cel = hot.getDataAtCell(sel[0][0], sel[0][1]);
-				// console.log(cel);
 				try {
 					cel = JSON.parse(cel);
-					cel = col.osm;
+					cel = cel.osm;
 					var url = `https://a.tile.openstreetmap.org/${cel.z}/${cel.x}/${cel.y}.png`;
 					document.querySelector(`#${id}`).src = url;
 				} catch (e) {

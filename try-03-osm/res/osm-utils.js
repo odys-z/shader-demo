@@ -1,28 +1,3 @@
-
-// function toxy() {
-//     var zoom = document.forms.Form1.zoom.value;
-//     var vlong = document.forms.Form1.long.value;
-//     var vlat  = document.forms.Form1.lat.value;
-//     // document.forms.Form1.xlong.value = long2tile(vlong,zoom);
-//     // document.forms.Form1.ylat.value = lat2tile(vlat,zoom);
-//     var x = long2tile(vlong, zoom);
-//     var y = lat2tile(vlat, zoom);
-//     document.forms.Form1.xlong.value = x;
-//     document.forms.Form1.ylat.value = y;
-//
-//     // ody
-//     loadTile('tile', x, y, zoom);
-// }
-
-// function tolonlat(vzoom) {
-//     vzoom = document.forms.Form1.zoom.value;
-//     var xlong = 3.12;
-//     xlong = document.forms.Form1.xlong.value;
-//     var ylat  = document.forms.Form1.ylat.value;
-//     document.forms.Form1.long.value=xlong = tile2long(xlong,vzoom);
-//     document.forms.Form1.lat.value=ylat = tile2lat(ylat,vzoom);
-// }
-
 /**Convert long-lat to world position in Cartesian.
  * @param {number} long longitude in radians ( degree *= pi / 180)
  * @param {number} lat latitude in radians ( degree *= pi / 180)
@@ -51,12 +26,22 @@ function cart2rad(p, c0) {
 	var y = p.y - c0.y;
 	var z = p.z - c0.z;
 
-	var r = Math.sqrt((x * x + y * y + z * z), 0.5);
-	var phi = Math.atan(y / x);
-	var theta = Math.acos(z / r);
+	var r = Math.sqrt(x * x + y * y + z * z);
+
+	// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/atan2
+	// The Math.atan2() function returns the angle in the plane (in radians)
+	// between the positive x-axis and the ray from (0,0) to the point (x,y),
+	// for Math.atan2(y,x)
+	var phi = Math.atan2(-z, x); // x = 0, z = a, phi = 0, it's -90;
+
+	if (x > r) x = r;
+	if (x < -r) x = -r;
+	// ∀x∊[-1;1],
+	// Math.acos(x) = arccos(x) = the unique y∊[0;π] such that cos(y) = x
+	var theta = Math.PI / 2 - Math.acos( y / r);
 
 	// with prime meridian at z = 0, x = R, y = 0, to north, negative z to the east hemishphere.
-	return {long: theta - Math.PI / 2, lat: phi, r};
+	return {long: phi, lat: theta, r};
 }
 
 function long2tile(lon, zoom1) {
@@ -90,24 +75,41 @@ function urlTile(x, y, z) {
 
 /**If xyz is not in tiles, add new xyz to tiles.
  * @param {object} tiles {z: {x0: {y00: world00, ...}, {x1: {y10: world10, ...}, ...}}}
+ * @param {vec3} c0 [x, y, z] center / eye
+ * @param {vec3} dir [x, y, z] dir
+ * @return {object} tiles
  */
-function collectOsmTiles(tiles, xyz, longlat) {
-	if (tiles === undefined)
-		tiles = {};
+function collectOsmTiles(tiles, dir, c0, a) {
+	dir = normalize(dir, [c0.x, c0.y, c0.z]);
+	var p = castPosition ([c0.x, c0.y, c0.z], dir, a);
+	if (p) {
+		var longlat = cart2rad(p);
+		longlat.long *= 180 / Math.PI;
+		longlat.lat *= 180 / Math.PI;
+		osmz = stepz(p.w, a);
+		var xyz = {
+			x: long2tile(longlat.long, osmz),
+			y: lat2tile(longlat.lat, osmz),
+			z: osmz };
 
-	if (tiles[xyz.z] === undefined) {
-		tiles[xyz.z] = {};
-	}
-	if (tiles[xyz.z][xyz.x] === undefined) {
-		tiles[xyz.z][xyz.x] = {};
-	}
-	if (tiles[xyz.z][xyz.x][xyz.y] === undefined) {
-		// tiles[xyz.z][xyz.x][xyz.y] = [xyz.x, xyz.y, xyz.z];
+		console.log('dir, p, long-lat, xyz', dir, p, longlat, xyz);
+		if (tiles === undefined)
+			tiles = {};
+
+		if (tiles[xyz.z] === undefined) {
+			tiles[xyz.z] = {};
+		}
+		if (tiles[xyz.z][xyz.x] === undefined) {
+			tiles[xyz.z][xyz.x] = {};
+		}
+		if (tiles[xyz.z][xyz.x][xyz.y] === undefined) {
+			tiles[xyz.z][xyz.x][xyz.y] = {};
+		}
 		tiles[xyz.z][xyz.x][xyz.y] = {
-			lon: longlat.long.toFixed(3),
-			lat: longlat.lat.toFixed(3)}
+			lon: longlat.long,
+			lat: longlat.lat
+		}
 	}
-
 	return tiles;
 }
 
@@ -128,7 +130,7 @@ function loadImgTile(id, xyz) {
   * @param {vec3} dir direction norm
   * @param {float} r sphere radius
   * @param {vec3} c0 shpere center position in world
-  * @return {object} (x, y, z): intersect position in world
+  * @return {object} (x, y, z, w): intersect position in world, w = distance from eye
  */
 function castPosition (eye, dir, r, c0) {
 	if (c0 === undefined) {
@@ -141,7 +143,7 @@ function castPosition (eye, dir, r, c0) {
 	else {
 		var p = [d * dir[0], d * dir[1], d * dir[2]];
 		// return [p[0] + eye[0], p[1] + eye[1], p[2] + eye[2]];
-		return {x: p[0] + eye[0], y: p[1] + eye[1], z: p[2] + eye[2]};
+		return {x: p[0] + eye[0], y: p[1] + eye[1], z: p[2] + eye[2], w: d};
 	}
 }
 
@@ -164,6 +166,29 @@ function distSphere( eye, l, r, cent ) {
 	 return Math.min( - dot( l, e ) + delta, - dot( l, e ) - delta );
  }
 
+/**Find OMS zoom level according to distance.
+ * @param {number} d distance
+ * @param {number} a
+ * @return {int} z */
+function stepz(d, a) {
+	// z ∊ [0, 19), see https://wiki.openstreetmap.org/wiki/Slippy_map_tilenames#Zoom_levels
+	// d = 2a, z = 0
+	// d = a,  z = 1
+	// d = a / 2, z = 2
+	// ...
+	// d = 0,  z = 19
+	if (d <= 1.0e-15) { return 19; }
+	else {
+		var z = Math.floor(Math.log2(a * 2 / d));
+		console.log ('d, a, z', d, a, z);
+		return z;
+	}
+}
+/**Normalize vector
+ * @param {vec3} v
+ * @param {vec3} v0
+ * @return {vec3} norm [x, y, z]
+ */
 function normalize( v, v0 ) {
 	if ( v0 === undefined )
 		v0 = [0, 0, 0];
@@ -200,24 +225,6 @@ function toVec3(obj) {
 		a.push(obj.w);
 	return a;
 }
-
-// function findTiles(z, id) {
-//     // X goes from 0 (left edge is 180 °W) to 2zoom − 1 (right edge is 180 °E)<br>
-//     // Y goes from 0 (top edge is 85.0511 °N) to 2zoom − 1 (bottom edge is 85.0511 °S) in a Mercator projection
-//     var max = Math.exp(2, z) - 1;
-//     var grids = [];
-//     for (var x = 0; x < max; x++) {
-//         lats = [];
-//         for (var y = 0; y < max; y++) {
-//             lats.push([tile2long(x, z), tile2lat(y, z)]);
-//         }
-//         grids.push(lats);
-//     }
-//
-//     document.querySelector(`#${id}`).value = grids.toString();
-//     console.log(grids);
-//     return grids;
-// }
 
 const fragFindTile = `
 	varying vec3 P;
