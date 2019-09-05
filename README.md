@@ -43,7 +43,7 @@ Shapes melding, because of power of "mix()".
 
 - OSM axis convertion
 
-![osm tile and world position](res/02-osm-grids.png)
+![osm tile and world position](try-03-osm/res/02-osm-grids.png)
 
 # Quick Start
 
