@@ -106,7 +106,7 @@ This source is copied in ./refrences
 
 - 1. [Three.js Fundamentals](https://threejsfundamentals.org/threejs/lessons/threejs-fundamentals.html#toc)
 
-- 2. [graphtoy](http://www.iquilezles.org/apps/graphtoy)
+- 2. [Inigo Quilez, Graphtoy](http://www.iquilezles.org/apps/graphtoy)
 
 - 3. [stackgl/glsl-transpiler](https://github.com/stackgl/glsl-transpiler) and [jarble Universal-transpiler](https://github.com/jarble/transpiler)
 
