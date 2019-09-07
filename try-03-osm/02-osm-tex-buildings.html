@@ -18,7 +18,8 @@
         	zoom: 18,
         	minZoom: 0,
         	maxZoom: 20,
-        	attribution: '© Data <a href="https://openstreetmap.org/copyright/">OpenStreetMap</a> © Map <a href="https://mapbox.com/">Mapbox</a> © 3D <a href="https://osmbuildings.org/copyright/">OSM Buildings</a>'
+			tilt: 45, // test shows max = 45
+        	attribution: '© Data <a href="https://openstreetmap.org/copyright/">OpenStreetMap</a> © 3D <a href="https://osmbuildings.org/copyright/">OSM Buildings</a>'
         });
 
         // map.addMapTiles('https://{s}.tiles.mapbox.com/v3/[YOUR_MAPBOX_KEY]/{z}/{x}/{y}.png');
@@ -28,6 +29,7 @@
         map.addGeoJSONTiles('https://{s}.data.osmbuildings.org/0.2/anonymous/tile/{z}/{x}/{y}.json');
         // map.addGeoJSON('https://{s}.data.osmbuildings.org/0.2/anonymous/tile/{z}/{x}/{y}.json', {rotation: 30});
         // map.setRotation(70);
+		// map.setTilt(60);
     </script>
     <a href='https://osmbuildings.org/documentation/viewer/'>Reference: OSM Buildings</a>
 </body>
