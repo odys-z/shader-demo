@@ -4,8 +4,10 @@
 <head>
 	<meta charset="utf-8">
 	<title>OSM Buildings</title>
-    <link href="https://cdn.osmbuildings.org/4.0.1/OSMBuildings.css" rel="stylesheet">
-    <script src="https://cdn.osmbuildings.org/4.0.1/OSMBuildings.js"></script>
+    <!--<link href="https://cdn.osmbuildings.org/4.0.1/OSMBuildings.css" rel="stylesheet">-->
+    <!--<script src="https://cdn.osmbuildings.org/4.0.1/OSMBuildings.js"></script>-->
+    <link href="../3rd-lib/osm/OSMBuildings.css" rel="stylesheet">
+    <script src="../lib/OSMBuildings.try.js"></script>
 </head>
 <body>
     <!-- Test shows that height must presented in style, otherwise errors occured -->
@@ -19,7 +21,7 @@
         	minZoom: 0,
         	maxZoom: 20,
 			tilt: 45, // test shows max = 45
-        	attribution: '© Data <a href="https://openstreetmap.org/copyright/">OpenStreetMap</a> © 3D <a href="https://osmbuildings.org/copyright/">OSM Buildings</a>'
+        	attribution: '© Data <a href="https://openstreetmap.org/copyright/">OpenStreetMap</a>'
         });
 
         // map.addMapTiles('https://{s}.tiles.mapbox.com/v3/[YOUR_MAPBOX_KEY]/{z}/{x}/{y}.png');
