@@ -45,6 +45,8 @@ Shapes melding, because of power of "mix()".
 
 ![osm tile and world position](try-03-osm/res/02-osm-grids.png)
 
+![osm transparent buildings](https://raw.githubusercontent.com/odys-z/odys-z.github.io/master/notes/opnGL/raymatching/screenshots/008%20transparent%20osm%20buildings.png)
+
 # Quick Start
 
     git clone https://github.com/odys-z/shader-demo.git
