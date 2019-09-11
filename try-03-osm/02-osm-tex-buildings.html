@@ -15,13 +15,13 @@
     <script>
         var map = new OSMBuildings({
         	container: 'map',
-        	position: { latitude: 52.51909021807995, longitude: 13.40109407901764 }, // Berliner Dom
-        	// position: { latitude: 30.6765, longitude: 104.09856 }, // UESTC
+        	// position: { latitude: 52.51909021807995, longitude: 13.40109407901764 }, // Berliner Dom
+        	position: { latitude: 30.6765, longitude: 104.09856 }, // UESTC
         	zoom: 18,
         	minZoom: 0,
         	maxZoom: 20,
-			tilt: 60, // test shows max = MAX_TILT
-        	attribution: '© Data <a href="https://openstreetmap.org/copyright/">OpenStreetMap</a>'
+			tilt: 50, // test shows max = MAX_TILT
+        	attribution: '<a href="https://openstreetmap.org/copyright/">©</a>'
         });
 
         // map.addMapTiles('https://{s}.tiles.mapbox.com/v3/[YOUR_MAPBOX_KEY]/{z}/{x}/{y}.png');

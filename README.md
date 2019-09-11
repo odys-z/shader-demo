@@ -45,7 +45,33 @@ Shapes melding, because of power of "mix()".
 
 ![osm tile and world position](try-03-osm/res/02-osm-grids.png)
 
+- [OSM 3D Bulidings](https://osmbuildings.org/documentation/viewer/api/) Hacked
+
 ![osm transparent buildings](https://raw.githubusercontent.com/odys-z/odys-z.github.io/master/notes/opnGL/raymatching/screenshots/008%20transparent%20osm%20buildings.png)
+
+Hacking Memo:
+
+1. Tiles and bulidings are scaled differently with respect to latitude;
+
+2. Using web works to handling data tasks asynchronously, scheduled by a manager
+class - Grid;
+
+* Grid#update() are peroidically called and visible tiles are collected;
+
+* Data access tasks are queued by Grid#update();
+
+* When tile is case of GeoJSON, task will create new Feature, which in turn will
+load geojson data;
+
+* When geojson data loaded, it post message to another worker, feature/worker.js,
+which will covert geojson (mainly polygons) into webgl compitable data, in method
+feature/worker.js#processGeoJSON();
+
+* The final model will be rendered by Feature#onload() in a cascading way, for
+performance reason.
+
+3. A bulding can be represented by multi geojson features and height is from the
+level property, with floor height = 3m.
 
 # Quick Start
 
