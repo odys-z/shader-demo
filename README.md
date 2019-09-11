@@ -71,7 +71,7 @@ feature/worker.js#processGeoJSON();
 performance reason.
 
 3. A bulding can be represented by multi geojson features and height is from the
-level property, with floor height = 3m.
+level property, with each floor height = 3m.
 
 # Quick Start
 

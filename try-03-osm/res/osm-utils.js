@@ -226,6 +226,73 @@ function toVec3(obj) {
 	return a;
 }
 
+/**Step through all tile girds, then change longitude / latitude to Cartesian,
+ * with prime meridian at z = 0, x = R, y = 0, to north, negative z to the east hemishphere.
+ * @param {number} OSM Z level
+ * @param {number} a model's radius
+ * see https://en.wikipedia.org/wiki/Mercator_projection#Cylindrical_projections
+ * @return {Float32Array} the verices buffer
+ * For z = 6, the closest points include:<pre>
+ 	left
+	2973: -48.77, 48.93, 495.20
+	2976: -49.01, 0, 497.59
+	2979: -48.77, -48.93, 495.20
+
+	center
+	3168: 3.0e-14, 0, 500
+
+	right
+	3549: 97.08, 48.93, 488.04
+	3552: 97.55, 0, 490.39
+	3555: 97.08, -48.93, 488.04</pre>
+ */
+function osmGlobeTiles (zoom, a) {
+	// X goes from 0 (left edge is 180 °W) to 2zoom − 1 (right edge is 180 °E)<br>
+	// Y goes from 0 (top edge is 85.0511 °N) to 2zoom − 1 (bottom edge is 85.0511 °S) in a Mercator projection
+	zoom = Math.min(zoom, 8);
+	var max = Math.pow(2, zoom);
+	var grids = new Float32Array( max * max * 3 );
+	for (var ix = 0; ix < max; ix++) {
+		var long = tile2long(ix, zoom);
+		long *= Math.PI / 180;
+		for (var iy = 0; iy < max; iy++) {
+			var lat = tile2lat(iy, zoom);
+			lat *= Math.PI / 180;
+			// var r = a * Math.cos(lat);
+			// var x = r * Math.cos(long);
+			// var y = a * Math.sin(lat);
+			// var z = -r * Math.sin(long);
+			var wld = rad2cart(long, lat, a);
+			var idx = (ix * max + iy) * 3;
+			grids[idx] = wld.x;
+			grids[idx + 1] = wld.y;
+			grids[idx + 2] = wld.z;
+	    }
+	}
+	console.log(`osm tiles (z = ${zoom})`, grids);
+	return grids;
+}
+
+/**Build points buffer, convert all tile grid into world position.
+ * @param {number} z zoom level of OSM XYZ
+ * @param {number} a a of Mercator Projection, see
+ * <a href=https://en.wikipedia.org/wiki/Mercator_projection#Cylindrical_projections'>Mercator Projection</a>
+ * @return {THREE.Points} points
+ */
+function pointsBuff(z, a) {
+	if (a === undefined)
+		a = 500;
+	var step = 10;
+
+	var points = osmGlobeTiles(z, a); // a = 500
+	var geometry = new THREE.BufferGeometry();
+	geometry.addAttribute( 'position', new THREE.BufferAttribute( points, 3 ) );
+
+	var grid = new THREE.Points(geometry,
+			new THREE.PointsMaterial( { color: 0xffffff, size: 3 } ) );
+	return grid;
+}
+
 const fragFindTile = `
 	varying vec3 P;
 	uniform sampler2D tex0;

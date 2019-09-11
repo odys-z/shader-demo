@@ -1,0 +1,24 @@
+
+<!DOCTYPE HTML>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>3D Buildings</title>
+    <link href="../lib/map.css" rel="stylesheet">
+
+	<script type='text/javascript' src='../3rd-lib/three.js/three.min.js'></script>
+
+    <script type='text/javascript' src="res/osm-utils.js"></script>
+    <script type='text/javascript' src="res/osm-shader.js"></script>
+</head>
+<body>
+    <!-- Test shows that height must presented in style, otherwise errors occured -->
+    <div id="map" style="width:100%; height:700px"></div>
+
+    <script>
+		var o3 = new O3('map');
+		o3.update();
+		o3.render();
+    </script>
+</body>
+</html>
