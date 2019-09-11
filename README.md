@@ -60,11 +60,11 @@ class - Grid;
 
 * Data access tasks are queued by Grid#update();
 
-* When tile is case of GeoJSON, task will create new Feature, which in turn will
+* When tile is case of GeoJSON, tasks will create new Features, which in turn will
 load geojson data;
 
 * When geojson data loaded, it post message to another worker, feature/worker.js,
-which will covert geojson (mainly polygons) into webgl compitable data, in method
+which will convert geojson (mainly polygons) into webgl compitable data, in method
 feature/worker.js#processGeoJSON();
 
 * The final model will be rendered by Feature#onload() in a cascading way, for
