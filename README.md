@@ -53,14 +53,14 @@ Hacking Memo:
 
 1. Tiles and bulidings are scaled differently with respect to latitude;
 
-2. Using web works to handling data tasks asynchronously, scheduled by a manager
+2. Using web workers to handling data tasks asynchronously, scheduled by a manager
 class - Grid;
 
 * Grid#update() are peroidically called and visible tiles are collected;
 
 * Data access tasks are queued by Grid#update();
 
-* When tile is case of GeoJSON, tasks will create new Features, which in turn will
+* When tiles are the case of GeoJSON, tasks will create new Features, which in turn will
 load geojson data;
 
 * When geojson data loaded, it post message to another worker, feature/worker.js,
