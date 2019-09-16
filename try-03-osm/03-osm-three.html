@@ -9,8 +9,9 @@
 	<script type='text/javascript' src='../3rd-lib/three.js/three.min.js'></script>
 	<script type='text/javascript' src='../3rd-lib/three.js/OrbitControls.js'></script>
 
+	<!-- Oms-utils.js will be merged to osm-shader.js -->
     <script type='text/javascript' src="res/osm-utils.js"></script>
-    <script type='text/javascript' src="res/osm-shader.js"></script>
+    <script type='text/javascript' src="../lib/osm-shader.js"></script>
 </head>
 <body>
     <!-- Test shows that height must presented in style, otherwise errors occured -->
@@ -18,7 +19,7 @@
 
     <script>
 		var o3 = new O3('map');
-		o3.init(new MapControls());
+		o3.init(new THREE.MapControls());
 		o3.update();
 		o3.render();
     </script>
