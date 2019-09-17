@@ -1,0 +1,456 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<office:document xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0" xmlns:style="urn:oasis:names:tc:opendocument:xmlns:style:1.0" xmlns:text="urn:oasis:names:tc:opendocument:xmlns:text:1.0" xmlns:table="urn:oasis:names:tc:opendocument:xmlns:table:1.0" xmlns:draw="urn:oasis:names:tc:opendocument:xmlns:drawing:1.0" xmlns:fo="urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:meta="urn:oasis:names:tc:opendocument:xmlns:meta:1.0" xmlns:number="urn:oasis:names:tc:opendocument:xmlns:datastyle:1.0" xmlns:svg="urn:oasis:names:tc:opendocument:xmlns:svg-compatible:1.0" xmlns:chart="urn:oasis:names:tc:opendocument:xmlns:chart:1.0" xmlns:dr3d="urn:oasis:names:tc:opendocument:xmlns:dr3d:1.0" xmlns:math="http://www.w3.org/1998/Math/MathML" xmlns:form="urn:oasis:names:tc:opendocument:xmlns:form:1.0" xmlns:script="urn:oasis:names:tc:opendocument:xmlns:script:1.0" xmlns:config="urn:oasis:names:tc:opendocument:xmlns:config:1.0" xmlns:ooo="http://openoffice.org/2004/office" xmlns:ooow="http://openoffice.org/2004/writer" xmlns:oooc="http://openoffice.org/2004/calc" xmlns:dom="http://www.w3.org/2001/xml-events" xmlns:xforms="http://www.w3.org/2002/xforms" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:rpt="http://openoffice.org/2005/report" xmlns:of="urn:oasis:names:tc:opendocument:xmlns:of:1.2" xmlns:xhtml="http://www.w3.org/1999/xhtml" xmlns:grddl="http://www.w3.org/2003/g/data-view#" xmlns:officeooo="http://openoffice.org/2009/office" xmlns:tableooo="http://openoffice.org/2009/table" xmlns:drawooo="http://openoffice.org/2010/draw" xmlns:calcext="urn:org:documentfoundation:names:experimental:calc:xmlns:calcext:1.0" xmlns:loext="urn:org:documentfoundation:names:experimental:office:xmlns:loext:1.0" xmlns:field="urn:openoffice:names:experimental:ooo-ms-interop:xmlns:field:1.0" xmlns:formx="urn:openoffice:names:experimental:ooxml-odf-interop:xmlns:form:1.0" xmlns:css3t="http://www.w3.org/TR/css3-text/" office:version="1.2" office:mimetype="application/vnd.oasis.opendocument.text">
+ <office:meta><meta:creation-date>2019-09-17T18:11:37.276295256</meta:creation-date><dc:date>2019-09-17T20:55:35.208161245</dc:date><meta:editing-duration>PT1H19M36S</meta:editing-duration><meta:editing-cycles>18</meta:editing-cycles><meta:generator>LibreOffice/5.1.6.2$Linux_X86_64 LibreOffice_project/10m0$Build-2</meta:generator><meta:document-statistic meta:table-count="0" meta:image-count="0" meta:object-count="0" meta:page-count="1" meta:paragraph-count="0" meta:word-count="0" meta:character-count="0" meta:non-whitespace-character-count="0"/></office:meta>
+ <office:settings>
+  <config:config-item-set config:name="ooo:view-settings">
+   <config:config-item config:name="ViewAreaTop" config:type="long">113</config:config-item>
+   <config:config-item config:name="ViewAreaLeft" config:type="long">0</config:config-item>
+   <config:config-item config:name="ViewAreaWidth" config:type="long">25874</config:config-item>
+   <config:config-item config:name="ViewAreaHeight" config:type="long">12589</config:config-item>
+   <config:config-item config:name="ShowRedlineChanges" config:type="boolean">true</config:config-item>
+   <config:config-item config:name="InBrowseMode" config:type="boolean">false</config:config-item>
+  </config:config-item-set>
+  <config:config-item-set config:name="ooo:configuration-settings">
+   <config:config-item config:name="PrintProspect" config:type="boolean">false</config:config-item>
+   <config:config-item config:name="PrintLeftPages" config:type="boolean">true</config:config-item>
+   <config:config-item config:name="PrintPageBackground" config:type="boolean">true</config:config-item>
+   <config:config-item config:name="PrintControls" config:type="boolean">true</config:config-item>
+   <config:config-item config:name="PrintAnnotationMode" config:type="short">0</config:config-item>
+   <config:config-item config:name="PrintGraphics" config:type="boolean">true</config:config-item>
+   <config:config-item config:name="PrintRightPages" config:type="boolean">true</config:config-item>
+   <config:config-item config:name="PrintFaxName" config:type="string"/>
+   <config:config-item config:name="PrintPaperFromSetup" config:type="boolean">false</config:config-item>
+   <config:config-item config:name="PrintTextPlaceholder" config:type="boolean">false</config:config-item>
+   <config:config-item config:name="ApplyParagraphMarkFormatToNumbering" config:type="boolean">false</config:config-item>
+   <config:config-item config:name="PrintReversed" config:type="boolean">false</config:config-item>
+   <config:config-item config:name="TabOverMargin" config:type="boolean">false</config:config-item>
+   <config:config-item config:name="EmbedFonts" config:type="boolean">false</config:config-item>
+   <config:config-item config:name="SurroundTextWrapSmall" config:type="boolean">false</config:config-item>
+   <config:config-item config:name="BackgroundParaOverDrawings" config:type="boolean">false</config:config-item>
+   <config:config-item config:name="ClippedPictures" config:type="boolean">false</config:config-item>
+   <config:config-item config:name="FloattableNomargins" config:type="boolean">false</config:config-item>
+   <config:config-item config:name="UnbreakableNumberings" config:type="boolean">false</config:config-item>
+   <config:config-item config:name="EmbedSystemFonts" config:type="boolean">false</config:config-item>
+   <config:config-item config:name="TabOverflow" config:type="boolean">true</config:config-item>
+   <config:config-item config:name="PrintTables" config:type="boolean">true</config:config-item>
+   <config:config-item config:name="PrintSingleJobs" config:type="boolean">false</config:config-item>
+   <config:config-item config:name="SmallCapsPercentage66" config:type="boolean">false</config:config-item>
+   <config:config-item config:name="CollapseEmptyCellPara" config:type="boolean">true</config:config-item>
+   <config:config-item config:name="MathBaselineAlignment" config:type="boolean">true</config:config-item>
+   <config:config-item config:name="AddFrameOffsets" config:type="boolean">false</config:config-item>
+   <config:config-item config:name="IsLabelDocument" config:type="boolean">false</config:config-item>
+   <config:config-item config:name="PrinterName" config:type="string"/>
+   <config:config-item config:name="OutlineLevelYieldsNumbering" config:type="boolean">false</config:config-item>
+   <config:config-item config:name="IgnoreFirstLineIndentInNumbering" config:type="boolean">false</config:config-item>
+   <config:config-item config:name="UpdateFromTemplate" config:type="boolean">true</config:config-item>
+   <config:config-item config:name="PrintBlackFonts" config:type="boolean">false</config:config-item>
+   <config:config-item config:name="TableRowKeep" config:type="boolean">false</config:config-item>
+   <config:config-item config:name="EmbeddedDatabaseName" config:type="string"/>
+   <config:config-item config:name="IgnoreTabsAndBlanksForLineCalculation" config:type="boolean">false</config:config-item>
+   <config:config-item config:name="UseOldPrinterMetrics" config:type="boolean">false</config:config-item>
+   <config:config-item config:name="InvertBorderSpacing" config:type="boolean">false</config:config-item>
+   <config:config-item config:name="SaveGlobalDocumentLinks" config:type="boolean">false</config:config-item>
+   <config:config-item config:name="TabsRelativeToIndent" config:type="boolean">true</config:config-item>
+   <config:config-item config:name="Rsid" config:type="int">610003</config:config-item>
+   <config:config-item config:name="PrintProspectRTL" config:type="boolean">false</config:config-item>
+   <config:config-item config:name="PrintEmptyPages" config:type="boolean">false</config:config-item>
+   <config:config-item config:name="ApplyUserData" config:type="boolean">true</config:config-item>
+   <config:config-item config:name="PrintHiddenText" config:type="boolean">false</config:config-item>
+   <config:config-item config:name="AddParaTableSpacingAtStart" config:type="boolean">true</config:config-item>
+   <config:config-item config:name="FieldAutoUpdate" config:type="boolean">true</config:config-item>
+   <config:config-item config:name="UseOldNumbering" config:type="boolean">false</config:config-item>
+   <config:config-item config:name="AddParaTableSpacing" config:type="boolean">true</config:config-item>
+   <config:config-item config:name="CharacterCompressionType" config:type="short">0</config:config-item>
+   <config:config-item config:name="SaveVersionOnClose" config:type="boolean">false</config:config-item>
+   <config:config-item config:name="ChartAutoUpdate" config:type="boolean">true</config:config-item>
+   <config:config-item config:name="PrinterIndependentLayout" config:type="string">high-resolution</config:config-item>
+   <config:config-item config:name="IsKernAsianPunctuation" config:type="boolean">false</config:config-item>
+   <config:config-item config:name="UseFormerObjectPositioning" config:type="boolean">false</config:config-item>
+   <config:config-item-map-indexed config:name="ForbiddenCharacters">
+    <config:config-item-map-entry>
+     <config:config-item config:name="Language" config:type="string">en</config:config-item>
+     <config:config-item config:name="Country" config:type="string">HK</config:config-item>
+     <config:config-item config:name="Variant" config:type="string"/>
+     <config:config-item config:name="BeginLine" config:type="string"/>
+     <config:config-item config:name="EndLine" config:type="string"/>
+    </config:config-item-map-entry>
+   </config:config-item-map-indexed>
+   <config:config-item config:name="AddVerticalFrameOffsets" config:type="boolean">false</config:config-item>
+   <config:config-item config:name="SubtractFlysAnchoredAtFlys" config:type="boolean">false</config:config-item>
+   <config:config-item config:name="AddParaSpacingToTableCells" config:type="boolean">true</config:config-item>
+   <config:config-item config:name="AddExternalLeading" config:type="boolean">true</config:config-item>
+   <config:config-item config:name="CurrentDatabaseDataSource" config:type="string"/>
+   <config:config-item config:name="AllowPrintJobCancel" config:type="boolean">true</config:config-item>
+   <config:config-item config:name="ProtectForm" config:type="boolean">false</config:config-item>
+   <config:config-item config:name="UseFormerLineSpacing" config:type="boolean">false</config:config-item>
+   <config:config-item config:name="PrintDrawings" config:type="boolean">true</config:config-item>
+   <config:config-item config:name="UseFormerTextWrapping" config:type="boolean">false</config:config-item>
+   <config:config-item config:name="UnxForceZeroExtLeading" config:type="boolean">false</config:config-item>
+   <config:config-item config:name="TabAtLeftIndentForParagraphsInList" config:type="boolean">false</config:config-item>
+   <config:config-item config:name="RedlineProtectionKey" config:type="base64Binary"/>
+   <config:config-item config:name="PropLineSpacingShrinksFirstLine" config:type="boolean">true</config:config-item>
+   <config:config-item config:name="ConsiderTextWrapOnObjPos" config:type="boolean">false</config:config-item>
+   <config:config-item config:name="RsidRoot" config:type="int">279929</config:config-item>
+   <config:config-item config:name="StylesNoDefault" config:type="boolean">false</config:config-item>
+   <config:config-item config:name="LinkUpdateMode" config:type="short">1</config:config-item>
+   <config:config-item config:name="AlignTabStopPosition" config:type="boolean">true</config:config-item>
+   <config:config-item config:name="DoNotJustifyLinesWithManualBreak" config:type="boolean">false</config:config-item>
+   <config:config-item config:name="DoNotResetParaAttrsForNumFont" config:type="boolean">false</config:config-item>
+   <config:config-item config:name="CurrentDatabaseCommandType" config:type="int">0</config:config-item>
+   <config:config-item config:name="LoadReadonly" config:type="boolean">false</config:config-item>
+   <config:config-item config:name="DoNotCaptureDrawObjsOnPage" config:type="boolean">false</config:config-item>
+   <config:config-item config:name="CurrentDatabaseCommand" config:type="string"/>
+   <config:config-item config:name="PrinterSetup" config:type="base64Binary"/>
+   <config:config-item config:name="ClipAsCharacterAnchoredWriterFlyFrames" config:type="boolean">false</config:config-item>
+  </config:config-item-set>
+ </office:settings>
+ <office:scripts>
+  <office:script script:language="ooo:Basic">
+   <ooo:libraries xmlns:ooo="http://openoffice.org/2004/office" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <ooo:library-embedded ooo:name="Standard"/>
+   </ooo:libraries>
+  </office:script>
+ </office:scripts>
+ <office:font-face-decls>
+  <style:font-face style:name="FreeSans1" svg:font-family="FreeSans" style:font-family-generic="swiss"/>
+  <style:font-face style:name="Liberation Serif" svg:font-family="&apos;Liberation Serif&apos;" style:font-family-generic="roman" style:font-pitch="variable"/>
+  <style:font-face style:name="Liberation Sans" svg:font-family="&apos;Liberation Sans&apos;" style:font-family-generic="swiss" style:font-pitch="variable"/>
+  <style:font-face style:name="FreeSans" svg:font-family="FreeSans" style:font-family-generic="system" style:font-pitch="variable"/>
+  <style:font-face style:name="Noto Sans CJK SC Regular" svg:font-family="&apos;Noto Sans CJK SC Regular&apos;" style:font-family-generic="system" style:font-pitch="variable"/>
+ </office:font-face-decls>
+ <office:styles>
+  <style:default-style style:family="graphic">
+   <style:graphic-properties svg:stroke-color="#3465a4" draw:fill-color="#729fcf" fo:wrap-option="no-wrap" draw:shadow-offset-x="0.1181in" draw:shadow-offset-y="0.1181in" draw:start-line-spacing-horizontal="0.1114in" draw:start-line-spacing-vertical="0.1114in" draw:end-line-spacing-horizontal="0.1114in" draw:end-line-spacing-vertical="0.1114in" style:flow-with-text="false"/>
+   <style:paragraph-properties style:text-autospace="ideograph-alpha" style:line-break="strict" style:writing-mode="lr-tb" style:font-independent-line-spacing="false">
+    <style:tab-stops/>
+   </style:paragraph-properties>
+   <style:text-properties style:use-window-font-color="true" style:font-name="Liberation Serif" fo:font-size="12pt" fo:language="en" fo:country="HK" style:letter-kerning="true" style:font-name-asian="Noto Sans CJK SC Regular" style:font-size-asian="10.5pt" style:language-asian="zh" style:country-asian="CN" style:font-name-complex="FreeSans" style:font-size-complex="12pt" style:language-complex="hi" style:country-complex="IN"/>
+  </style:default-style>
+  <style:default-style style:family="paragraph">
+   <style:paragraph-properties fo:orphans="2" fo:widows="2" fo:hyphenation-ladder-count="no-limit" style:text-autospace="ideograph-alpha" style:punctuation-wrap="hanging" style:line-break="strict" style:tab-stop-distance="0.4925in" style:writing-mode="page"/>
+   <style:text-properties style:use-window-font-color="true" style:font-name="Liberation Serif" fo:font-size="12pt" fo:language="en" fo:country="HK" style:letter-kerning="true" style:font-name-asian="Noto Sans CJK SC Regular" style:font-size-asian="10.5pt" style:language-asian="zh" style:country-asian="CN" style:font-name-complex="FreeSans" style:font-size-complex="12pt" style:language-complex="hi" style:country-complex="IN" fo:hyphenate="false" fo:hyphenation-remain-char-count="2" fo:hyphenation-push-char-count="2"/>
+  </style:default-style>
+  <style:default-style style:family="table">
+   <style:table-properties table:border-model="collapsing"/>
+  </style:default-style>
+  <style:default-style style:family="table-row">
+   <style:table-row-properties fo:keep-together="auto"/>
+  </style:default-style>
+  <style:style style:name="Standard" style:family="paragraph" style:class="text"/>
+  <style:style style:name="Heading" style:family="paragraph" style:parent-style-name="Standard" style:next-style-name="Text_20_body" style:class="text">
+   <style:paragraph-properties fo:margin-top="0.1665in" fo:margin-bottom="0.0835in" loext:contextual-spacing="false" fo:keep-with-next="always"/>
+   <style:text-properties style:font-name="Liberation Sans" fo:font-family="&apos;Liberation Sans&apos;" style:font-family-generic="swiss" style:font-pitch="variable" fo:font-size="14pt" style:font-name-asian="Noto Sans CJK SC Regular" style:font-family-asian="&apos;Noto Sans CJK SC Regular&apos;" style:font-family-generic-asian="system" style:font-pitch-asian="variable" style:font-size-asian="14pt" style:font-name-complex="FreeSans" style:font-family-complex="FreeSans" style:font-family-generic-complex="system" style:font-pitch-complex="variable" style:font-size-complex="14pt"/>
+  </style:style>
+  <style:style style:name="Text_20_body" style:display-name="Text body" style:family="paragraph" style:parent-style-name="Standard" style:class="text">
+   <style:paragraph-properties fo:margin-top="0in" fo:margin-bottom="0.0972in" loext:contextual-spacing="false" fo:line-height="120%"/>
+  </style:style>
+  <style:style style:name="List" style:family="paragraph" style:parent-style-name="Text_20_body" style:class="list">
+   <style:text-properties style:font-size-asian="12pt" style:font-name-complex="FreeSans1" style:font-family-complex="FreeSans" style:font-family-generic-complex="swiss"/>
+  </style:style>
+  <style:style style:name="Caption" style:family="paragraph" style:parent-style-name="Standard" style:class="extra">
+   <style:paragraph-properties fo:margin-top="0.0835in" fo:margin-bottom="0.0835in" loext:contextual-spacing="false" text:number-lines="false" text:line-number="0"/>
+   <style:text-properties fo:font-size="12pt" fo:font-style="italic" style:font-size-asian="12pt" style:font-style-asian="italic" style:font-name-complex="FreeSans1" style:font-family-complex="FreeSans" style:font-family-generic-complex="swiss" style:font-size-complex="12pt" style:font-style-complex="italic"/>
+  </style:style>
+  <style:style style:name="Index" style:family="paragraph" style:parent-style-name="Standard" style:class="index">
+   <style:paragraph-properties text:number-lines="false" text:line-number="0"/>
+   <style:text-properties style:font-size-asian="12pt" style:font-name-complex="FreeSans1" style:font-family-complex="FreeSans" style:font-family-generic-complex="swiss"/>
+  </style:style>
+  <text:outline-style style:name="Outline">
+   <text:outline-level-style text:level="1" style:num-format="">
+    <style:list-level-properties text:list-level-position-and-space-mode="label-alignment">
+     <style:list-level-label-alignment text:label-followed-by="listtab" text:list-tab-stop-position="0.3in" fo:text-indent="-0.3in" fo:margin-left="0.3in"/>
+    </style:list-level-properties>
+   </text:outline-level-style>
+   <text:outline-level-style text:level="2" style:num-format="">
+    <style:list-level-properties text:list-level-position-and-space-mode="label-alignment">
+     <style:list-level-label-alignment text:label-followed-by="listtab" text:list-tab-stop-position="0.4in" fo:text-indent="-0.4in" fo:margin-left="0.4in"/>
+    </style:list-level-properties>
+   </text:outline-level-style>
+   <text:outline-level-style text:level="3" style:num-format="">
+    <style:list-level-properties text:list-level-position-and-space-mode="label-alignment">
+     <style:list-level-label-alignment text:label-followed-by="listtab" text:list-tab-stop-position="0.5in" fo:text-indent="-0.5in" fo:margin-left="0.5in"/>
+    </style:list-level-properties>
+   </text:outline-level-style>
+   <text:outline-level-style text:level="4" style:num-format="">
+    <style:list-level-properties text:list-level-position-and-space-mode="label-alignment">
+     <style:list-level-label-alignment text:label-followed-by="listtab" text:list-tab-stop-position="0.6in" fo:text-indent="-0.6in" fo:margin-left="0.6in"/>
+    </style:list-level-properties>
+   </text:outline-level-style>
+   <text:outline-level-style text:level="5" style:num-format="">
+    <style:list-level-properties text:list-level-position-and-space-mode="label-alignment">
+     <style:list-level-label-alignment text:label-followed-by="listtab" text:list-tab-stop-position="0.7in" fo:text-indent="-0.7in" fo:margin-left="0.7in"/>
+    </style:list-level-properties>
+   </text:outline-level-style>
+   <text:outline-level-style text:level="6" style:num-format="">
+    <style:list-level-properties text:list-level-position-and-space-mode="label-alignment">
+     <style:list-level-label-alignment text:label-followed-by="listtab" text:list-tab-stop-position="0.8in" fo:text-indent="-0.8in" fo:margin-left="0.8in"/>
+    </style:list-level-properties>
+   </text:outline-level-style>
+   <text:outline-level-style text:level="7" style:num-format="">
+    <style:list-level-properties text:list-level-position-and-space-mode="label-alignment">
+     <style:list-level-label-alignment text:label-followed-by="listtab" text:list-tab-stop-position="0.9in" fo:text-indent="-0.9in" fo:margin-left="0.9in"/>
+    </style:list-level-properties>
+   </text:outline-level-style>
+   <text:outline-level-style text:level="8" style:num-format="">
+    <style:list-level-properties text:list-level-position-and-space-mode="label-alignment">
+     <style:list-level-label-alignment text:label-followed-by="listtab" text:list-tab-stop-position="1in" fo:text-indent="-1in" fo:margin-left="1in"/>
+    </style:list-level-properties>
+   </text:outline-level-style>
+   <text:outline-level-style text:level="9" style:num-format="">
+    <style:list-level-properties text:list-level-position-and-space-mode="label-alignment">
+     <style:list-level-label-alignment text:label-followed-by="listtab" text:list-tab-stop-position="1.1in" fo:text-indent="-1.1in" fo:margin-left="1.1in"/>
+    </style:list-level-properties>
+   </text:outline-level-style>
+   <text:outline-level-style text:level="10" style:num-format="">
+    <style:list-level-properties text:list-level-position-and-space-mode="label-alignment">
+     <style:list-level-label-alignment text:label-followed-by="listtab" text:list-tab-stop-position="1.2in" fo:text-indent="-1.2in" fo:margin-left="1.2in"/>
+    </style:list-level-properties>
+   </text:outline-level-style>
+  </text:outline-style>
+  <text:notes-configuration text:note-class="footnote" style:num-format="1" text:start-value="0" text:footnotes-position="page" text:start-numbering-at="document"/>
+  <text:notes-configuration text:note-class="endnote" style:num-format="i" text:start-value="0"/>
+  <text:linenumbering-configuration text:number-lines="false" text:offset="0.1965in" style:num-format="1" text:number-position="left" text:increment="5"/>
+ </office:styles>
+ <office:automatic-styles>
+  <style:style style:name="P1" style:family="paragraph" style:parent-style-name="Standard">
+   <style:text-properties officeooo:rsid="0005a77d" officeooo:paragraph-rsid="0005a77d"/>
+  </style:style>
+  <style:style style:name="P2" style:family="paragraph">
+   <style:paragraph-properties fo:text-align="center"/>
+  </style:style>
+  <style:style style:name="P3" style:family="paragraph">
+   <loext:graphic-properties draw:fill="solid" draw:fill-color="#dddddd"/>
+   <style:text-properties fo:font-size="12pt"/>
+  </style:style>
+  <style:style style:name="P4" style:family="paragraph">
+   <loext:graphic-properties draw:fill="none" draw:fill-color="#ffffff"/>
+  </style:style>
+  <style:style style:name="P5" style:family="paragraph">
+   <loext:graphic-properties draw:fill="none"/>
+   <style:text-properties fo:font-size="12pt"/>
+  </style:style>
+  <style:style style:name="P6" style:family="paragraph">
+   <loext:graphic-properties draw:fill="none" draw:fill-color="#ffffff"/>
+   <style:text-properties fo:font-size="12pt"/>
+  </style:style>
+  <style:style style:name="T1" style:family="text">
+   <style:text-properties fo:font-style="normal" style:font-style-asian="normal" style:font-style-complex="normal"/>
+  </style:style>
+  <style:style style:name="T2" style:family="text">
+   <style:text-properties fo:font-style="italic" style:font-style-asian="italic" style:font-style-complex="italic"/>
+  </style:style>
+  <style:style style:name="T3" style:family="text">
+   <style:text-properties style:text-position="-33% 58%" fo:font-style="italic" style:font-style-asian="italic" style:font-style-complex="italic"/>
+  </style:style>
+  <style:style style:name="T4" style:family="text">
+   <style:text-properties style:text-position="0% 100%" fo:font-style="italic" style:font-style-asian="italic" style:font-style-complex="italic"/>
+  </style:style>
+  <style:style style:name="T5" style:family="text">
+   <style:text-properties style:text-position="0% 100%" fo:font-style="normal" style:font-style-asian="normal" style:font-style-complex="normal"/>
+  </style:style>
+  <style:style style:name="T6" style:family="text">
+   <style:text-properties style:text-position="33% 58%" fo:font-style="italic" style:font-style-asian="italic" style:font-style-complex="italic"/>
+  </style:style>
+  <style:style style:name="T7" style:family="text">
+   <style:text-properties fo:font-size="12pt"/>
+  </style:style>
+  <style:style style:name="T8" style:family="text">
+   <style:text-properties style:text-position="-33% 58%" fo:font-size="12pt"/>
+  </style:style>
+  <style:style style:name="T9" style:family="text">
+   <style:text-properties style:text-position="0% 100%" fo:font-size="12pt"/>
+  </style:style>
+  <style:style style:name="gr1" style:family="graphic">
+   <style:graphic-properties draw:textarea-horizontal-align="center" draw:textarea-vertical-align="middle" style:run-through="foreground" style:wrap="run-through" style:number-wrapped-paragraphs="no-limit" style:vertical-pos="from-top" style:vertical-rel="paragraph" style:horizontal-pos="from-left" style:horizontal-rel="paragraph"/>
+  </style:style>
+  <style:style style:name="gr2" style:family="graphic">
+   <style:graphic-properties draw:fill="solid" draw:fill-color="#dddddd" draw:textarea-horizontal-align="justify" draw:textarea-vertical-align="middle" draw:auto-grow-height="false" fo:min-height="0.4472in" fo:min-width="0.5217in" style:run-through="foreground" style:wrap="run-through" style:number-wrapped-paragraphs="no-limit" style:vertical-pos="from-top" style:vertical-rel="paragraph" style:horizontal-pos="from-left" style:horizontal-rel="paragraph"/>
+  </style:style>
+  <style:style style:name="gr3" style:family="graphic">
+   <style:graphic-properties draw:stroke="none" svg:stroke-color="#000000" draw:fill="none" draw:fill-color="#ffffff" fo:min-height="0.2543in" style:run-through="foreground" style:wrap="run-through" style:number-wrapped-paragraphs="no-limit" style:vertical-pos="from-top" style:vertical-rel="paragraph" style:horizontal-pos="from-left" style:horizontal-rel="paragraph"/>
+  </style:style>
+  <style:style style:name="gr4" style:family="graphic">
+   <style:graphic-properties draw:stroke="none" svg:stroke-color="#000000" draw:fill="none" draw:fill-color="#ffffff" fo:min-height="0.1425in" style:run-through="foreground" style:wrap="run-through" style:number-wrapped-paragraphs="no-limit" style:vertical-pos="from-top" style:vertical-rel="paragraph" style:horizontal-pos="from-left" style:horizontal-rel="paragraph"/>
+  </style:style>
+  <style:style style:name="gr5" style:family="graphic">
+   <style:graphic-properties draw:stroke="solid" svg:stroke-color="#000000" draw:fill="none" draw:fill-color="#ffffff" fo:min-height="3.4634in" style:run-through="foreground" style:wrap="run-through" style:number-wrapped-paragraphs="no-limit" style:vertical-pos="from-top" style:vertical-rel="paragraph" style:horizontal-pos="from-left" style:horizontal-rel="paragraph"/>
+  </style:style>
+  <style:style style:name="gr6" style:family="graphic">
+   <style:graphic-properties draw:fill="none" draw:textarea-horizontal-align="justify" draw:textarea-vertical-align="middle" draw:auto-grow-height="false" fo:min-height="0.4472in" fo:min-width="0.5217in" style:run-through="foreground" style:wrap="run-through" style:number-wrapped-paragraphs="no-limit" style:vertical-pos="from-top" style:vertical-rel="paragraph" style:horizontal-pos="from-left" style:horizontal-rel="paragraph"/>
+  </style:style>
+  <style:style style:name="gr7" style:family="graphic">
+   <style:graphic-properties draw:fill="none" draw:textarea-horizontal-align="justify" draw:textarea-vertical-align="middle" draw:auto-grow-height="false" fo:min-height="1.7811in" fo:min-width="2.0835in" style:run-through="foreground" style:wrap="run-through" style:number-wrapped-paragraphs="no-limit" style:vertical-pos="from-top" style:vertical-rel="paragraph" style:horizontal-pos="from-left" style:horizontal-rel="paragraph"/>
+  </style:style>
+  <style:style style:name="gr8" style:family="graphic">
+   <style:graphic-properties draw:stroke="none" svg:stroke-color="#000000" draw:fill="none" draw:fill-color="#ffffff" fo:min-height="0.2181in" style:run-through="foreground" style:wrap="run-through" style:number-wrapped-paragraphs="no-limit" style:vertical-pos="from-top" style:vertical-rel="paragraph" style:horizontal-pos="from-left" style:horizontal-rel="paragraph"/>
+  </style:style>
+  <style:style style:name="gr9" style:family="graphic">
+   <style:graphic-properties draw:fill="none" draw:textarea-horizontal-align="justify" draw:textarea-vertical-align="middle" draw:auto-grow-height="false" fo:min-height="1.7846in" fo:min-width="2.0811in" style:run-through="foreground" style:wrap="run-through" style:number-wrapped-paragraphs="no-limit" style:vertical-pos="from-top" style:vertical-rel="paragraph" style:horizontal-pos="from-left" style:horizontal-rel="paragraph"/>
+  </style:style>
+  <style:style style:name="gr10" style:family="graphic">
+   <style:graphic-properties draw:fill="none" draw:textarea-horizontal-align="justify" draw:textarea-vertical-align="middle" draw:auto-grow-height="false" fo:min-height="0.8945in" fo:min-width="1.0429in" style:run-through="foreground" style:wrap="run-through" style:number-wrapped-paragraphs="no-limit" style:vertical-pos="from-top" style:vertical-rel="paragraph" style:horizontal-pos="from-left" style:horizontal-rel="paragraph"/>
+  </style:style>
+  <style:style style:name="gr11" style:family="graphic">
+   <style:graphic-properties draw:stroke="none" svg:stroke-color="#000000" draw:fill="none" draw:fill-color="#ffffff" fo:min-height="3.0008in" style:run-through="foreground" style:wrap="run-through" style:number-wrapped-paragraphs="no-limit" style:vertical-pos="from-top" style:vertical-rel="paragraph" style:horizontal-pos="from-left" style:horizontal-rel="paragraph"/>
+  </style:style>
+  <style:page-layout style:name="pm1">
+   <style:page-layout-properties fo:page-width="8.2681in" fo:page-height="11.6929in" style:num-format="1" style:print-orientation="portrait" fo:margin-top="0.7874in" fo:margin-bottom="0.7874in" fo:margin-left="0.7874in" fo:margin-right="0.7874in" style:writing-mode="lr-tb" style:footnote-max-height="0in">
+    <style:footnote-sep style:width="0.0071in" style:distance-before-sep="0.0398in" style:distance-after-sep="0.0398in" style:line-style="solid" style:adjustment="left" style:rel-width="25%" style:color="#000000"/>
+   </style:page-layout-properties>
+   <style:header-style/>
+   <style:footer-style/>
+  </style:page-layout>
+ </office:automatic-styles>
+ <office:master-styles>
+  <style:master-page style:name="Standard" style:page-layout-name="pm1"/>
+ </office:master-styles>
+ <office:body>
+  <office:text>
+   <text:sequence-decls>
+    <text:sequence-decl text:display-outline-level="0" text:name="Illustration"/>
+    <text:sequence-decl text:display-outline-level="0" text:name="Table"/>
+    <text:sequence-decl text:display-outline-level="0" text:name="Text"/>
+    <text:sequence-decl text:display-outline-level="0" text:name="Drawing"/>
+   </text:sequence-decls>
+   <text:p text:style-name="P1"><draw:frame text:anchor-type="paragraph" draw:z-index="21" draw:name="Shape8" draw:style-name="gr11" draw:text-style-name="P4" svg:width="2.9098in" svg:height="3.6551in" svg:x="0.2638in" svg:y="-0.1339in">
+     <draw:text-box>
+      <text:p><text:span text:style-name="T2">z</text:span><text:span text:style-name="T3">max</text:span><text:span text:style-name="T4"> = z(d</text:span><text:span text:style-name="T3">min</text:span><text:span text:style-name="T4">)</text:span></text:p>
+      <text:p><text:span text:style-name="T4">for each d</text:span><text:span text:style-name="T3">i</text:span><text:span text:style-name="T4"> {</text:span></text:p>
+      <text:p><text:span text:style-name="T4"><text:s text:c="4"/></text:span><text:span text:style-name="T4">z = f</text:span><text:span text:style-name="T6">-1</text:span><text:span text:style-name="T4">(d</text:span><text:span text:style-name="T3">i</text:span><text:span text:style-name="T4">)</text:span><text:span text:style-name="T5">;</text:span><text:span text:style-name="T4"> <text:s text:c="20"/>// </text:span><text:span text:style-name="T4">table finding</text:span></text:p>
+      <text:p><text:span text:style-name="T4"><text:s text:c="4"/></text:span><text:span text:style-name="T4">xyz = osmXyz(z, d</text:span><text:span text:style-name="T3">i</text:span><text:span text:style-name="T4">)</text:span><text:span text:style-name="T5">;</text:span><text:span text:style-name="T4"> <text:s text:c="3"/>// find </text:span><text:span text:style-name="T4">xyz at d</text:span><text:span text:style-name="T3">i</text:span></text:p>
+      <text:p><text:span text:style-name="T4"><text:s text:c="4"/></text:span><text:span text:style-name="T4">map[ z</text:span><text:span text:style-name="T4"> ].put(d</text:span><text:span text:style-name="T3">i </text:span><text:span text:style-name="T4">, xyz)</text:span><text:span text:style-name="T5">;</text:span></text:p>
+      <text:p><text:span text:style-name="T4">}</text:span></text:p>
+      <text:p><text:span text:style-name="T4"/></text:p>
+      <text:p><text:span text:style-name="T4">for each (z</text:span><text:span text:style-name="T3">i</text:span><text:span text:style-name="T4"> , d</text:span><text:span text:style-name="T3">i</text:span><text:span text:style-name="T4">) {</text:span></text:p>
+      <text:p><text:span text:style-name="T4"><text:s text:c="4"/></text:span><text:span text:style-name="T4">xyz = map[ z</text:span><text:span text:style-name="T3">i </text:span><text:span text:style-name="T4">, d</text:span><text:span text:style-name="T3">i</text:span><text:span text:style-name="T4"> ]</text:span><text:span text:style-name="T5">;</text:span></text:p>
+      <text:p><text:span text:style-name="T4"><text:s text:c="4"/></text:span><text:span text:style-name="T4">tiles.add( z, x, y, t(xyz) );</text:span></text:p>
+      <text:p><text:span text:style-name="T4"><text:s text:c="4"/></text:span><text:span text:style-name="T4">for each d</text:span><text:span text:style-name="T3">i</text:span><text:span text:style-name="T4"> in neighbours {</text:span></text:p>
+      <text:p><text:span text:style-name="T4"><text:s text:c="9"/></text:span><text:span text:style-name="T4">xyz = map[ z</text:span><text:span text:style-name="T3">i </text:span><text:span text:style-name="T4">, d</text:span><text:span text:style-name="T3">i</text:span><text:span text:style-name="T4"> ]</text:span><text:span text:style-name="T5">;</text:span></text:p>
+      <text:p><text:span text:style-name="T4"><text:s text:c="9"/></text:span><text:span text:style-name="T4">tiles.add( z, x, y, </text:span><text:span text:style-name="T4">extend(xyz) );</text:span></text:p>
+      <text:p><text:span text:style-name="T4"><text:s text:c="4"/></text:span><text:span text:style-name="T4">}</text:span></text:p>
+      <text:p><text:span text:style-name="T4"><text:s text:c="4"/></text:span><text:span text:style-name="T4">remove d</text:span><text:span text:style-name="T3">i</text:span><text:span text:style-name="T5">;</text:span></text:p>
+      <text:p><text:span text:style-name="T4">}</text:span></text:p>
+      <text:p><text:span text:style-name="T4"/></text:p>
+     </draw:text-box>
+    </draw:frame></text:p>
+   <text:p text:style-name="P1"/>
+   <text:p text:style-name="P1"><draw:custom-shape text:anchor-type="paragraph" draw:z-index="17" draw:name="Shape4" draw:style-name="gr9" draw:text-style-name="P5" svg:width="2.0815in" svg:height="1.785in" svg:x="4.2165in" svg:y="0.0091in">
+     <text:p/>
+     <draw:enhanced-geometry svg:viewBox="0 0 21600 21600" draw:mirror-horizontal="false" draw:mirror-vertical="false" draw:type="rectangle" draw:enhanced-path="M 0 0 L 21600 0 21600 21600 0 21600 0 0 Z N"/>
+    </draw:custom-shape></text:p>
+   <text:p text:style-name="P1"/>
+   <text:p text:style-name="P1"><draw:line text:anchor-type="paragraph" draw:z-index="0" draw:name="Shape1" draw:style-name="gr1" draw:text-style-name="P2" svg:x1="0.3161in" svg:y1="2.8543in" svg:x2="7.0205in" svg:y2="0.089in">
+     <text:p/>
+    </draw:line></text:p>
+   <text:p text:style-name="P1"><draw:line text:anchor-type="paragraph" draw:z-index="15" draw:name="Shape9" draw:style-name="gr1" draw:text-style-name="P2" svg:x1="2.7256in" svg:y1="2.3496in" svg:x2="6.5157in" svg:y2="0.0425in">
+     <text:p/>
+    </draw:line><draw:frame text:anchor-type="paragraph" draw:z-index="16" draw:name="Shape2" draw:style-name="gr8" draw:text-style-name="P6" svg:width="0.3252in" svg:height="0.2323in" svg:x="5.9728in" svg:y="0.0098in">
+     <draw:text-box>
+      <text:p><text:span text:style-name="T7">d</text:span><text:span text:style-name="T8">1</text:span><text:span text:style-name="T9">&apos;</text:span></text:p>
+     </draw:text-box>
+    </draw:frame></text:p>
+   <text:p text:style-name="P1"><draw:custom-shape text:anchor-type="paragraph" draw:z-index="19" draw:name="Shape4" draw:style-name="gr10" draw:text-style-name="P5" svg:width="1.0433in" svg:height="0.8949in" svg:x="3.1736in" svg:y="0.1327in">
+     <text:p/>
+     <draw:enhanced-geometry svg:viewBox="0 0 21600 21600" draw:mirror-horizontal="false" draw:mirror-vertical="false" draw:type="rectangle" draw:enhanced-path="M 0 0 L 21600 0 21600 21600 0 21600 0 0 Z N"/>
+    </draw:custom-shape></text:p>
+   <text:p text:style-name="P1"/>
+   <text:p text:style-name="P1"><draw:line text:anchor-type="paragraph" draw:z-index="18" draw:name="Shape5" draw:style-name="gr1" draw:text-style-name="P2" svg:x1="4.3114in" svg:y1="0.1098in" svg:x2="2.0134in" svg:y2="3.0524in">
+     <text:p/>
+    </draw:line></text:p>
+   <text:p text:style-name="P1"/>
+   <text:p text:style-name="P1"><draw:line text:anchor-type="paragraph" draw:z-index="4" draw:style-name="gr1" draw:text-style-name="P2" svg:x1="0.1016in" svg:y1="0.1681in" svg:x2="0.1016in" svg:y2="2.5445in">
+     <text:p/>
+    </draw:line><draw:frame text:anchor-type="paragraph" draw:z-index="5" draw:name="Shape2" draw:style-name="gr3" draw:text-style-name="P4" svg:width="0.1433in" svg:height="0.2543in" svg:x="-0.1244in" svg:y="0.1161in">
+     <draw:text-box>
+      <text:p>y</text:p>
+     </draw:text-box>
+    </draw:frame><draw:frame text:anchor-type="paragraph" draw:z-index="13" draw:name="Shape2" draw:style-name="gr8" draw:text-style-name="P6" svg:width="0.3252in" svg:height="0.2323in" svg:x="3.7764in" svg:y="0.0091in">
+     <draw:text-box>
+      <text:p><text:span text:style-name="T7">d</text:span><text:span text:style-name="T8">1</text:span></text:p>
+     </draw:text-box>
+    </draw:frame></text:p>
+   <text:p text:style-name="P1"><draw:custom-shape text:anchor-type="paragraph" draw:z-index="11" draw:name="Shape4" draw:style-name="gr7" draw:text-style-name="P5" svg:width="2.0835in" svg:height="1.7815in" svg:x="4.2165in" svg:y="0.0689in">
+     <text:p/>
+     <draw:enhanced-geometry svg:viewBox="0 0 21600 21600" draw:mirror-horizontal="false" draw:mirror-vertical="false" draw:type="rectangle" draw:enhanced-path="M 0 0 L 21600 0 21600 21600 0 21600 0 0 Z N"/>
+    </draw:custom-shape><draw:custom-shape text:anchor-type="paragraph" draw:z-index="12" draw:name="Shape4" draw:style-name="gr6" draw:text-style-name="P5" svg:width="0.5217in" svg:height="0.4476in" svg:x="3.1736in" svg:y="0.0689in">
+     <text:p/>
+     <draw:enhanced-geometry svg:viewBox="0 0 21600 21600" draw:mirror-horizontal="false" draw:mirror-vertical="false" draw:type="rectangle" draw:enhanced-path="M 0 0 L 21600 0 21600 21600 0 21600 0 0 Z N"/>
+    </draw:custom-shape></text:p>
+   <text:p text:style-name="P1"/>
+   <text:p text:style-name="P1"><draw:custom-shape text:anchor-type="paragraph" draw:z-index="3" draw:name="Shape4" draw:style-name="gr2" draw:text-style-name="P3" svg:width="0.5217in" svg:height="0.4476in" svg:x="3.1736in" svg:y="0.1346in">
+     <text:p/>
+     <draw:enhanced-geometry svg:viewBox="0 0 21600 21600" draw:mirror-horizontal="false" draw:mirror-vertical="false" draw:type="rectangle" draw:enhanced-path="M 0 0 L 21600 0 21600 21600 0 21600 0 0 Z N"/>
+    </draw:custom-shape><draw:custom-shape text:anchor-type="paragraph" draw:z-index="8" draw:name="Shape4" draw:style-name="gr6" draw:text-style-name="P5" svg:width="0.5217in" svg:height="0.4476in" svg:x="3.6953in" svg:y="0.1346in">
+     <text:p/>
+     <draw:enhanced-geometry svg:viewBox="0 0 21600 21600" draw:mirror-horizontal="false" draw:mirror-vertical="false" draw:type="rectangle" draw:enhanced-path="M 0 0 L 21600 0 21600 21600 0 21600 0 0 Z N"/>
+    </draw:custom-shape></text:p>
+   <text:p text:style-name="P1"><draw:frame text:anchor-type="paragraph" draw:z-index="14" draw:name="Shape2" draw:style-name="gr8" draw:text-style-name="P6" svg:width="0.3252in" svg:height="0.2323in" svg:x="3.0126in" svg:y="0.0311in">
+     <draw:text-box>
+      <text:p><text:span text:style-name="T7">d</text:span><text:span text:style-name="T8">2</text:span></text:p>
+     </draw:text-box>
+    </draw:frame></text:p>
+   <text:p text:style-name="P1"><draw:line text:anchor-type="paragraph" draw:z-index="20" draw:name="Shape6" draw:style-name="gr1" draw:text-style-name="P2" svg:x1="0.3161in" svg:y1="0.7461in" svg:x2="3.5709in" svg:y2="0.0362in">
+     <text:p/>
+    </draw:line></text:p>
+   <text:p text:style-name="P1"><draw:custom-shape text:anchor-type="paragraph" draw:z-index="9" draw:name="Shape4" draw:style-name="gr6" draw:text-style-name="P5" svg:width="0.5217in" svg:height="0.4476in" svg:x="3.1736in" svg:y="0.0071in">
+     <text:p/>
+     <draw:enhanced-geometry svg:viewBox="0 0 21600 21600" draw:mirror-horizontal="false" draw:mirror-vertical="false" draw:type="rectangle" draw:enhanced-path="M 0 0 L 21600 0 21600 21600 0 21600 0 0 Z N"/>
+    </draw:custom-shape><draw:custom-shape text:anchor-type="paragraph" draw:z-index="10" draw:name="Shape4" draw:style-name="gr6" draw:text-style-name="P5" svg:width="0.5217in" svg:height="0.4476in" svg:x="3.6953in" svg:y="0.0071in">
+     <text:p/>
+     <draw:enhanced-geometry svg:viewBox="0 0 21600 21600" draw:mirror-horizontal="false" draw:mirror-vertical="false" draw:type="rectangle" draw:enhanced-path="M 0 0 L 21600 0 21600 21600 0 21600 0 0 Z N"/>
+    </draw:custom-shape></text:p>
+   <text:p text:style-name="P1"/>
+   <text:p text:style-name="P1"><draw:line text:anchor-type="paragraph" draw:z-index="1" draw:name="Shape1" draw:style-name="gr1" draw:text-style-name="P2" svg:x1="0.3161in" svg:y1="0.1709in" svg:x2="3.1736in" svg:y2="1.3689in">
+     <text:p/>
+    </draw:line><draw:line text:anchor-type="paragraph" draw:z-index="2" draw:name="Shape3" draw:style-name="gr1" draw:text-style-name="P2" svg:x1="-0.1465in" svg:y1="0.1717in" svg:x2="5.4461in" svg:y2="0.1717in">
+     <text:p/>
+    </draw:line><draw:frame text:anchor-type="paragraph" draw:z-index="6" draw:name="Shape2" draw:style-name="gr4" draw:text-style-name="P4" svg:width="0.2425in" svg:height="0.1925in" svg:x="5.2102in" svg:y="0.1717in">
+     <draw:text-box>
+      <text:p>x</text:p>
+     </draw:text-box>
+    </draw:frame></text:p>
+   <text:p text:style-name="P1"/>
+   <text:p text:style-name="P1"/>
+   <text:p text:style-name="P1"/>
+   <text:p text:style-name="P1"/>
+   <text:p text:style-name="P1"/>
+   <text:p text:style-name="P1"/>
+   <text:p text:style-name="P1"/>
+   <text:p text:style-name="P1"><draw:frame text:anchor-type="paragraph" draw:z-index="7" draw:name="Shape7" draw:style-name="gr5" draw:text-style-name="P4" svg:width="2.6996in" svg:height="3.4634in" svg:x="0.4744in" svg:y="0.1425in">
+     <draw:text-box>
+      <text:p><text:span text:style-name="T1">1</text:span><text:span text:style-name="T2">.</text:span><text:span text:style-name="T2"> </text:span><text:span text:style-name="T2">f</text:span><text:span text:style-name="T2">i</text:span><text:span text:style-name="T2">n</text:span><text:span text:style-name="T2">d</text:span><text:span text:style-name="T2"> </text:span><text:span text:style-name="T2">a</text:span><text:span text:style-name="T2">l</text:span><text:span text:style-name="T2">l</text:span><text:span text:style-name="T2"> </text:span><text:span text:style-name="T2">t</text:span><text:span text:style-name="T2">i</text:span><text:span text:style-name="T2">l</text:span><text:span text:style-name="T2">e</text:span><text:span text:style-name="T2">s</text:span><text:span text:style-name="T2"> </text:span><text:span text:style-name="T2">f</text:span><text:span text:style-name="T2">o</text:span><text:span text:style-name="T2">r</text:span><text:span text:style-name="T2"> </text:span><text:span text:style-name="T2">d</text:span><text:span text:style-name="T3">i</text:span><text:span text:style-name="T2"> </text:span><text:span text:style-name="T2">i</text:span><text:span text:style-name="T2">n</text:span><text:span text:style-name="T2"> </text:span><text:span text:style-name="T2">z</text:span><text:span text:style-name="T3">m</text:span><text:span text:style-name="T3">i</text:span><text:span text:style-name="T3">n</text:span><text:span text:style-name="T4"> </text:span><text:span text:style-name="T4">=</text:span><text:span text:style-name="T4"> </text:span><text:span text:style-name="T4">z</text:span><text:span text:style-name="T4">(</text:span><text:span text:style-name="T4">d</text:span><text:span text:style-name="T3">m</text:span><text:span text:style-name="T3">a</text:span><text:span text:style-name="T3">x</text:span><text:span text:style-name="T4">)</text:span></text:p>
+      <text:p><text:span text:style-name="T4"><text:s/></text:span><text:span text:style-name="T4"><text:s/></text:span><text:span text:style-name="T4"><text:s/></text:span><text:span text:style-name="T4"><text:s/></text:span><text:span text:style-name="T4">f</text:span><text:span text:style-name="T4">u</text:span><text:span text:style-name="T4">n</text:span><text:span text:style-name="T4">c</text:span><text:span text:style-name="T4">t</text:span><text:span text:style-name="T4">i</text:span><text:span text:style-name="T4">o</text:span><text:span text:style-name="T4">n</text:span><text:span text:style-name="T4"> </text:span><text:span text:style-name="T4">z</text:span><text:span text:style-name="T4"> </text:span><text:span text:style-name="T4">i</text:span><text:span text:style-name="T4">s</text:span><text:span text:style-name="T4"> </text:span><text:span text:style-name="T4">a</text:span><text:span text:style-name="T4"> </text:span><text:span text:style-name="T4">t</text:span><text:span text:style-name="T4">a</text:span><text:span text:style-name="T4">b</text:span><text:span text:style-name="T4">l</text:span><text:span text:style-name="T4">e</text:span><text:span text:style-name="T4">,</text:span></text:p>
+      <text:p><text:span text:style-name="T4"><text:s/></text:span><text:span text:style-name="T4"><text:s/></text:span><text:span text:style-name="T4"><text:s/></text:span><text:span text:style-name="T4"><text:s/></text:span><text:span text:style-name="T4">d</text:span><text:span text:style-name="T3">m</text:span><text:span text:style-name="T3">a</text:span><text:span text:style-name="T3">x</text:span><text:span text:style-name="T4"> </text:span><text:span text:style-name="T4">m</text:span><text:span text:style-name="T4">u</text:span><text:span text:style-name="T4">s</text:span><text:span text:style-name="T4">t</text:span><text:span text:style-name="T4"> </text:span><text:span text:style-name="T4">b</text:span><text:span text:style-name="T4">e</text:span><text:span text:style-name="T4"> </text:span><text:span text:style-name="T4">o</text:span><text:span text:style-name="T4">n</text:span><text:span text:style-name="T4">e</text:span><text:span text:style-name="T4"> </text:span><text:span text:style-name="T4">o</text:span><text:span text:style-name="T4">f</text:span><text:span text:style-name="T4"> </text:span><text:span text:style-name="T4">4</text:span><text:span text:style-name="T4"> </text:span><text:span text:style-name="T4">c</text:span><text:span text:style-name="T4">o</text:span><text:span text:style-name="T4">r</text:span><text:span text:style-name="T4">n</text:span><text:span text:style-name="T4">e</text:span><text:span text:style-name="T4">r</text:span><text:span text:style-name="T4">s</text:span><text:span text:style-name="T4">;</text:span></text:p>
+      <text:p>2. <text:span text:style-name="T2">z</text:span><text:span text:style-name="T3">i</text:span><text:span text:style-name="T4"> </text:span><text:span text:style-name="T4">=</text:span><text:span text:style-name="T4"> </text:span><text:span text:style-name="T4">z</text:span><text:span text:style-name="T3">m</text:span><text:span text:style-name="T3">i</text:span><text:span text:style-name="T3">n</text:span></text:p>
+      <text:p><text:span text:style-name="T5">3</text:span><text:span text:style-name="T5">.</text:span><text:span text:style-name="T5"> </text:span><text:span text:style-name="T4">f</text:span><text:span text:style-name="T4">o</text:span><text:span text:style-name="T4">r</text:span><text:span text:style-name="T4"> </text:span><text:span text:style-name="T4">z</text:span><text:span text:style-name="T3">i</text:span><text:span text:style-name="T4"> </text:span><text:span text:style-name="T4">&lt;</text:span><text:span text:style-name="T4">=</text:span><text:span text:style-name="T4"> </text:span><text:span text:style-name="T4">z</text:span><text:span text:style-name="T3">m</text:span><text:span text:style-name="T3">a</text:span><text:span text:style-name="T3">x</text:span><text:span text:style-name="T4"> </text:span><text:span text:style-name="T4">u</text:span><text:span text:style-name="T4">n</text:span><text:span text:style-name="T4">t</text:span><text:span text:style-name="T4">i</text:span><text:span text:style-name="T4">l</text:span><text:span text:style-name="T4"> </text:span><text:span text:style-name="T4">n</text:span><text:span text:style-name="T4">o</text:span><text:span text:style-name="T4">t</text:span><text:span text:style-name="T4"> </text:span><text:span text:style-name="T4">t</text:span><text:span text:style-name="T4">i</text:span><text:span text:style-name="T4">l</text:span><text:span text:style-name="T4">e</text:span><text:span text:style-name="T4">s</text:span><text:span text:style-name="T4"> </text:span><text:span text:style-name="T4">b</text:span><text:span text:style-name="T4">r</text:span><text:span text:style-name="T4">e</text:span><text:span text:style-name="T4">a</text:span><text:span text:style-name="T4">k</text:span></text:p>
+      <text:p><text:span text:style-name="T4"><text:s/></text:span><text:span text:style-name="T4"><text:s/></text:span><text:span text:style-name="T4"><text:s/></text:span><text:span text:style-name="T4"><text:s/></text:span><text:span text:style-name="T4"><text:s/></text:span><text:span text:style-name="T4"><text:s/></text:span><text:span text:style-name="T4">i</text:span><text:span text:style-name="T4">f</text:span><text:span text:style-name="T4"> </text:span><text:span text:style-name="T4">d</text:span><text:span text:style-name="T3">i</text:span><text:span text:style-name="T4"> </text:span><text:span text:style-name="T4">&lt;</text:span><text:span text:style-name="T4"> </text:span><text:span text:style-name="T4">z</text:span><text:span text:style-name="T6">-</text:span><text:span text:style-name="T6">1</text:span><text:span text:style-name="T4">(</text:span><text:span text:style-name="T4">z</text:span><text:span text:style-name="T3">i</text:span><text:span text:style-name="T4">)</text:span></text:p>
+      <text:p><text:span text:style-name="T4"><text:s/></text:span><text:span text:style-name="T4"><text:s/></text:span><text:span text:style-name="T4"><text:s/></text:span><text:span text:style-name="T4"><text:s/></text:span><text:span text:style-name="T4"><text:s/></text:span><text:span text:style-name="T4"><text:s/></text:span><text:span text:style-name="T4"><text:s/></text:span><text:span text:style-name="T4"><text:s/></text:span><text:span text:style-name="T4"><text:s/></text:span><text:span text:style-name="T4">z</text:span><text:span text:style-name="T3">i</text:span><text:span text:style-name="T3"> </text:span><text:span text:style-name="T4">=</text:span><text:span text:style-name="T4"> </text:span><text:span text:style-name="T4">z</text:span><text:span text:style-name="T3">i</text:span><text:span text:style-name="T4"> </text:span><text:span text:style-name="T4">-</text:span><text:span text:style-name="T4"> </text:span><text:span text:style-name="T4">1</text:span></text:p>
+      <text:p><text:span text:style-name="T4"><text:s/></text:span><text:span text:style-name="T4"><text:s/></text:span><text:span text:style-name="T4"><text:s/></text:span><text:span text:style-name="T4"><text:s/></text:span><text:span text:style-name="T4"><text:s/></text:span><text:span text:style-name="T4"><text:s/></text:span><text:span text:style-name="T4"><text:s/></text:span><text:span text:style-name="T4"><text:s/></text:span><text:span text:style-name="T4"><text:s/></text:span><text:span text:style-name="T4">b</text:span><text:span text:style-name="T4">r</text:span><text:span text:style-name="T4">e</text:span><text:span text:style-name="T4">a</text:span><text:span text:style-name="T4">k</text:span><text:span text:style-name="T4">T</text:span><text:span text:style-name="T4">i</text:span><text:span text:style-name="T4">l</text:span><text:span text:style-name="T4">e</text:span><text:span text:style-name="T4">(</text:span><text:span text:style-name="T4">z</text:span><text:span text:style-name="T3">i</text:span><text:span text:style-name="T3"> </text:span><text:span text:style-name="T4">,</text:span><text:span text:style-name="T4"> </text:span><text:span text:style-name="T4">z</text:span><text:span text:style-name="T6">-</text:span><text:span text:style-name="T6">1</text:span><text:span text:style-name="T4">(</text:span><text:span text:style-name="T4">z</text:span><text:span text:style-name="T3">i</text:span><text:span text:style-name="T4">)</text:span><text:span text:style-name="T4">)</text:span><text:span text:style-name="T4">;</text:span></text:p>
+      <text:p><text:span text:style-name="T5">4</text:span><text:span text:style-name="T4">.</text:span><text:span text:style-name="T4"> </text:span><text:span text:style-name="T4">f</text:span><text:span text:style-name="T4">u</text:span><text:span text:style-name="T4">n</text:span><text:span text:style-name="T4">c</text:span><text:span text:style-name="T4">t</text:span><text:span text:style-name="T4">i</text:span><text:span text:style-name="T4">o</text:span><text:span text:style-name="T4">n</text:span><text:span text:style-name="T4"> </text:span><text:span text:style-name="T4">b</text:span><text:span text:style-name="T4">r</text:span><text:span text:style-name="T4">e</text:span><text:span text:style-name="T4">a</text:span><text:span text:style-name="T4">k</text:span><text:span text:style-name="T4">T</text:span><text:span text:style-name="T4">i</text:span><text:span text:style-name="T4">l</text:span><text:span text:style-name="T4">e</text:span><text:span text:style-name="T4">(</text:span><text:span text:style-name="T4">z</text:span><text:span text:style-name="T4">,</text:span><text:span text:style-name="T4"> </text:span><text:span text:style-name="T4">d</text:span><text:span text:style-name="T3">m</text:span><text:span text:style-name="T3">a</text:span><text:span text:style-name="T3">x</text:span><text:span text:style-name="T4">)</text:span><text:span text:style-name="T4"> </text:span><text:span text:style-name="T4">{</text:span></text:p>
+      <text:p><text:span text:style-name="T4"><text:s/></text:span><text:span text:style-name="T4"><text:s/></text:span><text:span text:style-name="T4"><text:s/></text:span><text:span text:style-name="T4"><text:s/></text:span><text:span text:style-name="T4"><text:s/></text:span><text:span text:style-name="T4"><text:s/></text:span><text:span text:style-name="T4">f</text:span><text:span text:style-name="T4">o</text:span><text:span text:style-name="T4">r</text:span><text:span text:style-name="T4"> </text:span><text:span text:style-name="T4">e</text:span><text:span text:style-name="T4">a</text:span><text:span text:style-name="T4">c</text:span><text:span text:style-name="T4">h</text:span><text:span text:style-name="T4"> </text:span><text:span text:style-name="T4">d</text:span><text:span text:style-name="T3">i</text:span><text:span text:style-name="T4"> </text:span><text:span text:style-name="T4">{</text:span></text:p>
+      <text:p><text:span text:style-name="T4"><text:s/></text:span><text:span text:style-name="T4"><text:s/></text:span><text:span text:style-name="T4"><text:s/></text:span><text:span text:style-name="T4"><text:s/></text:span><text:span text:style-name="T4"><text:s/></text:span><text:span text:style-name="T4"><text:s/></text:span><text:span text:style-name="T4"><text:s/></text:span><text:span text:style-name="T4"><text:s/></text:span><text:span text:style-name="T4">i</text:span><text:span text:style-name="T4">f</text:span><text:span text:style-name="T4"> </text:span><text:span text:style-name="T4">(</text:span><text:span text:style-name="T4">d</text:span><text:span text:style-name="T3">i</text:span><text:span text:style-name="T3"> </text:span><text:span text:style-name="T4">&lt;</text:span><text:span text:style-name="T4"> </text:span><text:span text:style-name="T4">d</text:span><text:span text:style-name="T3">m</text:span><text:span text:style-name="T3">a</text:span><text:span text:style-name="T3">x</text:span><text:span text:style-name="T4">)</text:span></text:p>
+      <text:p><text:span text:style-name="T4"><text:s/></text:span><text:span text:style-name="T4"><text:s/></text:span><text:span text:style-name="T4"><text:s/></text:span><text:span text:style-name="T4"><text:s/></text:span><text:span text:style-name="T4"><text:s/></text:span><text:span text:style-name="T4"><text:s/></text:span><text:span text:style-name="T4"><text:s/></text:span><text:span text:style-name="T4"><text:s/></text:span><text:span text:style-name="T4"><text:s/></text:span><text:span text:style-name="T4"><text:s/></text:span><text:span text:style-name="T4"><text:s/></text:span><text:span text:style-name="T4">t</text:span><text:span text:style-name="T4">i</text:span><text:span text:style-name="T4">l</text:span><text:span text:style-name="T4">e</text:span><text:span text:style-name="T4">s</text:span><text:span text:style-name="T4">.</text:span><text:span text:style-name="T4">p</text:span><text:span text:style-name="T4">u</text:span><text:span text:style-name="T4">s</text:span><text:span text:style-name="T4">h</text:span><text:span text:style-name="T4">(</text:span><text:span text:style-name="T4">t</text:span><text:span text:style-name="T4">i</text:span><text:span text:style-name="T4">l</text:span><text:span text:style-name="T4">e</text:span><text:span text:style-name="T4">(</text:span><text:span text:style-name="T4">d</text:span><text:span text:style-name="T4">,</text:span><text:span text:style-name="T4"> </text:span><text:span text:style-name="T4">z</text:span><text:span text:style-name="T4">)</text:span><text:span text:style-name="T4">)</text:span><text:span text:style-name="T4">;</text:span></text:p>
+      <text:p><text:span text:style-name="T4"><text:s/></text:span><text:span text:style-name="T4"><text:s/></text:span><text:span text:style-name="T4"><text:s/></text:span><text:span text:style-name="T4"><text:s/></text:span><text:span text:style-name="T4"><text:s/></text:span><text:span text:style-name="T4"><text:s/></text:span><text:span text:style-name="T4">}</text:span></text:p>
+      <text:p><text:span text:style-name="T4"><text:s/></text:span><text:span text:style-name="T4"><text:s/></text:span><text:span text:style-name="T4"><text:s/></text:span><text:span text:style-name="T4"><text:s/></text:span><text:span text:style-name="T4"><text:s/></text:span><text:span text:style-name="T4"><text:s/></text:span><text:span text:style-name="T4">c</text:span><text:span text:style-name="T4">o</text:span><text:span text:style-name="T4">l</text:span><text:span text:style-name="T4">l</text:span><text:span text:style-name="T4">e</text:span><text:span text:style-name="T4">c</text:span><text:span text:style-name="T4">t</text:span><text:span text:style-name="T4">(</text:span><text:span text:style-name="T4">t</text:span><text:span text:style-name="T4">i</text:span><text:span text:style-name="T4">l</text:span><text:span text:style-name="T4">e</text:span><text:span text:style-name="T4">s</text:span><text:span text:style-name="T4">)</text:span><text:span text:style-name="T4">;</text:span></text:p>
+      <text:p><text:span text:style-name="T4"><text:s/></text:span><text:span text:style-name="T4"><text:s/></text:span><text:span text:style-name="T4"><text:s/></text:span><text:span text:style-name="T4"><text:s/></text:span><text:span text:style-name="T4">}</text:span></text:p>
+      <text:p><text:span text:style-name="T4"/></text:p>
+     </draw:text-box>
+    </draw:frame></text:p>
+   <text:p text:style-name="P1"/>
+   <text:p text:style-name="P1"/>
+   <text:p text:style-name="P1"/>
+   <text:p text:style-name="P1"/>
+   <text:p text:style-name="P1"/>
+   <text:p text:style-name="P1"/>
+   <text:p text:style-name="P1"/>
+   <text:p text:style-name="P1"/>
+   <text:p text:style-name="P1"/>
+   <text:p text:style-name="P1"/>
+   <text:p text:style-name="P1"/>
+   <text:p text:style-name="P1"/>
+   <text:p text:style-name="P1"/>
+   <text:p text:style-name="P1"/>
+  </office:text>
+ </office:body>
+</office:document>

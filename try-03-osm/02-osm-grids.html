@@ -19,7 +19,7 @@
 	<table style="width:100%">
 		<tr><td>TODO: <a href='https://docs.mapbox.com/vector-tiles/reference/'>Vector Tiles</a></td></tr>
 		<tr><td style="width:60%"><div id="container" style="height:900px"></div></td>
-			<td><h4>a = 500, R = 6372.7982</h4><br>
+			<td><h4>R = 6372.7982, a = R</h4><br>
 				rotation (degree) = [ <input id='ux' style='width:2em' placeholder='x' value='0'></input>
 							  <input id='uy' style='width:2em' placeholder='y' value='0'></input>
 							  <input id='uz' style='width:2em' placeholder='z' value='5'></input> ]<br>
@@ -57,7 +57,8 @@
 
 		/** a of Mercator Projection
 		 * see https://en.wikipedia.org/wiki/Mercator_projection#Cylindrical_projections */
-		const a = 500;
+		// const a = 500;
+		const a = R;
 
 		const opts = {
 			uniforms: {
@@ -74,7 +75,7 @@
 		var camera, scene, renderer, controls;
 		var hot;
 
-		scene = init('container');
+		scene = init('container', a);
 		updateFrustum(scene, 'hot', 'tile');
 		animate();
 
@@ -133,7 +134,7 @@
 		 */
 		function pointsBuff(z, a) {
 			if (a === undefined)
-				a = 500;
+				a = R;
 			var step = 10;
 
 			var points = osmGlobeTiles(z, a); // a = 500
@@ -141,7 +142,7 @@
 			geometry.addAttribute( 'position', new THREE.BufferAttribute( points, 3 ) );
 
 			var grid = new THREE.Points(geometry,
-					new THREE.PointsMaterial( { color: 0xffffff, size: 3 } ) );
+					new THREE.PointsMaterial( { color: 0xffffff, size: 30 } ) );
 			return grid;
 		}
 
@@ -156,7 +157,7 @@
 			scene.background = new THREE.Color( 0x000104 );
 			// camera = new THREE.PerspectiveCamera( 20, window.innerWidth / window.innerHeight, 1, 50000 );
 			camera = new THREE.PerspectiveCamera( 50, container.clientWidth / container.clientHeight, 1, 50000 );
-			camera.position.set( 0, 0, 1200 );
+			camera.position.set( 0, 0, a * 2.8 );
 			camera.lookAt( scene.position );
 
 			renderer = new THREE.WebGLRenderer( { antialias: true } );
