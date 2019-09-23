@@ -13,7 +13,140 @@
 
 </head>
 <body>
+	<img id='tile'></img>
     <script>
+		// web worker tutorial: https://www.html5rocks.com/en/tutorials/workers/basics/
+		const work = `
+self.addEventListener('message', function(e) {
+  var data = e.data;
+  switch (data.cmd) {
+    case 'ping':
+      self.postMessage('Pong: ' + data.msg.name);
+      break;
+    case 'osm':
+      // self.postMessage('Pong: ' + data.msg.name);
+	  // endup with postMessage({code: 'texture'}, tiles)
+	  loadOsm(data.xyz);
+      break;
+    case 'stop':
+      self.postMessage('WORKER STOPPED: ' + data.msg );
+      self.close(); // Terminates the worker.
+      break;
+    case 'tile': // handle tile
+      console.log(data);
+	  break;
+    default:
+      self.postMessage('Unknown command: ' + data.msg);
+  };
+}, false);
+
+function loadOsm(xyzs) {
+	if (Array.isArray(xyzs)) {
+		xyzs.forEach(function(xyz, ix){
+			loadTile(xyz);
+		});
+	}
+	else if (typeof xyzs === 'object' && typeof xyzs.z === 'number')
+		loadTile(xyzs);
+}
+
+function loadTile(xyz) {
+	var url = 'https://a.tile.openstreetmap.org/'
+				+ xyz.z + '/' + xyz.x + '/' + xyz.y + '.png';
+	console.log(url);
+	Request.getOsm(url, e => {
+		console.log(e.length, e);
+		var e0 = new Uint8Array(e);
+		postMessage({code: 'tile', img: e0}, [e0.buffer]);
+	});
+}
+
+// so 'class' can work in web worker
+// see https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/Using_XMLHttpRequest
+class Request {
+  static load (url, callback) {
+    const req = new XMLHttpRequest();
+	req.responseType = "arraybuffer";
+
+    const timer = setTimeout(t => {
+      if (req.readyState !== 4) {
+        req.abort();
+        callback('status');
+      }
+    }, 10000);
+
+    req.onreadystatechange = () => {
+      if (req.readyState !== 4) {
+        return;
+      }
+
+      clearTimeout(timer);
+
+      if (!req.status || req.status < 200 || req.status > 299) {
+        callback('status');
+        return;
+      }
+
+      callback(null, req);
+    };
+
+    req.open('GET', url);
+    req.send(null);
+
+    return {
+      abort: () => {
+        req.abort();
+      }
+    };
+  }
+
+  static getOsm (url, callback) {
+    return this.load(url, (err, res) => {
+      if (err) {
+        callback(err);
+        return;
+      }
+      if (!res.response) {
+        callback('content not correct');
+        return;
+      }
+
+      let json;
+      try {
+		console.log(res.response);
+        // json = JSON.parse(res.responseText);
+        callback(res.response);
+      } catch (ex) {
+        // console.warn('Could not parse JSON from ' + url);
+        callback('content');
+      }
+    });
+  }
+
+  static getJSON (url, callback) {
+    return this.load(url, (err, res) => {
+      if (err) {
+        callback(err);
+        return;
+      }
+      if (!res.responseText) {
+        callback('content');
+        return;
+      }
+
+      let json;
+      try {
+        json = JSON.parse(res.responseText);
+        callback(null, json);
+      } catch (ex) {
+        console.warn('Could not parse JSON from ' + url);
+        callback('content');
+      }
+    });
+  }
+}
+`;
+
 		var camera, controls, scene, renderer;
 		init();
 		//render(); // remove when using next line for animation loop (requestAnimationFrame)
@@ -94,14 +227,43 @@
 			}
 		}
 
-		/**
+		var worker;
+		/**turorial: https://www.html5rocks.com/en/tutorials/workers/basics/
 		 * @param {object} opts
 		 * @@param {object} opts.position {longitude, latitude}
 		 * @@param {int} z OSM zoom level
 		 * @return {THREE.Mesh} meshes
 		 */
 		function loadingOsm(opts) {
+			if (worker === undefined) {
+				var blob = new Blob([work]);
+				var url = window.URL.createObjectURL(blob);
+				worker = new Worker(url);
+				worker.addEventListener('message', onOk, false);
+				worker.addEventListener('error', onErr, false);
+
+				var msg = {name: 'function loadingOsm'};
+				worker.postMessage({cmd: 'ping', msg: msg}); // Start worker without a message.
+			}
+			worker.postMessage({cmd: 'osm', xyz: [{x: 0, y: 0, z: 0}]});
 		}
+
+		function onOk (e) {
+			console.log(e);
+			if (e.data.code === 'tile') {
+				console.log(e.data);
+				// worker.postMessage({cmd: 'tile', xyz: e.data.xyz}, e.data.bytes);
+				var blob = new Blob( [ e.data.img ], { type: "image/jpeg" } );
+			    var imageUrl = window.URL.createObjectURL( blob );
+			    var img = document.querySelector( "#tile" );
+			    img.src = imageUrl;
+			}
+		}
+
+		function onErr (e) {
+			console.error(e);
+		}
+
     </script>
 </body>
 </html>
