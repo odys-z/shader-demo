@@ -62,7 +62,7 @@ function loadTile(xyz) {
 }
 
 // so 'class' can work in web worker
-// see https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/Using_XMLHttpRequest
+// for request in worker, see https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/Using_XMLHttpRequest
 class Request {
   static load (url, callback) {
     const req = new XMLHttpRequest();
@@ -147,6 +147,7 @@ class Request {
 }
 `;
 
+		var groundMeshes;
 		var camera, controls, scene, renderer;
 		init();
 		//render(); // remove when using next line for animation loop (requestAnimationFrame)
@@ -177,7 +178,7 @@ class Request {
 
         	var osm = { position: { latitude: 30.6765, longitude: 104.09856 },
 						z: 15};
-			loadingOsm(osm);
+			testOsm(osm);
 
 			// lights
 			var light = new THREE.DirectionalLight( 0xffffff );
@@ -227,43 +228,95 @@ class Request {
 			}
 		}
 
-		var worker;
+		var tilesKeeper;
 		/**turorial: https://www.html5rocks.com/en/tutorials/workers/basics/
 		 * @param {object} opts
 		 * @@param {object} opts.position {longitude, latitude}
 		 * @@param {int} z OSM zoom level
 		 * @return {THREE.Mesh} meshes
 		 */
-		function loadingOsm(opts) {
-			if (worker === undefined) {
-				var blob = new Blob([work]);
-				var url = window.URL.createObjectURL(blob);
-				worker = new Worker(url);
-				worker.addEventListener('message', onOk, false);
-				worker.addEventListener('error', onErr, false);
-
-				var msg = {name: 'function loadingOsm'};
-				worker.postMessage({cmd: 'ping', msg: msg}); // Start worker without a message.
+		function testOsm(opts) {
+			if (tilesKeeper === undefined) {
+				tilesKeeper = initilesKeeper();
 			}
-			worker.postMessage({cmd: 'osm', xyz: [{x: 0, y: 0, z: 0}]});
+			var msg = {name: 'function loadingOsm'};
+			tilesKeeper.postMessage({cmd: 'ping', msg: msg}); // Start worker
+
+			tilesKeeper.postMessage({cmd: 'osm', xyz: [{x: 0, y: 0, z: 0}]});
 		}
 
-		function onOk (e) {
+		function initilesKeeper () {
+			var blob = new Blob([work]);
+			var url = window.URL.createObjectURL(blob);
+			var tilesKeeper = new Worker(url);
+			tilesKeeper.addEventListener('message', onOsmReady, false);
+			tilesKeeper.addEventListener('error', onErr, false);
+			return tilesKeeper;
+		}
+
+		function onOsmReady (e) {
 			console.log(e);
+			// on tile loaded
 			if (e.data.code === 'tile') {
 				console.log(e.data);
-				// worker.postMessage({cmd: 'tile', xyz: e.data.xyz}, e.data.bytes);
-				var blob = new Blob( [ e.data.img ], { type: "image/jpeg" } );
-			    var imageUrl = window.URL.createObjectURL( blob );
-			    var img = document.querySelector( "#tile" );
-			    img.src = imageUrl;
+				{	var blob = new Blob( [ e.data.img ], { type: "image/jpeg" } );
+					var imageUrl = window.URL.createObjectURL( blob );
+					var img = document.querySelector( "#tile" );
+					img.src = imageUrl;
+				}
+				// tileKeeper.postMessage({cmd: 'set-ground', xyz: e.data.xyz}, e.data.bytes);
 			}
 		}
 
-		function onErr (e) {
-			console.error(e);
+		function onErr (e) { console.error(e); }
+
+		function startOsm (opts) {
+			if (tilesKeeper === undefined) {
+				tilesKeeper = initilesKeeper();
+			}
+			var msg = {name: 'function loadingOsm'};
+			tilesKeeper.postMessage({cmd: 'ping', msg: msg}); // Start worker
+
+			// tilesKeeper.postMessage({
+			// 			cmd: 'collect',
+			//         	// position: { latitude: 52.519090218, longitude: 13.401094079, z: 16 }, // Berliner Dom
+			//         	position: { latitude: 30.6765, longitude: 104.09856, z: 16 }, // UESTC
+			// 			cam: {pos: {x: 0, y: -50, z: 10},
+			// 				  up: {0, 1, 0},
+			// 				  lookAt: {x: 0, y: -0, z: 0}}
+			// 		});
+
+			// debug:
+			var osmTiles = findTiles( {	worldMat4: new THREE.Matrix4,
+										opts.castMatrix } );
+			groundMeshes = tile2ground(groundMeshes, osmTiles);
+			// TODO purge
 		}
 
+		function findTiles (cam, castMatrix) {
+			var m = cam.worldMat4;
+			m.multiply(cam.castMatrix);
+			var raytarges = osmUtils.getRayTargets(m, [4, 3]);
+
+			var geometry = new THREE.Geometry();
+			var osmTiles = {};
+			for ( var ix = 0; ix < raytarges.count; ix++ ) {
+				var x = raytarges.getX(ix);
+				var y = raytarges.getY(ix);
+				var z = raytarges.getZ(ix);
+				geometry.vertices.push(new THREE.Vector3( x, y, z ));
+				geometry.vertices.push(c0);
+
+				osmUtils.collectOsmTiles(osmTiles, [x, y, z], c0, R);
+			}
+			if (debug) console.log(osmTiles);
+			return osmTiles;
+		}
+
+		// Mesh can not handled by worker?
+		function tile2ground (ground, tiles) {
+			
+		}
     </script>
 </body>
 </html>

@@ -100,8 +100,8 @@
 			3555: 97.08, -48.93, 488.04</pre>
 		 */
 		function osmGlobeTiles(zoom, a) {
-			// X goes from 0 (left edge is 180 °W) to 2zoom − 1 (right edge is 180 °E)<br>
-			// Y goes from 0 (top edge is 85.0511 °N) to 2zoom − 1 (bottom edge is 85.0511 °S) in a Mercator projection
+			// X goes from 0 (left edge is 180 °W) to 2^zoom − 1 (right edge is 180 °E)<br>
+			// Y goes from 0 (top edge is 85.0511 °N) to 2^zoom − 1 (bottom edge is 85.0511 °S) in a Mercator projection
 			zoom = Math.min(zoom, 8);
 			var max = Math.pow(2, zoom);
 			var grids = new Float32Array( max * max * 3 );
@@ -172,38 +172,6 @@
 			window.addEventListener( 'resize', onWindowResize, false );
 			return scene;
 		}
-
-		/**@deprecated Use getUserMatrix(a)
-		 * Collect transform settings set by inputs.
-		 * @param {THREE.Object3D} obj
-		 * @param {number} a model radius
-		 * @return {THREE.Object3D} obj
-		function trans2(obj, a) {
-			var px = document.querySelector('#px').value;
-			var py = document.querySelector('#py').value;
-			var pz = document.querySelector('#pz').value;
-			var p = rad2cart(px * Math.PI / 180, py * Math.PI / 180, a + pz * 1.);
-			obj.position.set(p.x, p.y, p.z);
-
-			var lx = document.querySelector('#lx').value;
-			var ly = document.querySelector('#ly').value;
-			var lz = document.querySelector('#lz').value;
-			var look = rad2cart(lx * Math.PI / 180, ly * Math.PI / 180, a + lz * 1.);
-			obj.lookAt(look.x, look.y, look.z);
-
-			var rx = document.querySelector('#ux').value;
-			var ry = document.querySelector('#uy').value;
-			var rz = document.querySelector('#uz').value;
-			obj.rotateX(rx * Math.PI / 180);
-			obj.rotateY(ry * Math.PI / 180);
-			obj.rotateZ(rz * Math.PI / 180);
-
-			castscreen.updateMatrix();
-			castscreen.updateMatrixWorld();
-			console.log(`trans2(${obj.type}.matrix, ${a})`, obj.matrix);
-			return obj;
-		}
-		 */
 
 		function getUserPos(a) {
 			var px = document.querySelector('#px').value;
