@@ -75,11 +75,11 @@ function urlTile(x, y, z) {
 
 /**If xyz is not in tiles, add new xyz to tiles.
  * @param {object} tiles {z: {x0: {y00: world00, ...}, {x1: {y10: world10, ...}, ...}}}
- * @param {vec3} c0 [x, y, z] center / eye
  * @param {vec3} dir [x, y, z] dir
- * @return {object} tiles
+ * @param {vec3} c0 [x, y, z] center / eye
+ * @return {object} tiles {z: {x: {y: {lon, lat}}}}
  */
-function collectOsmTiles(tiles, dir, c0, a) {
+function castOsmTiles(tiles, dir, c0, a) {
 	dir = normalize(dir, [c0.x, c0.y, c0.z]);
 	var p = castPosition ([c0.x, c0.y, c0.z], dir, a);
 	if (p) {

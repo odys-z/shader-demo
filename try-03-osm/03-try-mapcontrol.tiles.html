@@ -13,7 +13,7 @@
 
 </head>
 <body>
-	<img id='tile'></img>
+	<img id='tile' onclick='testChang()'></img>
     <script>
 		// web worker tutorial: https://www.html5rocks.com/en/tutorials/workers/basics/
 		const work = `
@@ -57,7 +57,7 @@ function loadTile(xyz) {
 	Request.getOsm(url, e => {
 		console.log(e.length, e);
 		var e0 = new Uint8Array(e);
-		postMessage({code: 'tile', img: e0}, [e0.buffer]);
+		postMessage({code: 'tile', img: e0, xyz}, [e0.buffer]);
 	});
 }
 
@@ -155,8 +155,8 @@ class Request {
 
 		function init() {
 			scene = new THREE.Scene();
-			scene.background = new THREE.Color( 0xcccccc );
-			scene.fog = new THREE.FogExp2( 0xcccccc, 0.002 );
+			scene.background = new THREE.Color( 0x0c0c1c );
+			// scene.fog = new THREE.FogExp2( 0xcccccc, 0.002 );
 			renderer = new THREE.WebGLRenderer( { antialias: true } );
 			renderer.setPixelRatio( window.devicePixelRatio );
 			renderer.setSize( window.innerWidth, window.innerHeight );
@@ -185,15 +185,14 @@ class Request {
 			light.position.set( 1, 1, 1 );
 			scene.add( light );
 			var light = new THREE.DirectionalLight( 0x002288 );
-			light.position.set( - 1, - 1, - 1 );
+			light.position.set( -1, -1, -1 );
 			scene.add( light );
 			var light = new THREE.AmbientLight( 0x222222 );
 			scene.add( light );
 			//
 			window.addEventListener( 'resize', onWindowResize, false );
-			// var gui = new GUI();
-			// gui.add( controls, 'screenSpacePanning' );
 		}
+
 		function onWindowResize() {
 			camera.aspect = window.innerWidth / window.innerHeight;
 			camera.updateProjectionMatrix();
@@ -239,6 +238,10 @@ class Request {
 			if (tilesKeeper === undefined) {
 				tilesKeeper = initilesKeeper();
 			}
+
+			groundMeshes = updateGround(groundMeshes, {z: 0});
+			// TODO purge
+
 			var msg = {name: 'function loadingOsm'};
 			tilesKeeper.postMessage({cmd: 'ping', msg: msg}); // Start worker
 
@@ -265,6 +268,8 @@ class Request {
 					img.src = imageUrl;
 				}
 				// tileKeeper.postMessage({cmd: 'set-ground', xyz: e.data.xyz}, e.data.bytes);
+
+				setOsmTexture(e.data.xyz, imageUrl);
 			}
 		}
 
@@ -287,12 +292,17 @@ class Request {
 			// 		});
 
 			// debug:
-			var osmTiles = findTiles( {	worldMat4: new THREE.Matrix4,
-										opts.castMatrix } );
-			groundMeshes = tile2ground(groundMeshes, osmTiles);
+			var osmTiles = findTiles( {	worldMat4: new THREE.Matrix4 },
+									  opts.castMatrix );
+			// groundMeshes = updateGround(groundMeshes, osmTiles);
 			// TODO purge
 		}
 
+		/**Find osm tiles according to camera position.
+		 * @param {object} cam
+		 * @param {THREE.Matrix4} castMatrix
+ 		 * @return {object} tiles {z: {x: {y: {lon, lat}}}}
+		 */
 		function findTiles (cam, castMatrix) {
 			var m = cam.worldMat4;
 			m.multiply(cam.castMatrix);
@@ -307,15 +317,108 @@ class Request {
 				geometry.vertices.push(new THREE.Vector3( x, y, z ));
 				geometry.vertices.push(c0);
 
-				osmUtils.collectOsmTiles(osmTiles, [x, y, z], c0, R);
+				// find tile by ray cast from c0 to dir [x, y, z]
+				osmUtils.castOsmTiles(osmTiles, [x, y, z], c0, R);
 			}
 			if (debug) console.log(osmTiles);
 			return osmTiles;
 		}
 
 		// Mesh can not handled by worker?
-		function tile2ground (ground, tiles) {
-			
+		function updateGround (ground, tiles) {
+			var g = new THREE.PlaneBufferGeometry( 500, 500 );
+
+				// g.computeBoundingSphere();
+				// var scaleFactor = 160 / g.boundingSphere.radius;
+				// g.scale( scaleFactor, scaleFactor, scaleFactor );
+			g.rotateX(-Math.PI * 0.5);
+			g.rotateY(Math.PI * 0.5);
+
+			var material = new THREE.MeshBasicMaterial( {color: 0xff0000, side: THREE.DoubleSide} );
+			// var material = new THREE.MeshPhongMaterial( { color: 0x00ff00, flatShading: true } );
+			ground = new THREE.Mesh( g, material );
+			// ground.scale.y = Math.random() * 80 + 10;
+			// ground.scale.x = Math.random() * 80 + 10;
+			// ground.scale.z = Math.random() * 80 + 10;
+			scene.add(ground);
+			return ground;
+		}
+
+		/**Set loaded osm texture to the ground tile geometry
+		 * For three.js texture loader, see
+		 * https://threejs.org/docs/index.html#api/en/loaders/TextureLoader
+		 * TODO put into work?
+		 * @param {object} osm xyz {x, y, z}
+		 * @param {URL} should be a blob url - ready for building texture
+		 */
+		function setOsmTexture(xyz, blobUrl) {
+			{
+				// instantiate a loader
+				var loader = new THREE.TextureLoader();
+
+				// load a resource
+				loader.load(
+					// resource URL
+					// 'textures/land_ocean_ice_cloud_2048.jpg',
+					blobUrl,
+
+					// onLoad callback
+					function ( texture ) {
+						// in this example we create the material when the texture is loaded
+						var material = new THREE.MeshBasicMaterial( {
+							map: texture
+						 } );
+
+						// var geometry = new THREE.BoxBufferGeometry( 1, 1, 1 );
+						// geometry.translate( 0, 0.5, 0 );
+						// var material = new THREE.MeshPhongMaterial( { color: 0xffffff, flatShading: true } );
+						// for ( var i = 0; i < count; i ++ ) {
+						// 	var mesh = new THREE.Mesh( geometry, material );
+						//
+						// groundMeshes.
+					},
+
+					// onProgress callback currently not supported
+					undefined,
+
+					// onError callback
+					function ( err ) {
+						console.error( 'An error happened loading image' );
+					}
+				);
+			}
+
+		}
+
+		function testChang () {
+			console.log('change');
+			var loader = new THREE.TextureLoader();
+
+			// load a resource
+			loader.load(
+				// resource URL
+				'https://a.tile.openstreetmap.org/0/0/0.png',
+
+				// onLoad callback
+				function ( texture ) {
+					// in this example we create the material when the texture is loaded
+					var material = new THREE.MeshBasicMaterial( {
+						map: texture
+					 } );
+
+					// groundMeshes.material.map = texture;
+					groundMeshes.material = material;
+					groundMeshes.material.map.needsUpdate = true;
+				},
+
+				// onProgress callback currently not supported
+				undefined,
+
+				// onError callback
+				function ( err ) {
+					console.error( 'An error happened.' );
+				}
+			);
 		}
     </script>
 </body>
