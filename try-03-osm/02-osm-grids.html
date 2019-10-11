@@ -350,9 +350,9 @@
 			else alert('Please select a cell.');
 		}
 
-		/**Apply matWorld to poses position.
-		 * If poses is cast screen's points, and mat is user's settings,
-		 * this function will return it's positions in world.
+		/**Apply matWorld to ${poses} position.
+		 * If poses is the cast screen's points, and ${matWorld} is the user's
+		 * eye (pos, up, dir), this function will return it's positions in world.
 		 * @param {Float32Array} poses the verices buffer
 		 * @param {THREE.Matrix4} matWorld world matrix
 		 * @param {THREE.Matrix4} matLocal model matrix

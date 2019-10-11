@@ -149,6 +149,8 @@ class Request {
 
 		var groundMeshes;
 		var camera, controls, scene, renderer;
+
+		var blankMaterial = new THREE.MeshBasicMaterial( {color: 0x00c0c0, side: THREE.DoubleSide} );
 		init();
 		//render(); // remove when using next line for animation loop (requestAnimationFrame)
 		animate();
@@ -173,12 +175,15 @@ class Request {
 			controls.maxDistance = 500;
 			controls.maxPolarAngle = Math.PI / 2;
 
+			o3 = new O3(renderer.domElement, {control: controls});
+
 			// random buildings
 			addRandomesh(scene, 50);
 
         	var osm = { position: { latitude: 30.6765, longitude: 104.09856 },
 						z: 15};
-			testOsm(osm);
+			// testOsm(osm);
+			startOsm(osm);
 
 			// lights
 			var light = new THREE.DirectionalLight( 0xffffff );
@@ -254,6 +259,15 @@ class Request {
 			var tilesKeeper = new Worker(url);
 			tilesKeeper.addEventListener('message', onOsmReady, false);
 			tilesKeeper.addEventListener('error', onErr, false);
+			tilesKeeper.tiles = {};
+			tilesKeeper.getiles = (xyz) => {
+				var tiles = tilesKeeper;
+				if (tiles[xyz.z]) {
+					if (tiles[xyz.z][xyz.x]) {
+						return tiles[xyz.z][xyz.x][xyz.y];
+					}
+				}
+			}
 			return tilesKeeper;
 		}
 
@@ -291,25 +305,35 @@ class Request {
 			// 				  lookAt: {x: 0, y: -0, z: 0}}
 			// 		});
 
-			// debug:
-			var osmTiles = findTiles( {	worldMat4: new THREE.Matrix4 },
-									  opts.castMatrix );
+			var osmTiles = findTiles(osmTiles,
+									{worldMat4: new THREE.Matrix4() },
+									opts.castMatrix );
+			console.log(osmTiles);
+			tilesKeeper.tiles = osmTiles;
+
 			// groundMeshes = updateGround(groundMeshes, osmTiles);
 			// TODO purge
 		}
 
 		/**Find osm tiles according to camera position.
+		 * @param {object} osmTiles osm tile collection {z: {x: {y: tileInf}}}<br>
+		 * tileInf: lon, lat, mesh, world
 		 * @param {object} cam
 		 * @param {THREE.Matrix4} castMatrix
- 		 * @return {object} tiles {z: {x: {y: {lon, lat}}}}
+ 		 * @return {object} tiles {z: {x: {y: {tileInf}}}}
 		 */
-		function findTiles (cam, castMatrix) {
+		function findTiles (osmTiles, cam, castMatrix) {
+			if (osmTiles === undefined) {
+				osmTiles = {};
+			}
+
 			var m = cam.worldMat4;
-			m.multiply(cam.castMatrix);
-			var raytarges = osmUtils.getRayTargets(m, [4, 3]);
+			if (cam && cam.castMatrix) {
+				m.multiply(cam.castMatrix);
+			}
+			var raytarges = o3.getRayTargets(m, [4, 3]);
 
 			var geometry = new THREE.Geometry();
-			var osmTiles = {};
 			for ( var ix = 0; ix < raytarges.count; ix++ ) {
 				var x = raytarges.getX(ix);
 				var y = raytarges.getY(ix);
@@ -318,9 +342,14 @@ class Request {
 				geometry.vertices.push(c0);
 
 				// find tile by ray cast from c0 to dir [x, y, z]
-				osmUtils.castOsmTiles(osmTiles, [x, y, z], c0, R);
+				osmUtils.collectOsmTiles(osmTiles, [x, y, z], c0, R);
+				var tile = osmTiles[z][x][y];
+				if (tile.mesh === undefined) {
+					tile.mesh = new THREE.Mesh(tile.geom(), basicMaterial);
+				}
+				tilesKeeper.postMessage({cmd: 'osm', xyz: [{x, y, z}]});
 			}
-			if (debug) console.log(osmTiles);
+			if (debug) console.log('osmTiles', osmTiles);
 			return osmTiles;
 		}
 
@@ -328,18 +357,14 @@ class Request {
 		function updateGround (ground, tiles) {
 			var g = new THREE.PlaneBufferGeometry( 500, 500 );
 
-				// g.computeBoundingSphere();
-				// var scaleFactor = 160 / g.boundingSphere.radius;
-				// g.scale( scaleFactor, scaleFactor, scaleFactor );
+			// g.computeBoundingSphere();
+			// var scaleFactor = 160 / g.boundingSphere.radius;
+			// g.scale( scaleFactor, scaleFactor, scaleFactor );
 			g.rotateX(-Math.PI * 0.5);
 			g.rotateY(Math.PI * 0.5);
 
-			var material = new THREE.MeshBasicMaterial( {color: 0xff0000, side: THREE.DoubleSide} );
-			// var material = new THREE.MeshPhongMaterial( { color: 0x00ff00, flatShading: true } );
-			ground = new THREE.Mesh( g, material );
-			// ground.scale.y = Math.random() * 80 + 10;
-			// ground.scale.x = Math.random() * 80 + 10;
-			// ground.scale.z = Math.random() * 80 + 10;
+			// var material = new THREE.MeshBasicMaterial( {color: 0xff0000, side: THREE.DoubleSide} );
+			ground = new THREE.Mesh( g, blankMaterial );
 			scene.add(ground);
 			return ground;
 		}
@@ -369,13 +394,16 @@ class Request {
 							map: texture
 						 } );
 
-						// var geometry = new THREE.BoxBufferGeometry( 1, 1, 1 );
-						// geometry.translate( 0, 0.5, 0 );
-						// var material = new THREE.MeshPhongMaterial( { color: 0xffffff, flatShading: true } );
-						// for ( var i = 0; i < count; i ++ ) {
-						// 	var mesh = new THREE.Mesh( geometry, material );
-						//
-						// groundMeshes.
+						// groundMeshes.material = material;
+						// groundMeshes.material.map.needsUpdate = true;
+						var tile = tilesKeeper.getiles(xyz);
+						if (tile) {
+							tile.mesh.materail = materail;
+							tile.mesh.material.map.needsUpdate = true;
+						}
+						else {
+							console.error('No tile for texture?', xyz);
+						}
 					},
 
 					// onProgress callback currently not supported
@@ -387,7 +415,6 @@ class Request {
 					}
 				);
 			}
-
 		}
 
 		function testChang () {
@@ -407,6 +434,7 @@ class Request {
 					 } );
 
 					// groundMeshes.material.map = texture;
+					tilesKeeper.tiles = groundMeshes;
 					groundMeshes.material = material;
 					groundMeshes.material.map.needsUpdate = true;
 				},
