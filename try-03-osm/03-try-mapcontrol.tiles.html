@@ -261,10 +261,10 @@ class Request {
 			tilesKeeper.addEventListener('error', onErr, false);
 			tilesKeeper.tiles = {};
 			tilesKeeper.getiles = (xyz) => {
-				var tiles = tilesKeeper;
-				if (tiles[xyz.z]) {
-					if (tiles[xyz.z][xyz.x]) {
-						return tiles[xyz.z][xyz.x][xyz.y];
+				var ztiles = tilesKeeper.tiles[xyz.z];
+				if (ztiles) {
+					if (ztiles[xyz.x]) {
+						return ztiles[xyz.x][xyz.y];
 					}
 				}
 			}
