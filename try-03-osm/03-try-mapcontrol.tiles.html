@@ -306,7 +306,9 @@ class Request {
 			// 		});
 
 			var osmTiles = findTiles(osmTiles,
-									{worldMat4: new THREE.Matrix4() },
+									{worldMat4: new THREE.Matrix4(),
+									 position { lat: 30.6765, lon: 104.09856 },
+									 z: 16 },
 									opts.castMatrix );
 			console.log(osmTiles);
 			tilesKeeper.tiles = osmTiles;
@@ -331,6 +333,7 @@ class Request {
 			if (cam && cam.castMatrix) {
 				m.multiply(cam.castMatrix);
 			}
+			var c0 = new THREE.Vector3(cam.position);
 			var raytarges = o3.getRayTargets(m, [4, 3]);
 
 			var geometry = new THREE.Geometry();
