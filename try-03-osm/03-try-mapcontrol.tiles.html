@@ -9,418 +9,441 @@
 	<script type='text/javascript' src='../3rd-lib/three.js/three.min.js'></script>
 	<script type='text/javascript' src='../3rd-lib/three.js/three.module.js'></script>
 	<script type='text/javascript' src='../3rd-lib/three.js/OrbitControls.js'></script>
-	<script type='text/javascript' src='../lib/osm-shader.js'></script>
-
+	<script type='text/javascript' src='../lib/osm-shader.chrome.js'></script>
 </head>
 <body>
-	<img id='tile' onclick='testChang()'></img>
-    <script>
+  <img id='tile' onclick='testChang()'></img>
+  <script>
 		// web worker tutorial: https://www.html5rocks.com/en/tutorials/workers/basics/
-		const work = `
-self.addEventListener('message', function(e) {
-  var data = e.data;
-  switch (data.cmd) {
-    case 'ping':
-      self.postMessage('Pong: ' + data.msg.name);
-      break;
-    case 'osm':
-      // self.postMessage('Pong: ' + data.msg.name);
-	  // endup with postMessage({code: 'texture'}, tiles)
-	  loadOsm(data.xyz);
-      break;
-    case 'stop':
-      self.postMessage('WORKER STOPPED: ' + data.msg );
-      self.close(); // Terminates the worker.
-      break;
-    case 'tile': // handle tile
-      console.log(data);
-	  break;
-    default:
-      self.postMessage('Unknown command: ' + data.msg);
-  };
-}, false);
+   const work = `
+	self.addEventListener('message', function(e) {
+	  var data = e.data;
+	  switch (data.cmd) {
+	    case 'ping':
+	      self.postMessage('Pong: ' + data.msg.name);
+	      break;
+	    case 'osm':
+	      // self.postMessage('Pong: ' + data.msg.name);
+		  // endup with postMessage({code: 'texture'}, tiles)
+		  loadOsm(data.xyz);
+	      break;
+	    case 'stop':
+	      self.postMessage('WORKER STOPPED: ' + data.msg );
+	      self.close(); // Terminates the worker.
+	      break;
+	    case 'tile': // handle tile
+	      console.log(data);
+		  break;
+	    default:
+	      self.postMessage('Unknown command: ' + data.msg);
+	  };
+	}, false);
 
-function loadOsm(xyzs) {
-	if (Array.isArray(xyzs)) {
-		xyzs.forEach(function(xyz, ix){
-			loadTile(xyz);
+	function loadOsm(xyzs) {
+		if (Array.isArray(xyzs)) {
+			xyzs.forEach(function(xyz, ix){
+				loadTile(xyz);
+			});
+		}
+		else if (typeof xyzs === 'object' && typeof xyzs.z === 'number')
+			loadTile(xyzs);
+	}
+
+	function loadTile(xyz) {
+		var url = 'https://a.tile.openstreetmap.org/'
+					+ xyz.z + '/' + xyz.x + '/' + xyz.y + '.png';
+		console.log(url);
+		Request.getOsm(url, e => {
+			console.log(e.length, e);
+			var e0 = new Uint8Array(e);
+			postMessage({code: 'tile', img: e0, xyz}, [e0.buffer]);
 		});
 	}
-	else if (typeof xyzs === 'object' && typeof xyzs.z === 'number')
-		loadTile(xyzs);
-}
 
-function loadTile(xyz) {
-	var url = 'https://a.tile.openstreetmap.org/'
-				+ xyz.z + '/' + xyz.x + '/' + xyz.y + '.png';
-	console.log(url);
-	Request.getOsm(url, e => {
-		console.log(e.length, e);
-		var e0 = new Uint8Array(e);
-		postMessage({code: 'tile', img: e0, xyz}, [e0.buffer]);
-	});
-}
+	// so 'class' can work in web worker
+	// for request in worker, see https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/Using_XMLHttpRequest
+	class Request {
+		  static load (url, callback) {
+		    const req = new XMLHttpRequest();
+			req.responseType = "arraybuffer";
 
-// so 'class' can work in web worker
-// for request in worker, see https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/Using_XMLHttpRequest
-class Request {
-  static load (url, callback) {
-    const req = new XMLHttpRequest();
-	req.responseType = "arraybuffer";
+		    const timer = setTimeout(t => {
+		      if (req.readyState !== 4) {
+		        req.abort();
+		        callback('status');
+		      }
+		    }, 10000);
 
-    const timer = setTimeout(t => {
-      if (req.readyState !== 4) {
-        req.abort();
-        callback('status');
-      }
-    }, 10000);
+		    req.onreadystatechange = () => {
+		      if (req.readyState !== 4) {
+		        return;
+		      }
 
-    req.onreadystatechange = () => {
-      if (req.readyState !== 4) {
-        return;
-      }
+		      clearTimeout(timer);
 
-      clearTimeout(timer);
+		      if (!req.status || req.status < 200 || req.status > 299) {
+		        callback('status');
+		        return;
+		      }
 
-      if (!req.status || req.status < 200 || req.status > 299) {
-        callback('status');
-        return;
-      }
+		      callback(null, req);
+		    };
 
-      callback(null, req);
-    };
+		    req.open('GET', url);
+		    req.send(null);
 
-    req.open('GET', url);
-    req.send(null);
+		    return {
+		      abort: () => {
+		        req.abort();
+		      }
+		    };
+		  }
 
-    return {
-      abort: () => {
-        req.abort();
-      }
-    };
-  }
+		  static getOsm (url, callback) {
+		    return this.load(url, (err, res) => {
+		      if (err) {
+		        callback(err);
+		        return;
+		      }
+		      if (!res.response) {
+		        callback('content not correct');
+		        return;
+		      }
 
-  static getOsm (url, callback) {
-    return this.load(url, (err, res) => {
-      if (err) {
-        callback(err);
-        return;
-      }
-      if (!res.response) {
-        callback('content not correct');
-        return;
-      }
+		      let json;
+		      try {
+				console.log(res.response);
+		        // json = JSON.parse(res.responseText);
+		        callback(res.response);
+		      } catch (ex) {
+		        // console.warn('Could not parse JSON from ' + url);
+		        callback('content');
+		      }
+		    });
+		  }
 
-      let json;
-      try {
-		console.log(res.response);
-        // json = JSON.parse(res.responseText);
-        callback(res.response);
-      } catch (ex) {
-        // console.warn('Could not parse JSON from ' + url);
-        callback('content');
-      }
-    });
-  }
+		  static getJSON (url, callback) {
+		    return this.load(url, (err, res) => {
+		      if (err) {
+		        callback(err);
+		        return;
+		      }
+		      if (!res.responseText) {
+		        callback('content');
+		        return;
+		      }
 
-  static getJSON (url, callback) {
-    return this.load(url, (err, res) => {
-      if (err) {
-        callback(err);
-        return;
-      }
-      if (!res.responseText) {
-        callback('content');
-        return;
-      }
+		      let json;
+		      try {
+		        json = JSON.parse(res.responseText);
+		        callback(null, json);
+		      } catch (ex) {
+		        console.warn('Could not parse JSON from ' + url);
+		        callback('content');
+		      }
+		    });
+		  }
+		}
+   `;
 
-      let json;
-      try {
-        json = JSON.parse(res.responseText);
-        callback(null, json);
-      } catch (ex) {
-        console.warn('Could not parse JSON from ' + url);
-        callback('content');
-      }
-    });
-  }
-}
-`;
+	var groundMeshes;
+	var camera, controls, scene, renderer;
 
-		var groundMeshes;
-		var camera, controls, scene, renderer;
+	var blankMaterial = new THREE.MeshBasicMaterial( {color: 0x00c0c0, side: THREE.DoubleSide} );
+	init();
+	//render(); // remove when using next line for animation loop (requestAnimationFrame)
+	animate();
 
-		var blankMaterial = new THREE.MeshBasicMaterial( {color: 0x00c0c0, side: THREE.DoubleSide} );
-		init();
-		//render(); // remove when using next line for animation loop (requestAnimationFrame)
-		animate();
+	function init() {
+		scene = new THREE.Scene();
+		scene.background = new THREE.Color( 0x0c0c1c );
+		// scene.fog = new THREE.FogExp2( 0xcccccc, 0.002 );
+		renderer = new THREE.WebGLRenderer( { antialias: true } );
+		renderer.setPixelRatio( window.devicePixelRatio );
+		renderer.setSize( window.innerWidth, window.innerHeight );
+		document.body.appendChild( renderer.domElement );
+		camera = new THREE.PerspectiveCamera( 60, window.innerWidth / window.innerHeight, 1, 1000 );
+		camera.position.set( 400, 200, 0 );
+		// controls
+		controls = new THREE.MapControls( camera, renderer.domElement );
+		//controls.addEventListener( 'change', render ); // call this only in static scenes (i.e., if there is no animation loop)
+		controls.enableDamping = true; // an animation loop is required when either damping or auto-rotation are enabled
+		controls.dampingFactor = 0.05;
+		controls.screenSpacePanning = false;
+		controls.minDistance = 100;
+		controls.maxDistance = 500;
+		controls.maxPolarAngle = Math.PI / 2;
 
-		function init() {
-			scene = new THREE.Scene();
-			scene.background = new THREE.Color( 0x0c0c1c );
-			// scene.fog = new THREE.FogExp2( 0xcccccc, 0.002 );
-			renderer = new THREE.WebGLRenderer( { antialias: true } );
-			renderer.setPixelRatio( window.devicePixelRatio );
-			renderer.setSize( window.innerWidth, window.innerHeight );
-			document.body.appendChild( renderer.domElement );
-			camera = new THREE.PerspectiveCamera( 60, window.innerWidth / window.innerHeight, 1, 1000 );
-			camera.position.set( 400, 200, 0 );
-			// controls
-			controls = new THREE.MapControls( camera, renderer.domElement );
-			//controls.addEventListener( 'change', render ); // call this only in static scenes (i.e., if there is no animation loop)
-			controls.enableDamping = true; // an animation loop is required when either damping or auto-rotation are enabled
-			controls.dampingFactor = 0.05;
-			controls.screenSpacePanning = false;
-			controls.minDistance = 100;
-			controls.maxDistance = 500;
-			controls.maxPolarAngle = Math.PI / 2;
+		o3 = new O3(renderer.domElement, {control: controls});
 
-			o3 = new O3(renderer.domElement, {control: controls});
+		// random buildings
+		addRandomesh(scene, 50);
 
-			// random buildings
-			addRandomesh(scene, 50);
+    	var osm = { position: { latitude: 30.6765, longitude: 104.09856 },
+					z: 15};
+		// testOsm(osm);
+		startOsm(osm);
 
-        	var osm = { position: { latitude: 30.6765, longitude: 104.09856 },
-						z: 15};
-			// testOsm(osm);
-			startOsm(osm);
+		// lights
+		var light = new THREE.DirectionalLight( 0xffffff );
+		light.position.set( 1, 1, 1 );
+		scene.add( light );
+		var light = new THREE.DirectionalLight( 0x002288 );
+		light.position.set( -1, -1, -1 );
+		scene.add( light );
+		var light = new THREE.AmbientLight( 0x222222 );
+		scene.add( light );
+		//
+		window.addEventListener( 'resize', onWindowResize, false );
+	}
 
-			// lights
-			var light = new THREE.DirectionalLight( 0xffffff );
-			light.position.set( 1, 1, 1 );
-			scene.add( light );
-			var light = new THREE.DirectionalLight( 0x002288 );
-			light.position.set( -1, -1, -1 );
-			scene.add( light );
-			var light = new THREE.AmbientLight( 0x222222 );
-			scene.add( light );
-			//
-			window.addEventListener( 'resize', onWindowResize, false );
+	function onWindowResize() {
+		camera.aspect = window.innerWidth / window.innerHeight;
+		camera.updateProjectionMatrix();
+		renderer.setSize( window.innerWidth, window.innerHeight );
+	}
+
+	function animate() {
+		requestAnimationFrame( animate );
+		controls.update(); // only required if controls.enableDamping = true, or if controls.autoRotate = true
+		render();
+	}
+
+	function render() {
+		renderer.render( scene, camera );
+	}
+
+	function addRandomesh(scene, count) {
+		if (count === undefined)
+			count = 200;
+		var geometry = new THREE.BoxBufferGeometry( 1, 1, 1 );
+		geometry.translate( 0, 0.5, 0 );
+		var material = new THREE.MeshPhongMaterial( { color: 0xffffff, flatShading: true } );
+		for ( var i = 0; i < count; i ++ ) {
+			var mesh = new THREE.Mesh( geometry, material );
+			mesh.position.x = Math.random() * 1600 - 800;
+			mesh.position.y = 0;
+			mesh.position.z = Math.random() * 1600 - 800;
+			mesh.scale.x = 20;
+			mesh.scale.y = Math.random() * 80 + 10;
+			mesh.scale.z = 20;
+			mesh.updateMatrix();
+			mesh.matrixAutoUpdate = false;
+			scene.add( mesh );
+		}
+	}
+
+	var tilesKeeper;
+	/**turorial: https://www.html5rocks.com/en/tutorials/workers/basics/
+	 * @param {object} opts
+	 * @@param {object} opts.position {longitude, latitude}
+	 * @@param {int} z OSM zoom level
+	 * @return {THREE.Mesh} meshes
+	 */
+	function testOsm(opts) {
+		if (tilesKeeper === undefined) {
+			tilesKeeper = initilesKeeper();
 		}
 
-		function onWindowResize() {
-			camera.aspect = window.innerWidth / window.innerHeight;
-			camera.updateProjectionMatrix();
-			renderer.setSize( window.innerWidth, window.innerHeight );
-		}
-		function animate() {
-			requestAnimationFrame( animate );
-			controls.update(); // only required if controls.enableDamping = true, or if controls.autoRotate = true
-			render();
-		}
-		function render() {
-			renderer.render( scene, camera );
-		}
+		groundMeshes = updateGround(groundMeshes, {z: 0});
+		// TODO purge
 
-		function addRandomesh(scene, count) {
-			if (count === undefined)
-				count = 200;
-			var geometry = new THREE.BoxBufferGeometry( 1, 1, 1 );
-			geometry.translate( 0, 0.5, 0 );
-			var material = new THREE.MeshPhongMaterial( { color: 0xffffff, flatShading: true } );
-			for ( var i = 0; i < count; i ++ ) {
-				var mesh = new THREE.Mesh( geometry, material );
-				mesh.position.x = Math.random() * 1600 - 800;
-				mesh.position.y = 0;
-				mesh.position.z = Math.random() * 1600 - 800;
-				mesh.scale.x = 20;
-				mesh.scale.y = Math.random() * 80 + 10;
-				mesh.scale.z = 20;
-				mesh.updateMatrix();
-				mesh.matrixAutoUpdate = false;
-				scene.add( mesh );
-			}
-		}
+		var msg = {name: 'function loadingOsm'};
+		tilesKeeper.postMessage({cmd: 'ping', msg: msg}); // Start worker
 
-		var tilesKeeper;
-		/**turorial: https://www.html5rocks.com/en/tutorials/workers/basics/
-		 * @param {object} opts
-		 * @@param {object} opts.position {longitude, latitude}
-		 * @@param {int} z OSM zoom level
-		 * @return {THREE.Mesh} meshes
-		 */
-		function testOsm(opts) {
-			if (tilesKeeper === undefined) {
-				tilesKeeper = initilesKeeper();
-			}
+		tilesKeeper.postMessage({cmd: 'osm', xyz: [{x: 0, y: 0, z: 0}]});
+	}
 
-			groundMeshes = updateGround(groundMeshes, {z: 0});
-			// TODO purge
+	function initilesKeeper () {
+		var blob = new Blob([work]);
+		var url = window.URL.createObjectURL(blob);
+		var tilesKeeper = new Worker(url);
+		tilesKeeper.addEventListener('message', onOsmReady, false);
+		tilesKeeper.addEventListener('error', onErr, false);
+		const tiles = {};
+		tilesKeeper.tiles = tiles;
 
-			var msg = {name: 'function loadingOsm'};
-			tilesKeeper.postMessage({cmd: 'ping', msg: msg}); // Start worker
-
-			tilesKeeper.postMessage({cmd: 'osm', xyz: [{x: 0, y: 0, z: 0}]});
-		}
-
-		function initilesKeeper () {
-			var blob = new Blob([work]);
-			var url = window.URL.createObjectURL(blob);
-			var tilesKeeper = new Worker(url);
-			tilesKeeper.addEventListener('message', onOsmReady, false);
-			tilesKeeper.addEventListener('error', onErr, false);
-			tilesKeeper.tiles = {};
-			tilesKeeper.getiles = (xyz) => {
-				var ztiles = tilesKeeper.tiles[xyz.z];
-				if (ztiles) {
-					if (ztiles[xyz.x]) {
-						return ztiles[xyz.x][xyz.y];
-					}
+		/**@param {object} xyz {x, y, z} */
+		tilesKeeper.getile = (xyz) => {
+			var ztiles = tilesKeeper.tiles[xyz.z];
+			if (ztiles) {
+				if (ztiles[xyz.x]) {
+					return ztiles[xyz.x][xyz.y];
 				}
 			}
 			return tilesKeeper;
 		}
 
-		function onOsmReady (e) {
-			console.log(e);
-			// on tile loaded
-			if (e.data.code === 'tile') {
-				console.log(e.data);
-				{	var blob = new Blob( [ e.data.img ], { type: "image/jpeg" } );
-					var imageUrl = window.URL.createObjectURL( blob );
-					var img = document.querySelector( "#tile" );
-					img.src = imageUrl;
-				}
-				// tileKeeper.postMessage({cmd: 'set-ground', xyz: e.data.xyz}, e.data.bytes);
+		tilesKeeper.setile = (xyz, tile) => {
+			// collectOsmTiles (tiles, dir, c0, a) {
+			if (tiles === undefined)
+				tiles = {};
 
-				setOsmTexture(e.data.xyz, imageUrl);
+			if (tiles[xyz.z] === undefined) {
+				tiles[xyz.z] = {};
 			}
+			if (tiles[xyz.z][xyz.x] === undefined) {
+				tiles[xyz.z][xyz.x] = {};
+			}
+			if (tiles[xyz.z][xyz.x][xyz.y] === undefined) {
+				tiles[xyz.z][xyz.x][xyz.y] = {};
+			}
+			Object.assign(tiles[xyz.z][xyz.x][xyz.y],
+				// { lon: longlat.long, lat: longlat.lat });
+				tile);
+			return tilesKeeper;
 		}
 
-		function onErr (e) { console.error(e); }
+		return tilesKeeper;
+	}
 
-		function startOsm (opts) {
-			if (tilesKeeper === undefined) {
-				tilesKeeper = initilesKeeper();
+	function onOsmReady (e) {
+		console.log(e);
+		// on tile loaded
+		if (e.data.code === 'tile') {
+			console.log(e.data);
+			{	var blob = new Blob( [ e.data.img ], { type: "image/jpeg" } );
+				var imageUrl = window.URL.createObjectURL( blob );
+				var img = document.querySelector( "#tile" );
+				img.src = imageUrl;
 			}
-			var msg = {name: 'function loadingOsm'};
-			tilesKeeper.postMessage({cmd: 'ping', msg: msg}); // Start worker
+			// tileKeeper.postMessage({cmd: 'set-ground', xyz: e.data.xyz}, e.data.bytes);
 
-			// tilesKeeper.postMessage({
-			// 			cmd: 'collect',
-			//         	// position: { latitude: 52.519090218, longitude: 13.401094079, z: 16 }, // Berliner Dom
-			//         	position: { latitude: 30.6765, longitude: 104.09856, z: 16 }, // UESTC
-			// 			cam: {pos: {x: 0, y: -50, z: 10},
-			// 				  up: {0, 1, 0},
-			// 				  lookAt: {x: 0, y: -0, z: 0}}
-			// 		});
-
-			var osmTiles = findTiles(osmTiles,
-									{worldMat4: new THREE.Matrix4(),
-									 position { lat: 30.6765, lon: 104.09856 },
-									 z: 16 },
-									opts.castMatrix );
-			console.log(osmTiles);
-			tilesKeeper.tiles = osmTiles;
-
-			// groundMeshes = updateGround(groundMeshes, osmTiles);
-			// TODO purge
+			setOsmTexture(e.data.xyz, imageUrl);
 		}
+	}
 
-		/**Find osm tiles according to camera position.
-		 * @param {object} osmTiles osm tile collection {z: {x: {y: tileInf}}}<br>
-		 * tileInf: lon, lat, mesh, world
-		 * @param {object} cam
-		 * @param {THREE.Matrix4} castMatrix
- 		 * @return {object} tiles {z: {x: {y: {tileInf}}}}
-		 */
-		function findTiles (osmTiles, cam, castMatrix) {
-			if (osmTiles === undefined) {
-				osmTiles = {};
-			}
+	function onErr (e) { console.error(e); }
 
-			var m = cam.worldMat4;
-			if (cam && cam.castMatrix) {
-				m.multiply(cam.castMatrix);
-			}
-			var c0 = new THREE.Vector3(cam.position);
-			var raytarges = o3.getRayTargets(m, [4, 3]);
-
-			var geometry = new THREE.Geometry();
-			for ( var ix = 0; ix < raytarges.count; ix++ ) {
-				var x = raytarges.getX(ix);
-				var y = raytarges.getY(ix);
-				var z = raytarges.getZ(ix);
-				geometry.vertices.push(new THREE.Vector3( x, y, z ));
-				geometry.vertices.push(c0);
-
-				// find tile by ray cast from c0 to dir [x, y, z]
-				osmUtils.collectOsmTiles(osmTiles, [x, y, z], c0, R);
-				var tile = osmTiles[z][x][y];
-				if (tile.mesh === undefined) {
-					tile.mesh = new THREE.Mesh(tile.geom(), basicMaterial);
-				}
-				tilesKeeper.postMessage({cmd: 'osm', xyz: [{x, y, z}]});
-			}
-			if (debug) console.log('osmTiles', osmTiles);
-			return osmTiles;
+	function startOsm (opts) {
+		if (tilesKeeper === undefined) {
+			tilesKeeper = initilesKeeper();
 		}
+		var msg = {name: 'function loadingOsm'};
+		tilesKeeper.postMessage({cmd: 'ping', msg: msg}); // Start worker
 
-		// Mesh can not handled by worker?
-		function updateGround (ground, tiles) {
-			var g = new THREE.PlaneBufferGeometry( 500, 500 );
+		// tilesKeeper.postMessage({
+		// 			cmd: 'collect',
+		//         	// position: { latitude: 52.519090218, longitude: 13.401094079, z: 16 }, // Berliner Dom
+		//         	position: { latitude: 30.6765, longitude: 104.09856, z: 16 }, // UESTC
+		// 			cam: {pos: {x: 0, y: -50, z: 10},
+		// 				  up: {0, 1, 0},
+		// 				  lookAt: {x: 0, y: -0, z: 0}}
+		// 		});
 
-			// g.computeBoundingSphere();
-			// var scaleFactor = 160 / g.boundingSphere.radius;
-			// g.scale( scaleFactor, scaleFactor, scaleFactor );
-			g.rotateX(-Math.PI * 0.5);
-			g.rotateY(Math.PI * 0.5);
+		// var osmTiles = {};
+		findTiles(tilesKeeper,
+							{worldMat4: new THREE.Matrix4(),
+							 position: { lat: 30.6765, lon: 104.09856 },
+							 z: 16 },
+							opts.castMatrix );
+		if (this.verbose >= 5) console.log(osmTiles);
+		// tilesKeeper.tiles = osmTiles;
 
-			// var material = new THREE.MeshBasicMaterial( {color: 0xff0000, side: THREE.DoubleSide} );
-			ground = new THREE.Mesh( g, blankMaterial );
-			scene.add(ground);
-			return ground;
+		// groundMeshes = updateGround(groundMeshes, osmTiles);
+		// TODO purge
+	}
+
+	/**Find osm tiles according to camera position.
+	 * @param {object} osmTiles osm tile collection {z: {x: {y: tileInf}}}<br>
+	 * tileInf: lon, lat, mesh, world
+	 * @param {object} cam
+	 * @param {THREE.Matrix4} castMatrix
+		 * @return {object} tiles {z: {x: {y: {tileInf}}}}
+	 */
+	function findTiles (tilkeepr, cam, castMatrix) {
+		var m = cam.worldMat4;
+		if (cam && cam.castMatrix) {
+			m.multiply(cam.castMatrix);
 		}
+		var c0 = new THREE.Vector3(cam.position);
+		var raytarges = o3.getRayTargets(m, [4, 3]);
 
-		/**Set loaded osm texture to the ground tile geometry
-		 * For three.js texture loader, see
-		 * https://threejs.org/docs/index.html#api/en/loaders/TextureLoader
-		 * TODO put into work?
-		 * @param {object} osm xyz {x, y, z}
-		 * @param {URL} should be a blob url - ready for building texture
-		 */
-		function setOsmTexture(xyz, blobUrl) {
-			{
-				// instantiate a loader
-				var loader = new THREE.TextureLoader();
+		var geometry = new THREE.Geometry();
+		for ( var ix = 0; ix < raytarges.count; ix++ ) {
+			var x = raytarges.getX(ix);
+			var y = raytarges.getY(ix);
+			var z = raytarges.getZ(ix);
+			geometry.vertices.push(new THREE.Vector3( x, y, z ));
+			geometry.vertices.push(c0);
 
-				// load a resource
-				loader.load(
-					// resource URL
-					// 'textures/land_ocean_ice_cloud_2048.jpg',
-					blobUrl,
+			// find tile by ray cast from c0 to dir [x, y, z]
+			osmUtils.collectOsmTiles(tilkeepr, [x, y, z], c0, R);
+			var tile = tilkeepr.getile({x, y, z})
+			if (tile.mesh === undefined) {
+				tile.mesh = new THREE.Mesh(tile.geom(), basicMaterial);
+			}
+			tilesKeeper.postMessage({cmd: 'osm', xyz: [{x, y, z}]});
+		}
+		if (this.verbose >= 5) console.log('osmTiles', tilkeepr.tiles);
+		return tilkeepr;
+	}
 
-					// onLoad callback
-					function ( texture ) {
-						// in this example we create the material when the texture is loaded
-						var material = new THREE.MeshBasicMaterial( {
-							map: texture
-						 } );
+	// Mesh can not handled by worker?
+	function updateGround (ground, tiles) {
+		var g = new THREE.PlaneBufferGeometry( 500, 500 );
 
-						// groundMeshes.material = material;
-						// groundMeshes.material.map.needsUpdate = true;
-						var tile = tilesKeeper.getiles(xyz);
-						if (tile) {
-							tile.mesh.materail = materail;
-							tile.mesh.material.map.needsUpdate = true;
-						}
-						else {
-							console.error('No tile for texture?', xyz);
-						}
-					},
+		// g.computeBoundingSphere();
+		// var scaleFactor = 160 / g.boundingSphere.radius;
+		// g.scale( scaleFactor, scaleFactor, scaleFactor );
+		g.rotateX(-Math.PI * 0.5);
+		g.rotateY(Math.PI * 0.5);
 
-					// onProgress callback currently not supported
-					undefined,
+		// var material = new THREE.MeshBasicMaterial( {color: 0xff0000, side: THREE.DoubleSide} );
+		ground = new THREE.Mesh( g, blankMaterial );
+		scene.add(ground);
+		return ground;
+	}
 
-					// onError callback
-					function ( err ) {
-						console.error( 'An error happened loading image' );
+	/**Set loaded osm texture to the ground tile geometry
+	 * For three.js texture loader, see
+	 * https://threejs.org/docs/index.html#api/en/loaders/TextureLoader
+	 * TODO put into work?
+	 * @param {object} osm xyz {x, y, z}
+	 * @param {URL} should be a blob url - ready for building texture
+	 */
+	function setOsmTexture(xyz, blobUrl) {
+		{
+			// instantiate a loader
+			var loader = new THREE.TextureLoader();
+
+			// load a resource
+			loader.load(
+				// resource URL
+				// 'textures/land_ocean_ice_cloud_2048.jpg',
+				blobUrl,
+
+				// onLoad callback
+				function ( texture ) {
+					// in this example we create the material when the texture is loaded
+					var material = new THREE.MeshBasicMaterial( {
+						map: texture
+					 } );
+
+					// groundMeshes.material = material;
+					// groundMeshes.material.map.needsUpdate = true;
+					var tile = tilesKeeper.getiles(xyz);
+					if (tile) {
+						tile.mesh.materail = materail;
+						tile.mesh.material.map.needsUpdate = true;
 					}
-				);
-			}
-		}
+					else {
+						console.error('No tile for texture?', xyz);
+					}
+				},
 
-		function testChang () {
+				// onProgress callback currently not supported
+				undefined,
+
+				// onError callback
+				function ( err ) {
+					console.error( 'An error happened loading image' );
+				}
+			);
+		}
+	}
+
+	function testChang () {
 			console.log('change');
 			var loader = new THREE.TextureLoader();
 
@@ -451,6 +474,6 @@ class Request {
 				}
 			);
 		}
-    </script>
+  </script>
 </body>
 </html>
