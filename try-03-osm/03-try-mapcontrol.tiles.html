@@ -363,18 +363,19 @@
 		var c0 = new THREE.Vector3();
 		var raytarges = o3.getRayTargets(m, [4, 3]);
 
-		var geometry = new THREE.Geometry();
+		var campos = [0, 0, 0]; TO BE CONTINUED
+		// var geometry = new THREE.Geometry();
 		for ( var ix = 0; ix < raytarges.count; ix++ ) {
 			var x = raytarges.getX(ix);
 			var y = raytarges.getY(ix);
 			var z = raytarges.getZ(ix);
-			geometry.vertices.push(new THREE.Vector3( x, y, z ));
-			geometry.vertices.push(c0);
+			// geometry.vertices.push(new THREE.Vector3( x, y, z ));
+			// geometry.vertices.push(c0);
 
 			// find tile by ray casting from c0 to dir [x, y, z]
 			// FAKE data
-			var dir =
-			osmUtils.collectOsmTiles(tilkeepr, cam.dir(), c0, R);
+			var dir = [campos[0] - x, campos[1] - y, campos[2] - z];
+			osmUtils.collectOsmTiles(tilkeepr, dir, c0, R);
 
 			var tile = tilkeepr.getile({x, y, z})
 			if (tile.mesh === undefined) {
