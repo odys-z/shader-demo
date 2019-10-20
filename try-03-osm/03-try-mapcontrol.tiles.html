@@ -334,11 +334,11 @@
 
 		// var osmTiles = {};
 		findTiles(tilesKeeper,
-				  {worldMat4: new THREE.Matrix4(),
-				   position: { lat: 30.6765, lon: 104.09856 },
-				   z: 16 },
+				  { worldMat4: new THREE.Matrix4(),
+				    position: { lat: 30.6765, lon: 104.09856 },
+				    z: 16 },
 				  opts.castMatrix );
-		if (this.verbose >= 5) console.log(osmTiles);
+		if (this.verbose >= 5) console.log(tileKeepser.tiles);
 		// tilesKeeper.tiles = osmTiles;
 
 		// groundMeshes = updateGround(groundMeshes, osmTiles);
@@ -372,7 +372,8 @@
 			geometry.vertices.push(c0);
 
 			// find tile by ray casting from c0 to dir [x, y, z]
-			// osmUtils.collectOsmTiles(tilkeepr, [x, y, z], c0, R);
+			// FAKE data
+			var dir =
 			osmUtils.collectOsmTiles(tilkeepr, cam.dir(), c0, R);
 
 			var tile = tilkeepr.getile({x, y, z})
