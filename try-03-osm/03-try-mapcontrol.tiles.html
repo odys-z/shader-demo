@@ -25,6 +25,7 @@
 	    case 'osm':
 	      // self.postMessage('Pong: ' + data.msg.name);
 		  // endup with postMessage({code: 'texture'}, tiles)
+		  console.log('osm:data', data);
 		  loadOsm(data.xyz);
 	      break;
 	    case 'stop':
@@ -40,6 +41,7 @@
 	}, false);
 
 	function loadOsm(xyzs) {
+		console.log('loading', xyzs);
 		if (Array.isArray(xyzs)) {
 			xyzs.forEach(function(xyz, ix){
 				loadTile(xyz);
@@ -50,8 +52,15 @@
 	}
 
 	function loadTile(xyz) {
-		var url = 'https://a.tile.openstreetmap.org/'
+		var url;
+		if (typeof xyz === 'string' ) {
+			url = 'https://a.tile.openstreetmap.org/'
 					+ xyz.z + '/' + xyz.x + '/' + xyz.y + '.png';
+		}
+		else {
+			url = 'https://a.tile.openstreetmap.org/'
+					+ xyz[2] + '/' + xyz[0] + '/' + xyz[1] + '.png';
+		}
 		console.log(url);
 		Request.getOsm(url, e => {
 			console.log(e.length, e);
@@ -147,35 +156,35 @@
    `;
 
 	var o3;// = new O3();
-	var groundMeshes;
-	var camera, controls, scene, renderer;
+	// var groundMeshes;
+	// var camera, controls, scene, renderer;
 
-	var blankMaterial = new THREE.MeshBasicMaterial( {color: 0x00c0c0, side: THREE.DoubleSide} );
+	var blankMaterial = new THREE.MeshBasicMaterial( {color: 0xc0c0c0, side: THREE.DoubleSide} );
 	init();
 	//render(); // remove when using next line for animation loop (requestAnimationFrame)
 	animate();
 
 	function init() {
-		scene = new THREE.Scene();
+		var scene = new THREE.Scene();
 		scene.background = new THREE.Color( 0x0c0c1c );
 		// scene.fog = new THREE.FogExp2( 0xcccccc, 0.002 );
-		renderer = new THREE.WebGLRenderer( { antialias: true } );
+		var renderer = new THREE.WebGLRenderer( { antialias: true } );
 		renderer.setPixelRatio( window.devicePixelRatio );
 		renderer.setSize( window.innerWidth, window.innerHeight );
 		document.body.appendChild( renderer.domElement );
-		camera = new THREE.PerspectiveCamera( 60, window.innerWidth / window.innerHeight, 1, 1000 );
-		camera.position.set( 400, 200, 0 );
-		// controls
-		controls = new THREE.MapControls( camera, renderer.domElement );
-		//controls.addEventListener( 'change', render ); // call this only in static scenes (i.e., if there is no animation loop)
-		controls.enableDamping = true; // an animation loop is required when either damping or auto-rotation are enabled
-		controls.dampingFactor = 0.05;
-		controls.screenSpacePanning = false;
-		controls.minDistance = 100;
-		controls.maxDistance = 500;
-		controls.maxPolarAngle = Math.PI / 2;
+		// var camera = new THREE.PerspectiveCamera( 60, window.innerWidth / window.innerHeight, 1, 1000 );
+		// camera.position.set( 400, 200, 0 );
+		// // controls
+		// var controls = new THREE.MapControls( camera, renderer.domElement );
+		// //controls.addEventListener( 'change', render ); // call this only in static scenes (i.e., if there is no animation loop)
+		// controls.enableDamping = true; // an animation loop is required when either damping or auto-rotation are enabled
+		// controls.dampingFactor = 0.05;
+		// controls.screenSpacePanning = false;
+		// controls.minDistance = 100;
+		// controls.maxDistance = 500;
+		// controls.maxPolarAngle = Math.PI / 2;
 
-		o3 = new O3(renderer.domElement, {control: controls});
+		o3 = new O3(renderer.domElement);
 
 		// random buildings
 		addRandomesh(scene, 50);
@@ -183,19 +192,24 @@
     	var osm = { position: { latitude: 30.6765, longitude: 104.09856 },
 					z: 15};
 		// testOsm(osm);
-		startOsm(osm);
+		startOsm(o3.s3, osm);
 
 		// lights
 		var light = new THREE.DirectionalLight( 0xffffff );
 		light.position.set( 1, 1, 1 );
-		s3.scene.add( light );
+		scene.add( light );
 		var light = new THREE.DirectionalLight( 0x002288 );
 		light.position.set( -1, -1, -1 );
-		s3.scene.add( light );
+		scene.add( light );
 		var light = new THREE.AmbientLight( 0x222222 );
-		s3.scene.add( light );
+		scene.add( light );
+
+		o3.s3.scene = scene;
+		o3.s3.renderer = renderer;
+		// o3.s3.controls = controls;
 		//
 		window.addEventListener( 'resize', onWindowResize, false );
+
 	}
 
 	function onWindowResize() {
@@ -206,12 +220,12 @@
 
 	function animate() {
 		requestAnimationFrame( animate );
-		controls.update(); // only required if controls.enableDamping = true, or if controls.autoRotate = true
+		o3.s3.controls.update(); // only required if controls.enableDamping = true, or if controls.autoRotate = true
 		render();
 	}
 
 	function render() {
-		renderer.render( scene, camera );
+		o3.s3.renderer.render( o3.s3.scene, o3.s3.camera );
 	}
 
 	function addRandomesh(scene, count) {
@@ -272,7 +286,7 @@
 					return ztiles[xyz.x][xyz.y];
 				}
 			}
-			return tilesKeeper;
+			// return tilesKeeper;
 		}
 
 		tilesKeeper.setile = (xyz, tile) => {
@@ -293,6 +307,16 @@
 				// { lon: longlat.long, lat: longlat.lat });
 				tile);
 			return tilesKeeper;
+		}
+
+		tilesKeeper.forEachTile = (fun) => {
+			var tz = tilesKeeper.tiles; // for short
+			if (tz) {
+				for (var z in tz)
+					for (var x in tz[z])
+						for (var y in tz[z][x])
+							fun(tz[z][x][y], [x, y, z]);
+			}
 		}
 
 		return tilesKeeper;
@@ -316,7 +340,7 @@
 
 	function onErr (e) { console.error(e); }
 
-	function startOsm (opts) {
+	function startOsm (s3, opts) {
 		if (tilesKeeper === undefined) {
 			tilesKeeper = initilesKeeper();
 		}
@@ -335,12 +359,27 @@
 		// var osmTiles = {};
 		findTiles(tilesKeeper,
 				  { worldMat4: new THREE.Matrix4(),
-				    position: { lat: 30.6765, lon: 104.09856 },
+				    position: { lat: 30.6765, lon: 104.09856, h: 10 },
 				    z: 16 },
 				  opts.castMatrix );
 		if (this.verbose >= 5) console.log(tileKeepser.tiles);
-		// tilesKeeper.tiles = osmTiles;
 
+		// loading osm tile texture asynchronously
+		tilesKeeper.forEachTile((t, xyz) => {
+			if (t.mesh === undefined) {
+				t.mesh = new THREE.Mesh(t.geom(), blankMaterial);
+				t.mesh.name = `${xyz[2]}-${xyz[0]}-${xyz[1]}`
+				s3.scene.add(t.mesh);
+				tilesKeeper.postMessage({cmd: 'osm', xyz: [xyz]});
+			}
+		});
+
+
+		// for debug
+		var g = new THREE.PlaneBufferGeometry( 500, 500 );
+		ground = new THREE.Mesh( g, blankMaterial );
+		s3.scene.add(ground);
+		return ground;
 		// groundMeshes = updateGround(groundMeshes, osmTiles);
 		// TODO purge
 	}
@@ -349,7 +388,7 @@
 	 * @param {object} osmTiles osm tile collection {z: {x: {y: tileInf}}}<br>
 	 * tileInf: lon, lat, mesh, world
 	 * @param {object} cam:<br>
-	 *     position: {lat, lon}<br>
+	 *     position: {lat, lon, h}<br>
 	 *     z: osm z
 	 * @param {THREE.Matrix4} castMatrix
 		 * @return {object} tiles {z: {x: {y: {tileInf}}}}
@@ -360,32 +399,32 @@
 			m.multiply(cam.castMatrix);
 		}
 		// var c0 = new THREE.Vector3(cam.position);
-		var c0 = new THREE.Vector3();
-		var raytarges = o3.getRayTargets(m, [4, 3]);
+		// var c0 = new THREE.Vector3();
+		var raytarges = o3.getRayTargets(m, {w: 4, h: 3});
 
-		var geometry = new THREE.Geometry();
+		// var geometry = new THREE.Geometry();
 		for ( var ix = 0; ix < raytarges.count; ix++ ) {
 			var x = raytarges.getX(ix);
-			var y = raytarges.getY(ix);
-			var z = raytarges.getZ(ix);
-			geometry.vertices.push(new THREE.Vector3( x, y, z ));
-			geometry.vertices.push(c0);
+			// rotateX - Pi/2
+			var y = raytarges.getY(ix) + 100;
+			var z = raytarges.getZ(ix) + 100;
+			// geometry.vertices.push(new THREE.Vector3( x, y, z ));
+			// geometry.vertices.push(c0);
 
 			// find tile by ray casting from c0 to dir [x, y, z]
 			// FAKE data
-			var dir =
-			osmUtils.collectOsmTiles(tilkeepr, cam.dir(), c0, R);
+			var eye = osmUtils.rad2cart(cam.position.lon, cam.position.lat, R + cam.position.h);
 
-			var tile = tilkeepr.getile({x, y, z})
-			if (tile.mesh === undefined) {
-				// tile.mesh = new THREE.Mesh(osmUtils.tile2geom(tile, [x, y, z]), basicMaterial);
-				tile.mesh = new THREE.Mesh(tile.geom(), basicMaterial);
-			}
-			tilesKeeper.postMessage({cmd: 'osm', xyz: [{x, y, z}]});
+			// x,y,z are not correct yet
+			// var dir = [x - c0.x, y - c0.y, z - cam.position.h];
+			var dir = [x, y, z];
+
+			osmUtils.collectOsmTiles(tilkeepr, dir, eye, R);
 		}
 		if (this.verbose >= 5) {
 			console.log('osmTiles', tilkeepr.tiles);
 		}
+
 		return tilkeepr;
 	}
 
@@ -432,9 +471,9 @@
 
 					// groundMeshes.material = material;
 					// groundMeshes.material.map.needsUpdate = true;
-					var tile = tilesKeeper.getiles(xyz);
+					var tile = tilesKeeper.getile({x: xyz[0], y: xyz[1], z: xyz[2]});
 					if (tile) {
-						tile.mesh.materail = materail;
+						tile.mesh.material = material;
 						tile.mesh.material.map.needsUpdate = true;
 					}
 					else {
