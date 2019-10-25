@@ -165,8 +165,8 @@
 	animate();
 
 	function init() {
-		var scene = new THREE.Scene();
-		scene.background = new THREE.Color( 0x0c0c1c );
+		// var scene = new THREE.Scene();
+		// scene.background = new THREE.Color( 0x0c0c1c );
 		// scene.fog = new THREE.FogExp2( 0xcccccc, 0.002 );
 		// var renderer = new THREE.WebGLRenderer( { antialias: true } );
 		// renderer.setPixelRatio( window.devicePixelRatio );
@@ -184,8 +184,9 @@
 		// controls.maxDistance = 500;
 		// controls.maxPolarAngle = Math.PI / 2;
 
-		o3 = new O3(renderer.domElement);
+		o3 = new O3();
 
+		var scene = o3.s3.scene;
 		// random buildings
 		addRandomesh(scene, 50);
 
@@ -204,8 +205,8 @@
 		var light = new THREE.AmbientLight( 0x222222 );
 		scene.add( light );
 
-		o3.s3.scene = scene;
-		o3.s3.renderer = renderer;
+		// o3.s3.scene = scene;
+		// o3.s3.renderer = renderer;
 		// o3.s3.controls = controls;
 		//
 		window.addEventListener( 'resize', onWindowResize, false );
@@ -215,7 +216,7 @@
 	function onWindowResize() {
 		camera.aspect = window.innerWidth / window.innerHeight;
 		camera.updateProjectionMatrix();
-		renderer.setSize( window.innerWidth, window.innerHeight );
+		o3.se.renderer.setSize( window.innerWidth, window.innerHeight );
 	}
 
 	function animate() {
@@ -374,12 +375,12 @@
 			}
 		});
 
-
+		return tilesKeeper;
 		// for debug
-		var g = new THREE.PlaneBufferGeometry( 500, 500 );
-		ground = new THREE.Mesh( g, blankMaterial );
-		s3.scene.add(ground);
-		return ground;
+		// var g = new THREE.PlaneBufferGeometry( 500, 500 );
+		// ground = new THREE.Mesh( g, blankMaterial );
+		// s3.scene.add(ground);
+		// return ground;
 		// groundMeshes = updateGround(groundMeshes, osmTiles);
 		// TODO purge
 	}
@@ -440,8 +441,6 @@
 
 		// var material = new THREE.MeshBasicMaterial( {color: 0xff0000, side: THREE.DoubleSide} );
 		ground = new THREE.Mesh( g, blankMaterial );
-		scene.add(ground);
-		return ground;
 	}
 
 	/**Set loaded osm texture to the ground tile geometry
