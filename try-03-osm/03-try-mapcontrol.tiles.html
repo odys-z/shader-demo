@@ -14,8 +14,8 @@
 <body>
   <img id='tile' onclick='testChang()'></img>
   <script>
-		// web worker tutorial: https://www.html5rocks.com/en/tutorials/workers/basics/
-   const work = `
+  // web worker tutorial: https://www.html5rocks.com/en/tutorials/workers/basics/
+  const work = `
 	self.addEventListener('message', function(e) {
 	  var data = e.data;
 	  switch (data.cmd) {
@@ -153,7 +153,7 @@
 		    });
 		  }
 		}
-   `;
+  `;
 
 	var o3;// = new O3();
 	// var groundMeshes;
@@ -165,52 +165,34 @@
 	animate();
 
 	function init() {
-		// var scene = new THREE.Scene();
-		// scene.background = new THREE.Color( 0x0c0c1c );
-		// scene.fog = new THREE.FogExp2( 0xcccccc, 0.002 );
-		// var renderer = new THREE.WebGLRenderer( { antialias: true } );
-		// renderer.setPixelRatio( window.devicePixelRatio );
-		// renderer.setSize( window.innerWidth, window.innerHeight );
-		// document.body.appendChild( renderer.domElement );
-		// var camera = new THREE.PerspectiveCamera( 60, window.innerWidth / window.innerHeight, 1, 1000 );
-		// camera.position.set( 400, 200, 0 );
-		// // controls
-		// var controls = new THREE.MapControls( camera, renderer.domElement );
-		// //controls.addEventListener( 'change', render ); // call this only in static scenes (i.e., if there is no animation loop)
-		// controls.enableDamping = true; // an animation loop is required when either damping or auto-rotation are enabled
-		// controls.dampingFactor = 0.05;
-		// controls.screenSpacePanning = false;
-		// controls.minDistance = 100;
-		// controls.maxDistance = 500;
-		// controls.maxPolarAngle = Math.PI / 2;
+		// https://stackoverflow.com/questions/44630265/how-can-i-set-z-up-coordinate-system-in-three-js
+		THREE.Object3D.DefaultUp = new THREE.Vector3(0, 0, 1);
 
-		o3 = new O3();
+    	// var osm = { position: { lat: 0, lon: 0 },
+    	var osm = { position: { lat: 30.6765, lon: 104.09856 },
+					h: 300,
+					z: 15};
+
+		o3 = new O3(osm);
 
 		var scene = o3.s3.scene;
-		// random buildings
-		addRandomesh(scene, 50);
-
-    	var osm = { position: { latitude: 30.6765, longitude: 104.09856 },
-					z: 15};
 		// testOsm(osm);
-		startOsm(o3.s3, osm);
+		var tlkeepr = startOsm(o3.s3, osm);
+
+		// random buildings
+		addRandomesh(scene, 20, tlkeepr.viewCenter);
 
 		// lights
 		var light = new THREE.DirectionalLight( 0xffffff );
-		light.position.set( 1, 1, 1 );
+		light.position.set( 100, 100, 100 );
 		scene.add( light );
 		var light = new THREE.DirectionalLight( 0x002288 );
-		light.position.set( -1, -1, -1 );
+		light.position.set( -100, -100, -100 );
 		scene.add( light );
 		var light = new THREE.AmbientLight( 0x222222 );
 		scene.add( light );
 
-		// o3.s3.scene = scene;
-		// o3.s3.renderer = renderer;
-		// o3.s3.controls = controls;
-		//
 		window.addEventListener( 'resize', onWindowResize, false );
-
 	}
 
 	function onWindowResize() {
@@ -233,16 +215,16 @@
 		if (count === undefined)
 			count = 200;
 		var geometry = new THREE.BoxBufferGeometry( 1, 1, 1 );
-		geometry.translate( 0, 0.5, 0 );
+		geometry.translate( 0, 0, 0.5 );
 		var material = new THREE.MeshPhongMaterial( { color: 0xffffff, flatShading: true } );
 		for ( var i = 0; i < count; i ++ ) {
 			var mesh = new THREE.Mesh( geometry, material );
 			mesh.position.x = Math.random() * 1600 - 800;
-			mesh.position.y = 0;
-			mesh.position.z = Math.random() * 1600 - 800;
+			mesh.position.y = Math.random() * 1600 - 800;
+			mesh.position.z = 0;
 			mesh.scale.x = 20;
-			mesh.scale.y = Math.random() * 80 + 10;
-			mesh.scale.z = 20;
+			mesh.scale.y = 20;
+			mesh.scale.z = Math.random() * 80 + 10;
 			mesh.updateMatrix();
 			mesh.matrixAutoUpdate = false;
 			scene.add( mesh );
@@ -258,7 +240,7 @@
 	 */
 	function testOsm(opts) {
 		if (tilesKeeper === undefined) {
-			tilesKeeper = initilesKeeper();
+			tilesKeeper = initilesKeeper(opts.position, R);
 		}
 
 		groundMeshes = updateGround(groundMeshes, {z: 0});
@@ -270,10 +252,17 @@
 		tilesKeeper.postMessage({cmd: 'osm', xyz: [{x: 0, y: 0, z: 0}]});
 	}
 
-	function initilesKeeper () {
+	/**
+	 * @param {object} center center in lon-lat
+	 * @aram {float} a radius
+	 */
+	function initilesKeeper (center, a) {
 		var blob = new Blob([work]);
 		var url = window.URL.createObjectURL(blob);
 		var tilesKeeper = new Worker(url);
+		// tilesKeeper.center = osmUtils.rad2cart(center.lon, center.lat, a);
+		tilesKeeper.geoCenter = center;
+		// tilesKeeper.viewCenter = [center.x, center.y, center.z];
 		tilesKeeper.addEventListener('message', onOsmReady, false);
 		tilesKeeper.addEventListener('error', onErr, false);
 		const tiles = {};
@@ -343,7 +332,7 @@
 
 	function startOsm (s3, opts) {
 		if (tilesKeeper === undefined) {
-			tilesKeeper = initilesKeeper();
+			tilesKeeper = initilesKeeper(opts.position, R);
 		}
 		var msg = {name: 'function loadingOsm'};
 		tilesKeeper.postMessage({cmd: 'ping', msg: msg}); // Start worker
@@ -357,13 +346,15 @@
 		// 				  lookAt: {x: 0, y: -0, z: 0}}
 		// 		});
 
-		// var osmTiles = {};
 		findTiles(tilesKeeper,
 				  { worldMat4: new THREE.Matrix4(),
-				    position: { lat: 30.6765, lon: 104.09856, h: 10 },
+				    // target: { lat: 30.6765, lon: 104.09856 },
+				    // position: { lat: 30.70, lon: 104.09856, h: 10 },
+					target: opts.position,
+				    position: { lat: opts.position.lat - 0.2, lon: opts.position.lon, h: 10 },
 				    z: 16 },
 				  opts.castMatrix );
-		if (this.verbose >= 5) console.log(tileKeepser.tiles);
+		if (o3.verbose >= 5) console.log(tilesKeeper.tiles);
 
 		// loading osm tile texture asynchronously
 		tilesKeeper.forEachTile((t, xyz) => {
@@ -399,30 +390,22 @@
 		if (cam && cam.castMatrix) {
 			m.multiply(cam.castMatrix);
 		}
-		// var c0 = new THREE.Vector3(cam.position);
-		// var c0 = new THREE.Vector3();
+
 		var raytarges = o3.getRayTargets(m, {w: 4, h: 3});
 
-		// var geometry = new THREE.Geometry();
 		for ( var ix = 0; ix < raytarges.count; ix++ ) {
 			var x = raytarges.getX(ix);
-			// rotateX - Pi/2
-			var y = raytarges.getY(ix) + 100;
-			var z = raytarges.getZ(ix) + 100;
-			// geometry.vertices.push(new THREE.Vector3( x, y, z ));
-			// geometry.vertices.push(c0);
+			var y = raytarges.getY(ix);
+			var z = raytarges.getZ(ix);
 
 			// find tile by ray casting from c0 to dir [x, y, z]
 			// FAKE data
 			var eye = osmUtils.rad2cart(cam.position.lon, cam.position.lat, R + cam.position.h);
-
-			// x,y,z are not correct yet
-			// var dir = [x - c0.x, y - c0.y, z - cam.position.h];
 			var dir = [x, y, z];
-
 			osmUtils.collectOsmTiles(tilkeepr, dir, eye, R);
 		}
-		if (this.verbose >= 5) {
+
+		if (o3.verbose >= 5) {
 			console.log('osmTiles', tilkeepr.tiles);
 		}
 
@@ -430,18 +413,18 @@
 	}
 
 	// Mesh can not handled by worker?
-	function updateGround (ground, tiles) {
-		var g = new THREE.PlaneBufferGeometry( 500, 500 );
-
-		// g.computeBoundingSphere();
-		// var scaleFactor = 160 / g.boundingSphere.radius;
-		// g.scale( scaleFactor, scaleFactor, scaleFactor );
-		g.rotateX(-Math.PI * 0.5);
-		g.rotateY(Math.PI * 0.5);
-
-		// var material = new THREE.MeshBasicMaterial( {color: 0xff0000, side: THREE.DoubleSide} );
-		ground = new THREE.Mesh( g, blankMaterial );
-	}
+	// function updateGround (ground, tiles) {
+	// 	var g = new THREE.PlaneBufferGeometry( 500, 500 );
+	//
+	// 	// g.computeBoundingSphere();
+	// 	// var scaleFactor = 160 / g.boundingSphere.radius;
+	// 	// g.scale( scaleFactor, scaleFactor, scaleFactor );
+	// 	g.rotateX(-Math.PI * 0.5);
+	// 	g.rotateY(Math.PI * 0.5);
+	//
+	// 	// var material = new THREE.MeshBasicMaterial( {color: 0xff0000, side: THREE.DoubleSide} );
+	// 	ground = new THREE.Mesh( g, blankMaterial );
+	// }
 
 	/**Set loaded osm texture to the ground tile geometry
 	 * For three.js texture loader, see
@@ -451,44 +434,38 @@
 	 * @param {URL} should be a blob url - ready for building texture
 	 */
 	function setOsmTexture(xyz, blobUrl) {
-		{
-			// instantiate a loader
-			var loader = new THREE.TextureLoader();
+		// instantiate a loader
+		var loader = new THREE.TextureLoader();
 
-			// load a resource
-			loader.load(
-				// resource URL
-				// 'textures/land_ocean_ice_cloud_2048.jpg',
-				blobUrl,
+		// load a resource
+		loader.load( blobUrl, // resource URL
+			// onLoad callback
+			function ( texture ) {
+				// in this example we create the material when the texture is loaded
+				var material = new THREE.MeshBasicMaterial( {
+					map: texture
+				 } );
 
-				// onLoad callback
-				function ( texture ) {
-					// in this example we create the material when the texture is loaded
-					var material = new THREE.MeshBasicMaterial( {
-						map: texture
-					 } );
-
-					// groundMeshes.material = material;
-					// groundMeshes.material.map.needsUpdate = true;
-					var tile = tilesKeeper.getile({x: xyz[0], y: xyz[1], z: xyz[2]});
-					if (tile) {
-						tile.mesh.material = material;
-						tile.mesh.material.map.needsUpdate = true;
-					}
-					else {
-						console.error('No tile for texture?', xyz);
-					}
-				},
-
-				// onProgress callback currently not supported
-				undefined,
-
-				// onError callback
-				function ( err ) {
-					console.error( 'An error happened loading image' );
+				// groundMeshes.material = material;
+				// groundMeshes.material.map.needsUpdate = true;
+				var tile = tilesKeeper.getile({x: xyz[0], y: xyz[1], z: xyz[2]});
+				if (tile) {
+					tile.mesh.material = material;
+					tile.mesh.material.map.needsUpdate = true;
 				}
-			);
-		}
+				else {
+					console.error('No tile for texture?', xyz);
+				}
+			},
+
+			// onProgress callback currently not supported
+			undefined,
+
+			// onError callback
+			function ( err ) {
+				console.error( 'An error happened loading image' );
+			}
+		);
 	}
 
 	function testChang () {
