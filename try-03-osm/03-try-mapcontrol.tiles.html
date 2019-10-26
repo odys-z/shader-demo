@@ -155,13 +155,11 @@
 		}
   `;
 
-	var o3;// = new O3();
-	// var groundMeshes;
-	// var camera, controls, scene, renderer;
+	/** Osm-Three.js view */
+	var o3;
 
 	var blankMaterial = new THREE.MeshBasicMaterial( {color: 0xc0c0c0, side: THREE.DoubleSide} );
 	init();
-	//render(); // remove when using next line for animation loop (requestAnimationFrame)
 	animate();
 
 	function init() {
