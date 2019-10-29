@@ -166,8 +166,8 @@
 		// https://stackoverflow.com/questions/44630265/how-can-i-set-z-up-coordinate-system-in-three-js
 		THREE.Object3D.DefaultUp = new THREE.Vector3(0, 0, 1);
 
-    	// var osm = { position: { lat: 0, lon: 0 },
-    	var osm = { position: { lat: 30.6765, lon: 104.09856 },
+    	var osm = { position: { lat: 0, lon: 0 },
+    	// var osm = { position: { lat: 30.6765, lon: 104.09856 },
 					h: 300,
 					z: 15};
 
@@ -229,6 +229,7 @@
 		}
 	}
 
+	var raytarges;
 	var tilesKeeper;
 	/**turorial: https://www.html5rocks.com/en/tutorials/workers/basics/
 	 * @param {object} opts
@@ -335,19 +336,9 @@
 		var msg = {name: 'function loadingOsm'};
 		tilesKeeper.postMessage({cmd: 'ping', msg: msg}); // Start worker
 
-		// tilesKeeper.postMessage({
-		// 			cmd: 'collect',
-		//         	// position: { latitude: 52.519090218, longitude: 13.401094079, z: 16 }, // Berliner Dom
-		//         	position: { latitude: 30.6765, longitude: 104.09856, z: 16 }, // UESTC
-		// 			cam: {pos: {x: 0, y: -50, z: 10},
-		// 				  up: {0, 1, 0},
-		// 				  lookAt: {x: 0, y: -0, z: 0}}
-		// 		});
-
+		// move to worker?
 		findTiles(tilesKeeper,
-				  { worldMat4: new THREE.Matrix4(),
-				    // target: { lat: 30.6765, lon: 104.09856 },
-				    // position: { lat: 30.70, lon: 104.09856, h: 10 },
+				  { // worldMat4: new THREE.Matrix4(),
 					target: opts.position,
 				    position: { lat: opts.position.lat - 0.2, lon: opts.position.lon, h: 10 },
 				    z: 16 },
@@ -378,7 +369,8 @@
 	 * @param {object} osmTiles osm tile collection {z: {x: {y: tileInf}}}<br>
 	 * tileInf: lon, lat, mesh, world
 	 * @param {object} cam:<br>
-	 *     position: {lat, lon, h}<br>
+	 *     target: lookAt, {lat, lon, h = 0}<br>
+	 *     position: eye position, {lat, lon, h}<br>
 	 *     z: osm z
 	 * @param {THREE.Matrix4} castMatrix
 		 * @return {object} tiles {z: {x: {y: {tileInf}}}}
@@ -389,7 +381,15 @@
 			m.multiply(cam.castMatrix);
 		}
 
-		var raytarges = o3.getRayTargets(m, {w: 4, h: 3});
+		var eye = osmUtils.rad2cart(cam.position.lon, cam.position.lat, R + cam.position.h);
+		eye = [eye.x, eye.y, eye.z];
+
+		var lookAt = osmUtils.rad2cart(cam.target.lon, cam.target.lat,
+									cam.target.h === undefined ? R : R + cam.target.h);
+		lookAt= [lookAt.x, lookAt.y, lookAt.z];
+
+		if (raytarges === undefined)
+			raytarges = o3.getRayTargets(m, {w: 4, h: 3});
 
 		for ( var ix = 0; ix < raytarges.count; ix++ ) {
 			var x = raytarges.getX(ix);
@@ -397,9 +397,7 @@
 			var z = raytarges.getZ(ix);
 
 			// find tile by ray casting from c0 to dir [x, y, z]
-			// FAKE data
-			var eye = osmUtils.rad2cart(cam.position.lon, cam.position.lat, R + cam.position.h);
-			var dir = [x, y, z];
+			var dir = Vec3.minus(Vec3.add([x, y, z], lookAt), eye);
 			osmUtils.collectOsmTiles(tilkeepr, dir, eye, R);
 		}
 
@@ -409,20 +407,6 @@
 
 		return tilkeepr;
 	}
-
-	// Mesh can not handled by worker?
-	// function updateGround (ground, tiles) {
-	// 	var g = new THREE.PlaneBufferGeometry( 500, 500 );
-	//
-	// 	// g.computeBoundingSphere();
-	// 	// var scaleFactor = 160 / g.boundingSphere.radius;
-	// 	// g.scale( scaleFactor, scaleFactor, scaleFactor );
-	// 	g.rotateX(-Math.PI * 0.5);
-	// 	g.rotateY(Math.PI * 0.5);
-	//
-	// 	// var material = new THREE.MeshBasicMaterial( {color: 0xff0000, side: THREE.DoubleSide} );
-	// 	ground = new THREE.Mesh( g, blankMaterial );
-	// }
 
 	/**Set loaded osm texture to the ground tile geometry
 	 * For three.js texture loader, see
