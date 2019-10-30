@@ -166,10 +166,11 @@
 		// https://stackoverflow.com/questions/44630265/how-can-i-set-z-up-coordinate-system-in-three-js
 		THREE.Object3D.DefaultUp = new THREE.Vector3(0, 0, 1);
 
-    	var osm = { position: { lat: 0, lon: 0 },
-    	// var osm = { position: { lat: 30.6765, lon: 104.09856 },
-					h: 300,
-					z: 15};
+    	var osm = {
+			campos: { lat: 0, lon: 0, h: 300 },
+			position: { lat: 0, lon: 0 },
+		//  position: { lat: 30.6765, lon: 104.09856 },
+			z: 15};
 
 		o3 = new O3(osm);
 
@@ -190,14 +191,13 @@
 		var light = new THREE.AmbientLight( 0x222222 );
 		scene.add( light );
 
-		window.addEventListener( 'resize', onWindowResize, false );
 	}
 
-	function onWindowResize() {
-		camera.aspect = window.innerWidth / window.innerHeight;
-		camera.updateProjectionMatrix();
-		o3.se.renderer.setSize( window.innerWidth, window.innerHeight );
-	}
+	// function onWindowResize() {
+	// 	camera.aspect = window.innerWidth / window.innerHeight;
+	// 	camera.updateProjectionMatrix();
+	// 	o3.se.renderer.setSize( window.innerWidth, window.innerHeight );
+	// }
 
 	function animate() {
 		requestAnimationFrame( animate );
@@ -229,7 +229,8 @@
 		}
 	}
 
-	var raytarges;
+	// var raytarges;
+	var dirs;
 	var tilesKeeper;
 	/**turorial: https://www.html5rocks.com/en/tutorials/workers/basics/
 	 * @param {object} opts
@@ -388,16 +389,18 @@
 									cam.target.h === undefined ? R : R + cam.target.h);
 		lookAt= [lookAt.x, lookAt.y, lookAt.z];
 
-		if (raytarges === undefined)
-			raytarges = o3.getRayTargets(m, {w: 4, h: 3});
+		// var dir = Vec3.minus(Vec3.add([x, y, z], lookAt), eye);
+		if (dirs === undefined)
+			dirs = o3.getRayDirs({w: 4, h: 3});
 
-		for ( var ix = 0; ix < raytarges.count; ix++ ) {
-			var x = raytarges.getX(ix);
-			var y = raytarges.getY(ix);
-			var z = raytarges.getZ(ix);
+		for ( var ix = 0; ix < dirs.count; ix++ ) {
+			var x = dirs.getX(ix);
+			var y = dirs.getY(ix);
+			var z = dirs.getZ(ix);
 
 			// find tile by ray casting from c0 to dir [x, y, z]
-			var dir = Vec3.minus(Vec3.add([x, y, z], lookAt), eye);
+			// var dir = Vec3.minus(Vec3.add([x, y, z], lookAt), eye);
+			var dir = [x, y, z];
 			osmUtils.collectOsmTiles(tilkeepr, dir, eye, R);
 		}
 
@@ -467,9 +470,14 @@
 					 } );
 
 					// groundMeshes.material.map = texture;
-					tilesKeeper.tiles = groundMeshes;
-					groundMeshes.material = material;
-					groundMeshes.material.map.needsUpdate = true;
+					// tilesKeeper.tiles = groundMeshes;
+					var tl;
+					tilesKeeper.forEachTile((t, x) => {
+						console.log(t);
+						tl = t;
+					});
+					tl.mesh.material = material;
+					tl.mesh.material.map.needsUpdate = true;
 				},
 
 				// onProgress callback currently not supported
