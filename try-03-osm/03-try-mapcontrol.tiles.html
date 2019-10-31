@@ -343,6 +343,7 @@
 					target: opts.position,
 				    position: { lat: opts.position.lat - 0.2, lon: opts.position.lon, h: 10 },
 				    z: 16 },
+				  s3.camera,
 				  opts.castMatrix );
 		if (o3.verbose >= 5) console.log(tilesKeeper.tiles);
 
@@ -369,29 +370,30 @@
 	/**Find osm tiles according to camera position.
 	 * @param {object} osmTiles osm tile collection {z: {x: {y: tileInf}}}<br>
 	 * tileInf: lon, lat, mesh, world
-	 * @param {object} cam:<br>
+	 * @param {object} camWorld:<br>
 	 *     target: lookAt, {lat, lon, h = 0}<br>
 	 *     position: eye position, {lat, lon, h}<br>
 	 *     z: osm z
+	 * @param {THREE.Camera} camera
 	 * @param {THREE.Matrix4} castMatrix
 		 * @return {object} tiles {z: {x: {y: {tileInf}}}}
 	 */
-	function findTiles (tilkeepr, cam, castMatrix) {
-		var m = cam.worldMat4;
-		if (cam && cam.castMatrix) {
-			m.multiply(cam.castMatrix);
+	function findTiles (tilkeepr, camWorld, camera, castMatrix) {
+		var m = camWorld.worldMat4;
+		if (camWorld && camWorld.castMatrix) {
+			m.multiply(camWorld.castMatrix);
 		}
 
-		var eye = osmUtils.rad2cart(cam.position.lon, cam.position.lat, R + cam.position.h);
+		var eye = osmUtils.rad2cart(camWorld.position.lon, camWorld.position.lat, R + camWorld.position.h);
 		eye = [eye.x, eye.y, eye.z];
 
-		var lookAt = osmUtils.rad2cart(cam.target.lon, cam.target.lat,
-									cam.target.h === undefined ? R : R + cam.target.h);
+		var lookAt = osmUtils.rad2cart(camWorld.target.lon, camWorld.target.lat,
+									camWorld.target.h === undefined ? R : R + camWorld.target.h);
 		lookAt= [lookAt.x, lookAt.y, lookAt.z];
 
 		// var dir = Vec3.minus(Vec3.add([x, y, z], lookAt), eye);
 		if (dirs === undefined)
-			dirs = o3.getRayDirs({w: 4, h: 3});
+			dirs = o3.getRayDirs(camera, {w: 4, h: 3});
 
 		for ( var ix = 0; ix < dirs.count; ix++ ) {
 			var x = dirs.getX(ix);
