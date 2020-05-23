@@ -1,0 +1,157 @@
+<!-- Licensed under a BSD license. See license.html for license -->
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>08.1 Volumetric - Ellipsoid</title>
+    <link rel='stylesheet' type='text/css' href='../lib/shader.css'>
+    <script type='text/javascript' src='../3rd-lib/three.js/three.min.js'></script>
+    <script type='text/javascript' src='../3rd-lib/three.js/OrbitControls.js'></script>
+    <script type='text/javascript' src='../lib/volumetric-raymatching v0.1.js'></script>
+  </head>
+  <body>
+    <p>8.1 Data Texture [dist = sphere, norm = reflect(ray-dir), colour = sample(norm.xz)] - Model Alpha:<input id='alpha' value='0.1'></input></p>
+    <p>Reference
+        <ol><li><a href='https://math.stackexchange.com/questions/778171/intersection-of-ellipsoid-with-ray'>Mathematics: Intersection of Ellipsoid with Ray</a></li></ol>
+    </p>
+    <canvas id="frag"></canvas>
+  </body>
+<script>
+'use strict';
+
+const fragmentShader = `
+  uniform vec3 iResolution;
+  uniform vec3 camPos;
+  uniform float iTime;
+  uniform vec2 iMouse;
+  uniform float modelAlpha;
+  uniform sampler2D iChannel0;
+
+  varying vec2 vUv;
+  varying vec3 I;
+  varying vec3 P;
+  varying vec4 cent;
+
+  // dx, dy in texture
+  const vec2 grad_step = vec2(2.0);
+
+  /**Vector distance  to orignal point.
+   * See https://en.wikipedia.org/wiki/Line%E2%80%93sphere_intersection
+   * FIXME why not return norm?
+   * @param eye camera position in world
+   * @param u direction norm
+   * @param r sphere radius
+   * @param cent shpere center position in world
+   * @return vec2(distance_close, distance_far)
+  vec2 distSphere( vec3 eye, vec3 u, float r, vec3 cent, vec3 abc ) {
+      // e = o - c, where o = eye, c = cent
+      vec3 e = eye - cent;
+      // delta = (u . e)^2 + r^2 - |e|^2
+      float delta = pow( dot( u, e ), 2. ) + pow( r, 2. ) - dot(e, e);
+      if (delta < 0.) return vec2(delta);
+      // d = - u.e +/- delta^0.5
+      delta = pow( delta, 0.5 );
+      return vec2( -dot( u, e ) + delta, -dot( u, e ) - delta );
+  }
+   */
+
+  /**Vector distance  to orignal point.
+   * https://math.stackexchange.com/questions/778171/intersection-of-ellipsoid-with-ray
+   */
+  vec2 sdEllipsoid( vec3 eye, vec3 u, float r, vec3 cent, vec3 abc ) {
+      // e = o - c, where o = eye, c = cent
+      vec3 e = eye - cent;
+      e = e / abc;
+      // delta = (u . e)^2 + r^2 - |e|^2
+      u = normalize(u / abc);
+      float delta = pow( dot( u, e ), 2. ) + pow( r, 2. ) - dot(e, e);
+      if (delta < 0.) return vec2(delta);
+      // d = - u.e +/- delta^0.5
+      delta = pow( delta, 0.5 );
+      return vec2( -dot( u, e ) + delta, -dot( u, e ) - delta );
+  }
+
+  void mainImage( out vec4 fragColor, in vec2 fragCoord ) {
+    // SDF tanslate
+    vec3 e = camPos;
+    vec3 i = normalize( P - camPos );
+    // vec2 dists = distSphere( e, i, 0.3, cent.xyz );
+    vec2 dists = sdEllipsoid( e, i, 0.3, cent.xyz, vec3(.5, 1.2, .5) );
+
+    if (dists.x < 0.0) {
+      // Didn't hit anything
+      // fragColor = vec4( abs(modelAlpha) ) + vec4(normalize(i), modelAlpha);
+      fragColor = mix(vec4( abs(modelAlpha) ), texture2D(iChannel0, vUv), .3);
+      return;
+    }
+
+    vec3 p = e + dists.x * i;
+    vec3 n = normalize(p - cent.xyz);
+    p = reflect( I, n );
+    vec4 refractedColor = texture2D(iChannel0, p.xy);
+    fragColor = mix( refractedColor, texture2D(iChannel0, vUv), .30);
+  }
+
+  void main() {
+    mainImage(gl_FragColor, gl_FragCoord.xy);
+  }
+`;
+
+const vertexShader = `
+  uniform vec3 camPos;
+
+  varying vec2 vUv;
+  varying vec3 I;
+  varying vec3 P;
+  varying vec4 cent;
+
+  void main() {
+    vUv = uv;
+
+    // gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
+    vec4 worldPosition = modelMatrix * vec4(position, 1.0);
+
+    P = worldPosition.xyz;
+    I = normalize(camPos - worldPosition.xyz);
+
+    cent = modelMatrix * vec4(0., 0., 0., 1.);
+
+    gl_Position = projectionMatrix * viewMatrix * worldPosition;
+  }
+`;
+
+  const campos = new THREE.Vector3(0, 0.2, 1.6);
+  const loader = new THREE.TextureLoader();
+  loader.setCrossOrigin('anonymous');
+  var texture;
+  // try {
+  //   texture = loader.load('three.js/parallel axis with bar chart.png');
+  // } catch (e) { console.error(e); }
+
+  // texture = dataxture(512, 512, () => {return new THREE.Color(0.5, 0, 1);});
+  texture = sinTex(64, 64);
+
+  const uniforms = {
+    iTime: { value: 0 },
+    modelAlpha: { value: 0.05 },
+    iResolution:  { value: new THREE.Vector3() },
+    camPos: { value: campos },
+    iChannel0: { value: texture },
+    // iChannel0: { value: texture },
+    iMouse: {value: new THREE.Vector2()},
+  };
+
+  //const mouse = new THREE.Vector2();
+  document.onmousemove = function(e){
+    uniforms.iMouse.value.x = e.clientX / window.innerWidth - 0.5;
+    uniforms.iMouse.value.y = e.clientY / window.innerHeight - 0.5;
+
+    uniforms.modelAlpha.value = document.querySelector('#alpha').value;
+  }
+  vmatch('frag', vertexShader, fragmentShader, uniforms,
+    {geometryType: new THREE.BoxGeometry(.9, .9, .9),
+     camPos: { value: campos },
+     geometryCnt: 3});
+</script>
+</html>
