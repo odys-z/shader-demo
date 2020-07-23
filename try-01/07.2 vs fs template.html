@@ -53,13 +53,12 @@ const fragmentShader = `
     // SDF tanslate
     vec3 e = camPos;
     vec3 i = normalize( P - camPos );
-    vec2 dists = distSphere( e, i, .4, cent.xyz);
+    vec2 dists = distSphere( e, i, .3, cent.xyz);
 
     if (dists.y < 0. || dists.x < 0.) {
       // Didn't hit anything
-      fragColor = vec4( 0.1 );
-      // fragColor = vec4(abs(i), 1.);
-		  return;
+      fragColor = vec4( i, 0.3 );
+      return;
     }
 
     vec3 p = e + dists.x * i;
@@ -86,17 +85,17 @@ const vertexShader = `
   varying vec4 cent;
 
   void main() {
-      vUv = uv;
+    vUv = uv;
 
-      // gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
-      vec4 worldPosition = modelMatrix * vec4(position, 1.0);
+    // gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
+    vec4 worldPosition = modelMatrix * vec4(position, 1.0);
 
-      P = worldPosition.xyz;
-    	I = normalize(camPos - worldPosition.xyz);
+    P = worldPosition.xyz;
+    I = normalize(camPos - worldPosition.xyz);
 
-      cent = modelMatrix * vec4(0., 0., 0., 1.);
+    cent = modelMatrix * vec4(0., 0., 0., 1.);
 
-    	gl_Position = projectionMatrix * viewMatrix * worldPosition;
+    gl_Position = projectionMatrix * viewMatrix * worldPosition;
   }
 `;
 
